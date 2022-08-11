@@ -26,6 +26,9 @@ void MainWindow::prepare_()
     rio::PrimitiveRenderer::instance()->setCamera(mCamera);
     rio::PrimitiveRenderer::instance()->setProjection(mProjection);
     rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+
+    mpKeyboardMouseDevice = static_cast<rio::KeyboardMouseDevice*>(rio::ControllerMgr::instance()->getControlDevice(rio::ControllerDefine::DEVICE_KEYBOARD_MOUSE));
+    RIO_ASSERT(mpKeyboardMouseDevice);
 }
 
 void MainWindow::calc_()
@@ -39,7 +42,7 @@ void MainWindow::calc_()
     const f32 window_w_2 = window_w / 2;
     const f32 window_h_2 = window_h / 2;
 
-    rio::Vector2f cursor_pos = rio::ControllerMgr::instance()->getMainPointer()->getPointer();
+    rio::Vector2f cursor_pos = mpKeyboardMouseDevice->getCursorPos();
     cursor_pos.x = cursor_pos.x - window_w_2;
     cursor_pos.y = window_h_2 - cursor_pos.y;
 
@@ -63,4 +66,9 @@ void MainWindow::calc_()
         );
     }
     rio::PrimitiveRenderer::instance()->end();
+}
+
+void MainWindow::exit_()
+{
+    mpKeyboardMouseDevice = nullptr;
 }
