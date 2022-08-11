@@ -10,12 +10,21 @@ class MainWindow : public rio::ITask
 public:
     MainWindow();
 
+    const rio::Vector2f& getCursorPos() const
+    {
+        return mCursorPos;
+    }
+
+private:
     void prepare_() override;
     void calc_()    override;
     void exit_()    override;
+
+    void updateCursorPos_();
 
 private:
     rio::LookAtCamera           mCamera;
     rio::OrthoProjection        mProjection;
     rio::KeyboardMouseDevice*   mpKeyboardMouseDevice;
+    rio::Vector2f               mCursorPos;
 };
