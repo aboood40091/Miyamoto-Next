@@ -35,3 +35,13 @@
 *.depend
 *.layout
 *.cbp
+
+# Wii U build files
+build/
+Makefile
+*.elf
+*.rpx
+
+# Test files
+*.szs
+*.sarc
