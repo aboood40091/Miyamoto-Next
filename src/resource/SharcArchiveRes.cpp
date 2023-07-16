@@ -1,12 +1,14 @@
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <cstring>
+
 #include <resource/SharcArchiveRes.h>
 #include <resource/SharcHasher.h>
 
 #include <cstdio>
-#include <cstring>
 
 namespace {
 
-#if RIO_IS_CAFE
+#ifndef __STDC_LIB_EXT1__
 
 template <typename C>
 inline int strcpy_s(C* d, size_t dmax, const C* s)
@@ -26,7 +28,7 @@ inline int strcpy_s(C* d, size_t dmax, const C* s)
     return 0;
 }
 
-#endif // RIO_IS_CAFE
+#endif // __STDC_LIB_EXT1__
 
 inline u16 EndianToHost(bool is_be, u16 value)
 {
