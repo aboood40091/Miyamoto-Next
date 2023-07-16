@@ -306,6 +306,7 @@ class CourseDataFile
 
 public:
     CourseDataFile();
+    ~CourseDataFile();
 
     void load(
         u32 id,

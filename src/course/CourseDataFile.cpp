@@ -19,6 +19,8 @@ CourseDataFile::CourseDataFile()
 {
 }
 
+CourseDataFile::~CourseDataFile() = default;
+
 void CourseDataFile::load(
     u32 id,
     const void* file,
