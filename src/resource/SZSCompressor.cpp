@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-gsl::span<const u8> SZSCompressor::compressionSearch_(
+std::span<const u8> SZSCompressor::compressionSearch_(
     const u8* src,
     const u8* src_start,
     const u8* src_end,
@@ -13,7 +13,7 @@ gsl::span<const u8> SZSCompressor::compressionSearch_(
 )
 {
     if (src + 2 >= src_end)
-        return gsl::span<u8>();
+        return std::span<u8>();
 
     const u8* found = nullptr;
     size_t found_len = 0;
@@ -54,7 +54,7 @@ gsl::span<const u8> SZSCompressor::compressionSearch_(
     return { found, found_len};
 }
 
-gsl::span<u8> SZSCompressor::compress(const gsl::span<const u8>& data, CompressionLevel level)
+std::span<u8> SZSCompressor::compress(std::span<const u8> data, CompressionLevel level)
 {
     RIO_ASSERT(LEVEL_NO_COMPRESSION <= level && level <= LEVEL_MAX);
 
@@ -100,8 +100,8 @@ gsl::span<u8> SZSCompressor::compress(const gsl::span<const u8>& data, Compressi
             if (src >= src_end)
                 break;
 
-            const gsl::span<const u8>& found = (range > 0) ? compressionSearch_(src, src_start, src_end, max_len, range)
-                                                           : gsl::span<u8>();
+            std::span<const u8> found = (range > 0) ? compressionSearch_(src, src_start, src_end, max_len, range)
+                                                    : std::span<u8>();
             if (found.size() > 2)
             {
                 u16 delta = uintptr_t(src) - uintptr_t(found.data()) - 1;

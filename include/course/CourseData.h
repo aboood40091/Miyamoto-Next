@@ -3,7 +3,7 @@
 #include <course/Bg.h>
 #include <course/CourseDataFile.h>
 
-#include <gsl/span>
+#include <span>
 
 class CourseData
 {
@@ -12,7 +12,7 @@ public:
     ~CourseData();
 
     bool loadFromPack(const std::string& path);
-    gsl::span<u8> save(const std::string& level_name) const;
+    std::span<u8> save(const std::string& level_name) const;
 
     CourseDataFile* getFile(u32 index)
     {
@@ -54,7 +54,7 @@ private:
     Bg                                          mBg;
 
     // Unused res data to be included at saving
-    std::vector<std::pair<std::string, gsl::span<u8>>> mResData;
+    std::vector<std::pair<std::string, std::span<u8>>> mResData;
 
     enum
     {

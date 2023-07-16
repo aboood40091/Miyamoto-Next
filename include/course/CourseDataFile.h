@@ -5,7 +5,7 @@
 #include <array>
 #include <vector>
 
-#include <gsl/span>
+#include <span>
 
 struct CourseDataFileHeader
 {
@@ -315,7 +315,7 @@ public:
         const void* bgdat_L2 = nullptr
     );
 
-    std::array<gsl::span<u8>, 4> save() const
+    std::array<std::span<u8>, 4> save() const
     {
         return {
             saveFile_(),
@@ -329,8 +329,8 @@ private:
     void loadFile_(const CourseDataFileHeader* p_header);
     void loadBgDat_(u8 layer, const BgCourseData* bgdat);
 
-    gsl::span<u8> saveFile_() const;
-    gsl::span<u8> saveBgDat_(u8 layer) const;
+    std::span<u8> saveFile_() const;
+    std::span<u8> saveBgDat_(u8 layer) const;
 
 public:
     void clear();

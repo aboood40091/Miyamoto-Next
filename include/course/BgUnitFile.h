@@ -5,7 +5,8 @@
 
 #include <gpu/rio_Texture.h>
 
-#include <gsl/span>
+#include <span>
+#include <string>
 
 class BgUnitFile
 {
@@ -13,7 +14,7 @@ public:
     BgUnitFile(const std::string& name);
     ~BgUnitFile();
 
-    bool load(const gsl::span<u8>& data);
+    bool load(std::span<const u8> data);
     void unload();
 
     bool save();
@@ -23,7 +24,7 @@ public:
         return mName;
     }
 
-    const gsl::span<u8>& getData() const
+    std::span<const u8> getData() const
     {
         return mData;
     }
@@ -57,7 +58,7 @@ public:
 
 private:
     std::string         mName;
-    gsl::span<u8>       mData;
+    std::span<u8>       mData;
 
     u64                 mBgCheck[BG_MAX_PER_UNIT_NUM];
 

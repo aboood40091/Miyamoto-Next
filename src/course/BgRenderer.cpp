@@ -47,8 +47,8 @@ void BgRenderer::initialize_()
     RIO_ASSERT(vtx_data != nullptr);
     RIO_ASSERT(idx_data != nullptr);
 
-    mVtxData = gsl::span{ vtx_data, vtx_data_size };
-    mIdxData = gsl::span{ idx_data, idx_data_size };
+    mVtxData = std::span{ vtx_data, vtx_data_size };
+    mIdxData = std::span{ idx_data, idx_data_size };
 
     rio::MemUtil::set(vtx_data, 0, vtx_data_size);
 
@@ -93,8 +93,8 @@ void BgRenderer::destroy_()
     rio::MemUtil::free(mVtxData.data());
     rio::MemUtil::free(mIdxData.data());
 
-    mVtxData = gsl::span<Vertex>();
-    mIdxData = gsl::span<u32>();
+    mVtxData = std::span<Vertex>();
+    mIdxData = std::span<u32>();
 }
 
 void BgRenderer::createVertexBuffer(u8 layer, const Bg& bg)

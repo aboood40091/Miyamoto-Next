@@ -164,12 +164,12 @@ bool CourseData::loadFromPack(const std::string& path)
         u8* new_data = static_cast<u8*>(rio::MemUtil::alloc(size, 4));
         rio::MemUtil::copy(new_data, data, size);
 
-        mResData.emplace_back(entry.name, gsl::span{ new_data, size });
+        mResData.emplace_back(entry.name, std::span{ new_data, size });
     }
 
 #if 0
-    const gsl::span<u8>& out_archive = save(level_name);
-    const gsl::span<u8>& out_szs = SZSCompressor::compress(out_archive);
+    const std::span<u8> out_archive = save(level_name);
+    const std::span<u8> out_szs = SZSCompressor::compress(out_archive);
     {
         rio::FileHandle handle;
 #if RIO_IS_WIN
@@ -194,7 +194,7 @@ bool CourseData::loadFromPack(const std::string& path)
     return true;
 }
 
-gsl::span<u8> CourseData::save(const std::string& level_name) const
+std::span<u8> CourseData::save(const std::string& level_name) const
 {
     SharcWriter<0x65> pack_writer;
     for (const auto& file : mResData)
@@ -228,10 +228,10 @@ gsl::span<u8> CourseData::save(const std::string& level_name) const
         if (cd_file_data[3].data()) level_arc_writer.addFile(sCourseDataFileL2Name, cd_file_data[3]);
     }
 
-    const gsl::span<u8>& out_level_archive = level_arc_writer.save();
+    const std::span<u8> out_level_archive = level_arc_writer.save();
     pack_writer.addFile(level_name, out_level_archive);
 
-    const gsl::span<u8>& out_archive = pack_writer.save(true);
+    const std::span<u8> out_archive = pack_writer.save(true);
     rio::MemUtil::free(out_level_archive.data());
 
     return out_archive;

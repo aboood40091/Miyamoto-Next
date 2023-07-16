@@ -239,15 +239,15 @@ void BgUnitFile::unload()
     if (mData.data())
     {
         rio::MemUtil::free(mData.data());
-        mData = gsl::span<u8>();
+        mData = std::span<u8>();
     }
 }
 
-bool BgUnitFile::load(const gsl::span<u8>& data)
+bool BgUnitFile::load(std::span<const u8> data)
 {
     unload();
 
-    u8* file = data.data();
+    const u8* file = data.data();
     u32 filesize = data.size();
 
     if (!file || !filesize)
@@ -260,7 +260,7 @@ bool BgUnitFile::load(const gsl::span<u8>& data)
     RIO_ASSERT(file_new);
     rio::MemUtil::copy(file_new, file, filesize);
 
-    mData = gsl::span(file_new, filesize);
+    mData = std::span(file_new, filesize);
 
     SharcArchiveRes archive;
     if (!archive.prepareArchive(file))

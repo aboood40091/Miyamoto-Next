@@ -2,7 +2,7 @@
 
 #include <misc/rio_Types.h>
 
-#include <gsl/span>
+#include <span>
 #include <vector>
 
 class SharcArchiveRes
@@ -131,7 +131,7 @@ private:
     const ArchiveBlockHeader*   mArchiveBlockHeader;
     const FATBlockHeader*       mFATBlockHeader;
     const char*                 mFNTBlock;
-    gsl::span<const FATEntry>   mFATEntrys;
+    std::span<const FATEntry>   mFATEntrys;
     const u8*                   mDataBlock;
     bool                        mIsBigEndian;
 };

@@ -45,7 +45,7 @@ SharcWriter<hash_key>::~SharcWriter()
 }
 
 template <u32 hash_key>
-void SharcWriter<hash_key>::addFile(const std::string& name, const gsl::span<u8>& data)
+void SharcWriter<hash_key>::addFile(const std::string& name, std::span<const u8> data)
 {
     RIO_ASSERT(!name.empty());
     RIO_ASSERT(data.data() != nullptr);
@@ -56,7 +56,7 @@ void SharcWriter<hash_key>::addFile(const std::string& name, const gsl::span<u8>
 }
 
 template <u32 hash_key>
-void SharcWriter<hash_key>::addFile(u32 name_hash, const gsl::span<u8>& data)
+void SharcWriter<hash_key>::addFile(u32 name_hash, std::span<const u8> data)
 {
     RIO_ASSERT(name_hash != 0);
     RIO_ASSERT(data.data() != nullptr);
@@ -67,10 +67,10 @@ void SharcWriter<hash_key>::addFile(u32 name_hash, const gsl::span<u8>& data)
 }
 
 template <u32 hash_key>
-gsl::span<u8> SharcWriter<hash_key>::save(bool is_be) const
+std::span<u8> SharcWriter<hash_key>::save(bool is_be) const
 {
     if (mFiles.empty())
-        return gsl::span<u8>();
+        return std::span<u8>();
 
     u32 file_num = mFiles.size();
 
@@ -90,7 +90,7 @@ gsl::span<u8> SharcWriter<hash_key>::save(bool is_be) const
         {
             const auto& file = it.second;
             const std::string& name = file.first;
-            const gsl::span<u8>& data = file.second;
+            const std::span<const u8> data = file.second;
 
             // Name
             {
@@ -192,7 +192,7 @@ gsl::span<u8> SharcWriter<hash_key>::save(bool is_be) const
             u32 hash = it->first;
             const auto& file = it->second;
             const std::string& name = file.first;
-            const gsl::span<u8>& data = file.second;
+            const std::span<const u8> data = file.second;
 
             u32 name_offset = name_offsets[i];
             u32 data_start_offset = data_start_offsets[i];

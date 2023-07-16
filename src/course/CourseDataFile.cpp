@@ -311,7 +311,7 @@ void CourseDataFile::loadFile_(const CourseDataFileHeader* p_header)
     }
 }
 
-gsl::span<u8> CourseDataFile::saveFile_() const
+std::span<u8> CourseDataFile::saveFile_() const
 {
     std::set<u16> used_sprites;
     for (const Sprite& sprite : mSprite)
@@ -656,13 +656,13 @@ void CourseDataFile::loadBgDat_(u8 layer, const BgCourseData* bgdat)
     }
 }
 
-gsl::span<u8> CourseDataFile::saveBgDat_(u8 layer) const
+std::span<u8> CourseDataFile::saveBgDat_(u8 layer) const
 {
     const std::vector<BgCourseData>& self_bgdat = mBgData[layer];
     const u32 bgdat_num = self_bgdat.size();
 
     if (bgdat_num == 0)
-        return gsl::span<u8>();
+        return std::span<u8>();
 
     const size_t file_size = sizeof(BgCourseData) * bgdat_num + sizeof(BgCourseData::type);
     u8* const file = static_cast<u8*>(rio::MemUtil::alloc(file_size, 4));

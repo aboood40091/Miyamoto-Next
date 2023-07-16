@@ -8,8 +8,8 @@
 #include <gpu/rio_TextureSampler.h>
 #include <gpu/rio_VertexArray.h>
 
-#include <gsl/span>
 //#include <array>
+#include <span>
 
 class Bg;
 class CourseDataFile;
@@ -74,8 +74,8 @@ private:
     static constexpr f32 cPadYNorm          = f32(cPad) / cTilesetHeight;
 
 private:
-    gsl::span<Vertex>       mVtxData;
-    gsl::span<   u32>       mIdxData;
+    std::span<Vertex>       mVtxData;
+    std::span<   u32>       mIdxData;
 
     rio::Shader             mShader;
     rio::VertexBuffer       mVertexBuffer;

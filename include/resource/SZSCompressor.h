@@ -2,7 +2,7 @@
 
 #include <misc/rio_Types.h>
 
-#include <gsl/span>
+#include <span>
 
 class SZSCompressor
 {
@@ -15,10 +15,10 @@ public:
     };
 
 public:
-    static gsl::span<u8> compress(const gsl::span<const u8>& data, CompressionLevel level = LEVEL_DEFAULT);
+    static std::span<u8> compress(std::span<const u8> data, CompressionLevel level = LEVEL_DEFAULT);
 
 private:
-    static inline gsl::span<const u8> compressionSearch_(
+    static inline std::span<const u8> compressionSearch_(
         const u8* src,
         const u8* src_start,
         const u8* src_end,
