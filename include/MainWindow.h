@@ -10,10 +10,6 @@
 #include <item/NextGotoItem.h>
 #include <item/SpriteItem.h>
 
-#if RIO_IS_WIN
-#include <controller/win/rio_KeyboardMouseDeviceWin.h>
-#endif // RIO_IS_WIN
-
 #include <controller/rio_Controller.h>
 #include <gfx/rio_Projection.h>
 #include <task/rio_Task.h>
@@ -43,7 +39,6 @@ public:
 private:
     void prepare_() override;
     void calc_()    override;
-    void exit_()    override;
 
     void processInputs_();
     void updateCursorPos_();
@@ -52,9 +47,6 @@ private:
 private:
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
-#if RIO_IS_WIN
-    rio::KeyboardMouseDevice*   mpKeyboardMouseDevice;
-#endif // RIO_IS_WIN
     rio::Vector2f               mCursorPos;
     rio::Vector2f               mLastCursorPos;
 

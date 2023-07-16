@@ -8,11 +8,7 @@
 
 #include <resource/SZSDecompressor.h>
 
-#if RIO_IS_WIN
-static const char* level_path = "native://D:/New Super Mario Bros. U (USA, Physical)/New Super Mario Bros. U (USA, Physical)/data/content/Common/course_res_pack/1-1.szs";
-#else
 static const char* level_path = "1-1.szs";
-#endif // RIO_IS_WIN
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
@@ -66,16 +62,10 @@ void MainWindow::updateCursorPos_()
 {
     mLastCursorPos = mCursorPos;
 
-#if !RIO_IS_WIN
     if (!rio::ControllerMgr::instance()->getMainPointer()->isPointerOn())
         return;
-#endif
 
-#if RIO_IS_WIN
-    mCursorPos = mpKeyboardMouseDevice->getCursorPos();
-#else
     mCursorPos = rio::ControllerMgr::instance()->getMainPointer()->getPointer();
-#endif
 
     const f32 min_x =  0.0f;
     const f32 max_x =  s32(rio::Window::instance()->getWidth());
@@ -96,23 +86,13 @@ void MainWindow::updateCursorPos_()
     else if (mCursorPos.y > max_y)
         mCursorPos.y = max_y;
 
-#if !RIO_IS_WIN
     if (rio::ControllerMgr::instance()->getMainPointer()->isPointerOnNow())
         mLastCursorPos = mCursorPos;
-#endif
 }
 
 void MainWindow::processInputs_()
 {
-#if RIO_IS_WIN
-    const u8* state = mpKeyboardMouseDevice->getKeyState();
-    if (!state)
-        return;
-
-    if (state[0x04] & 0x80) // Mouse middle-click
-#else
     if (rio::ControllerMgr::instance()->getMainPointer()->isHold(1 << rio::Controller::PAD_IDX_TOUCH))
-#endif
     {
         static_cast<rio::Vector2f&>(mCamera.pos()) +=
             viewToWorldPos(mLastCursorPos) - viewToWorldPos(mCursorPos);
@@ -150,11 +130,6 @@ void MainWindow::prepare_()
 
     mBgRenderer.setCamera(&mCamera);
     mBgRenderer.setProjection(&mProjection);
-
-#if RIO_IS_WIN
-    mpKeyboardMouseDevice = static_cast<rio::KeyboardMouseDevice*>(rio::ControllerMgr::instance()->getControlDevice(rio::ControllerDefine::DEVICE_KEYBOARD_MOUSE));
-    RIO_ASSERT(mpKeyboardMouseDevice);
-#endif // RIO_IS_WIN
 
     updateCursorPos_();
     mLastCursorPos = mCursorPos;
@@ -361,11 +336,4 @@ void MainWindow::drawCursor_()
         );
     }
     rio::PrimitiveRenderer::instance()->end();
-}
-
-void MainWindow::exit_()
-{
-#if RIO_IS_WIN
-    mpKeyboardMouseDevice = nullptr;
-#endif // RIO_IS_WIN
 }
