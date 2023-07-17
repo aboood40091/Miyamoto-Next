@@ -236,8 +236,7 @@ void MainWindow::prepare_()
 
     const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
     mCourseData.loadFromPack(level_path);
-    if (mCourseData.getFile(0))
-        setCurrentCourseDataFile(0);
+    setCurrentCourseDataFile(0);
 }
 
 void MainWindow::exit_()
@@ -282,6 +281,15 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         // Clear BG
         bg.clearBgCourseData();
         mBgRenderer.createVertexBuffer(bg);
+
+        const char* dv_name = "Nohara";
+
+        const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
+        RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
+
+        DistantViewMgr::instance()->initialize(dv_name, dv_path);
+
+      //RIO_LOG("Initialized DistantViewMgr\n");
 
         return;
     }
