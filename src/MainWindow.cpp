@@ -25,7 +25,7 @@
 #include <distant_view/DistantViewMgr.h>
 #include <graphics/ShaderHolder.h>
 
-static const char* level_fname = "1-1.szs";
+static const char* level_fname = "8-43.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
 
 MainWindow::MainWindow()
@@ -354,13 +354,31 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_w_2);
         camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_h_2);
 
-        RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size());
-        const AreaData& area_data = cd_file.getAreaData()[start_next_goto->area];
+        if (cd_file.getAreaData().size() > 0)
+        {
+          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size());
+            u8 area =
+                (start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size())
+                    ? start_next_goto->area
+                    : 0;
 
-        RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
-        const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
+            const AreaData& area_data = cd_file.getAreaData()[area];
 
-        dv_name = dv_data.name;
+          //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
+            if (area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size())
+            {
+                const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
+                dv_name = dv_data.name;
+            }
+            else
+            {
+                dv_name = "Nohara";
+            }
+        }
+        else
+        {
+            dv_name = "Nohara";
+        }
     }
     else
     {
