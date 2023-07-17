@@ -10,11 +10,13 @@
 #include <item/NextGotoItem.h>
 #include <item/SpriteItem.h>
 
-#include <controller/rio_Controller.h>
+#include <resource/SharcArchiveRes.h>
+
 #include <gfx/rio_Projection.h>
+#include <gfx/lyr/rio_Layer.h>
 #include <task/rio_Task.h>
 
-class MainWindow : public rio::ITask
+class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 {
 public:
     MainWindow();
@@ -34,17 +36,40 @@ public:
 
     void setCurrentCourseDataFile(u32 id);
 
-  //bool checkButtonPress(u32 idx, rio::Controller::PadIdx button);
-
 private:
     void prepare_() override;
     void calc_()    override;
+    void exit_()    override;
 
     void processInputs_();
     void updateCursorPos_();
     void drawCursor_();
 
+    void dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info);
+    void dv_CalcGPU_(const rio::lyr::DrawInfo& draw_info);
+    void dv_DrawOpa_(const rio::lyr::DrawInfo& draw_info);
+    void dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info);
+    void dv_PostFx_ (const rio::lyr::DrawInfo& draw_info);
+
+    void bg_Render_ (const rio::lyr::DrawInfo& draw_info);
+
 private:
+    enum SceneLayer
+    {
+        SCENE_LAYER_BG = 0,
+        SCENE_LAYER_DISTANT_VIEW,
+        SCENE_LAYER_NUM
+    };
+
+    struct
+    {
+        rio::lyr::Layer::iterator it;
+        rio::lyr::Layer* ptr;
+    } mLayer[SCENE_LAYER_NUM];
+
+    void* mpArchive;
+    SharcArchiveRes mArchiveRes;
+
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
     rio::Vector2f               mCursorPos;
@@ -58,11 +83,6 @@ private:
     std::vector<SpriteItem>     mSpriteItem;
     std::vector<AreaItem>       mAreaItem;
     std::vector<LocationItem>   mLocationItem;
-
-  //static constexpr s32 cButtonMaxNum = CD_FILE_LAYER_MAX_NUM + 2;
-
-  //u32     mHoldCounter   [cButtonMaxNum];
-  //bool    mWaitForRelease[cButtonMaxNum];
 
     bool    mBlendEnable;
     bool    mLayerShown[CD_FILE_LAYER_MAX_NUM];

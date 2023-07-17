@@ -1,14 +1,32 @@
 #include <MainWindow.h>
 
 #include <controller/rio_ControllerMgr.h>
+#include <filedevice/rio_FileDevice.h>
 #include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
+#include <gfx/lyr/rio_Renderer.h>
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>
 
-#include <resource/SZSDecompressor.h>
+#if RIO_IS_WIN
+#include <graphics/win/ShaderUtil.h>
+#endif // RIO_IS_WIN
 
-static const char* level_path = "1-1.szs";
+#if RIO_IS_CAFE
+#include <detail/aglGX2.h>
+#endif // RIO_IS_CAFE
+
+#include <detail/aglShaderHolder.h>
+#include <resource/SZSDecompressor.h>
+#include <utility/aglPrimitiveShape.h>
+#include <utility/aglPrimitiveTexture.h>
+#include <utility/aglVertexAttributeHolder.h>
+
+#include <distant_view/DistantViewMgr.h>
+#include <graphics/ShaderHolder.h>
+
+static const char* level_fname = "1-1.szs";
+static const std::string nsmbu_content_path = "game/nsmbu";
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
@@ -101,13 +119,94 @@ void MainWindow::processInputs_()
 
 void MainWindow::prepare_()
 {
-    /*
-    for (s32 i = 0; i < cButtonMaxNum; i++)
-    {
-        mHoldCounter[i] = 0;
-        mWaitForRelease[i] = false;
-    }
-    */
+  //RIO_LOG("MainWindow::prepare_(): start\n");
+
+    mLayer[SCENE_LAYER_DISTANT_VIEW].it = rio::lyr::Renderer::instance()->addLayer("DistantView", SCENE_LAYER_DISTANT_VIEW);
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_DISTANT_VIEW].it);
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearDepthStencil();
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Calc");
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("CalcGPU");
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Opa");
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Xlu");
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("PostFx");
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::dv_CalcMdl_));
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(1, rio::lyr::DrawMethod(this, &MainWindow::dv_CalcGPU_));
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(2, rio::lyr::DrawMethod(this, &MainWindow::dv_DrawOpa_));
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(3, rio::lyr::DrawMethod(this, &MainWindow::dv_DrawXlu_));
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(4, rio::lyr::DrawMethod(this, &MainWindow::dv_PostFx_));
+
+    mLayer[SCENE_LAYER_BG].it = rio::lyr::Renderer::instance()->addLayer("BG", SCENE_LAYER_BG);
+    mLayer[SCENE_LAYER_BG].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_BG].it);
+    mLayer[SCENE_LAYER_BG].ptr->addRenderStep("Render");
+    mLayer[SCENE_LAYER_BG].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::bg_Render_));
+
+  //RIO_LOG("MainWindow::prepare_(): layer initialized\n");
+
+#if RIO_IS_WIN
+    ShaderUtil::sTempPath                   = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/shaders/cache";
+    ShaderUtil::sGx2ShaderDecompilerPath    = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/gx2shader-decompiler.exe";
+    ShaderUtil::sSpirvCrossPath             = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/spirv-cross.exe";
+
+  //RIO_LOG("MainWindow::prepare_(): ShaderUtil parameters set\n");
+#endif // RIO_IS_WIN
+
+#if RIO_IS_CAFE
+    agl::driver::GX2Resource::createSingleton();
+  //RIO_LOG("MainWindow::prepare_(): agl::driver::GX2Resource::createSingleton() done\n");
+    agl::driver::GX2Resource::instance()->initialize();
+  //RIO_LOG("MainWindow::prepare_(): agl::driver::GX2Resource::instance()->initialize() done\n");
+#endif // RIO_IS_CAFE
+
+    agl::detail::ShaderHolder::createSingleton();
+  //RIO_LOG("MainWindow::prepare_(): agl::detail::ShaderHolder::createSingleton() done\n");
+#if RIO_IS_CAFE
+    agl::detail::ShaderHolder::instance()->setCreateDisplayLists(true);
+#endif // RIO_IS_CAFE
+
+    agl::utl::PrimitiveShape::createSingleton();
+  //RIO_LOG("MainWindow::prepare_(): agl::utl::PrimitiveShape::createSingleton() done\n");
+    agl::utl::PrimitiveShape::instance()->initialize();
+  //RIO_LOG("MainWindow::prepare_(): agl::utl::PrimitiveShape::instance()->initialize() done\n");
+
+    agl::utl::PrimitiveTexture::createSingleton();
+    agl::utl::PrimitiveTexture::instance()->initialize();
+  //agl::utl::PrimitiveVertex::createSingleton();
+  //agl::utl::PrimitiveVertex::instance()->initialize();
+
+    rio::FileDevice::LoadArg arg;
+    arg.path =
+#if RIO_IS_CAFE
+        nsmbu_content_path + "/CAFE/agl_resource_cafe.sarc";
+#else
+        "agl_resource_cafe_dev.sarc";
+#endif
+    arg.alignment = 0x2000;
+
+    mpArchive = rio::FileDeviceMgr::instance()->load(arg);
+    RIO_ASSERT(mpArchive);
+
+    mArchiveRes.prepareArchive(mpArchive);
+  //RIO_LOG("MainWindow::prepare_(): mArchiveRes.prepareArchive() done\n");
+
+    agl::detail::ShaderHolder::instance()->initialize(&mArchiveRes);
+
+  //RIO_LOG("Initialized shader holder\n");
+
+    agl::utl::VertexAttributeHolder::createSingleton();
+    agl::utl::VertexAttributeHolder::instance()->initialize();
+
+  //RIO_LOG("Initialized agl!\n");
+
+    ShaderHolder::createSingleton();
+    ShaderHolder::instance()->initialize(nsmbu_content_path + "/Common/shader/shaderfb");
+
+  //RIO_LOG("Initialized ShaderHolder\n");
+
+    DistantViewMgr::createSingleton();
+    DistantViewMgr::instance()->setFlickerEnable(false);
+
+  //RIO_LOG("Created DistantViewMgr\n");
 
     mBlendEnable = true;
     mLayerShown[LAYER_0] = true;
@@ -134,9 +233,36 @@ void MainWindow::prepare_()
     updateCursorPos_();
     mLastCursorPos = mCursorPos;
 
+
+    const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
     mCourseData.loadFromPack(level_path);
     if (mCourseData.getFile(0))
         setCurrentCourseDataFile(0);
+}
+
+void MainWindow::exit_()
+{
+    DistantViewMgr::destroySingleton();
+
+    ShaderHolder::destroySingleton();
+
+    agl::utl::VertexAttributeHolder::destroySingleton();
+
+    agl::utl::PrimitiveTexture::destroySingleton();
+  //agl::utl::PrimitiveVertex::destroySingleton();
+
+    agl::utl::PrimitiveShape::destroySingleton();
+
+    agl::detail::ShaderHolder::destroySingleton();
+
+    mArchiveRes.destroy();
+
+    rio::MemUtil::free(mpArchive);
+    mpArchive = nullptr;
+
+#if RIO_IS_CAFE
+    agl::driver::GX2Resource::destroySingleton();
+#endif // RIO_IS_CAFE
 }
 
 void MainWindow::setCurrentCourseDataFile(u32 id)
@@ -207,6 +333,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     rio::BaseVec2f& camera_pos = mCamera.pos();
 
+    const char* dv_name = nullptr;
+
     if (start_next_goto)
     {
         const f32 window_w = s32(rio::Window::instance()->getWidth());
@@ -217,36 +345,44 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
         camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_w_2);
         camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_h_2);
+
+        RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size());
+        const AreaData& area_data = cd_file.getAreaData()[start_next_goto->area];
+
+        RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
+        const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
+
+        dv_name = dv_data.name;
     }
     else
     {
         camera_pos.x = 0.0f;
         camera_pos.y = 0.0f;
+
+        if (cd_file.getAreaData().size() > 0)
+        {
+            const AreaData& area_data = cd_file.getAreaData()[0];
+
+            RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
+            const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
+
+            dv_name = dv_data.name;
+        }
+        else
+        {
+            dv_name = "Nohara";
+        }
     }
+
+    RIO_ASSERT(dv_name != nullptr);
+
+    const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
+    RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
+
+    DistantViewMgr::instance()->initialize(dv_name, dv_path);
+
+  //RIO_LOG("Initialized DistantViewMgr\n");
 }
-
-/*
-bool MainWindow::checkButtonPress(u32 idx, rio::Controller::PadIdx button)
-{
-    if (rio::ControllerMgr::instance()->getMainController()->isHold(1 << button))
-        mHoldCounter[idx]++;
-
-    else
-    {
-        mHoldCounter[idx] = 0;
-        if (mWaitForRelease[idx])
-            mWaitForRelease[idx] = false;
-    }
-
-    if (!mWaitForRelease[idx] && mHoldCounter[idx] >*//*= 60 * 3*//* 0)
-    {
-        mWaitForRelease[idx] = true;
-        return true;
-    }
-
-    return false;
-}
-*/
 
 void MainWindow::calc_()
 {
@@ -279,13 +415,36 @@ void MainWindow::calc_()
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* 4, */ rio::Controller::PAD_IDX_START))
         mBlendEnable = !mBlendEnable;
 
-    rio::Window::instance()->clearColor(
-        119 / 255.f,
-        136 / 255.f,
-        153 / 255.f
-    );
-    rio::Window::instance()->clearDepthStencil();
+    DistantViewMgr::instance()->update();
+}
 
+void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
+{
+    DistantViewMgr::instance()->calcMdl();
+}
+
+void MainWindow::dv_CalcGPU_(const rio::lyr::DrawInfo& draw_info)
+{
+    DistantViewMgr::instance()->calcGPU();
+}
+
+void MainWindow::dv_DrawOpa_(const rio::lyr::DrawInfo& draw_info)
+{
+    DistantViewMgr::instance()->drawOpa();
+}
+
+void MainWindow::dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info)
+{
+    DistantViewMgr::instance()->drawXlu();
+}
+
+void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
+{
+    DistantViewMgr::instance()->applyDepthOfField();
+}
+
+void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
+{
     rio::PrimitiveRenderer::instance()->setCamera(mCamera);
 
     if (mCurrentFile != -1)

@@ -14,7 +14,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+# *.dll
 
 # Fortran module files
 *.mod
@@ -27,7 +27,7 @@
 *.lib
 
 # Executables
-*.exe
+# *.exe
 *.out
 *.app
 
@@ -38,10 +38,14 @@
 
 # Wii U build files
 build/
-Makefile
-*.elf
-*.rpx
+bin/fs/code/*.elf
+bin/fs/code/*.rpx
+
+# Windows build files
+bin/*.exe
+bin/*.dll
 
 # Test files
-*.szs
-*.sarc
+bin/fs/content/game/
+bin/fs/content/shaders/agl_shader_temp_out.*
+bin/fs/content/shaders/cache/
