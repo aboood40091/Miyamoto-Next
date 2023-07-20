@@ -524,9 +524,15 @@ rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
 
 void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
 {
+    mDrawDV = true;
+    mRestoreScissor = false;
+
     if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
     {
+        mDrawDV = false;
+
         RIO_ASSERT(mCurrentFile != -1);
+
         const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
         const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
 
@@ -577,32 +583,43 @@ void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
             const rio::BaseVec2f& visible_area_max = worldToScreenPos(visible_area_world_max);
 
             rio::Graphics::setScissor(visible_area_min.x, visible_area_max.y, visible_area_max.x - visible_area_min.x, visible_area_min.y - visible_area_max.y);
+
+            mDrawDV = true;
+            mRestoreScissor = true;
         }
     }
 
-    DistantViewMgr::instance()->calcMdl();
+    if (mDrawDV)
+        DistantViewMgr::instance()->calcMdl();
 }
 
 void MainWindow::dv_CalcGPU_(const rio::lyr::DrawInfo& draw_info)
 {
-    DistantViewMgr::instance()->calcGPU();
+    if (mDrawDV)
+        DistantViewMgr::instance()->calcGPU();
 }
 
 void MainWindow::dv_DrawOpa_(const rio::lyr::DrawInfo& draw_info)
 {
-    DistantViewMgr::instance()->drawOpa();
+    if (mDrawDV)
+        DistantViewMgr::instance()->drawOpa();
 }
 
 void MainWindow::dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info)
 {
-    DistantViewMgr::instance()->drawXlu();
+    if (mDrawDV)
+        DistantViewMgr::instance()->drawXlu();
 }
 
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
 {
-    rio::Graphics::setScissor(0, 0, /* s32(rio::Window::instance()->getWidth()) */ 1280, /* s32(rio::Window::instance()->getHeight()) */ 720);
+    if (mDrawDV)
+    {
+        if (mRestoreScissor)
+            rio::Graphics::setScissor(0, 0, /* s32(rio::Window::instance()->getWidth()) */ 1280, /* s32(rio::Window::instance()->getHeight()) */ 720);
 
-    DistantViewMgr::instance()->applyDepthOfField();
+        DistantViewMgr::instance()->applyDepthOfField();
+    }
 }
 
 void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)

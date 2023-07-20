@@ -87,6 +87,9 @@ private:
     f32 mBgZoom;
     s32 mDVControlArea;
 
+    bool mDrawDV;
+    bool mRestoreScissor;
+
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
     rio::Vector2f               mCursorPos;
