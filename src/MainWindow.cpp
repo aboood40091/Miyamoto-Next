@@ -218,7 +218,7 @@ void MainWindow::prepare_()
     mLayerShown[LAYER_2] = true;
 
     setZoomTileSize(24);
-    RIO_LOG("Zoom: %f\n", mBgZoom);
+  //RIO_LOG("Zoom: %f\n", mBgZoom);
 
     mProjection.set(
         -10000.0f,                                   // Near
@@ -653,20 +653,6 @@ void MainWindow::drawCursor_()
             rio::PrimitiveRenderer::QuadArg()
                 .setColor(rio::Color4f::cRed, rio::Color4f::cBlue)
                 .setCenter({ cursor_pos.x, cursor_pos.y, -mProjection.getNear() + 10000.0f })
-                .setSize({ 16.0f, 16.0f })
-        );
-
-        const rio::BaseVec2f& camera_pos = mCamera.pos();
-
-        const f32 screen_world_h = 224 * mBgZoom;
-        const f32 screen_world_w = screen_world_h * 16 / 9;
-
-        const rio::BaseVec2f& screen_center = static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f };
-
-        rio::PrimitiveRenderer::instance()->drawQuad(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f::cRed, rio::Color4f::cBlue)
-                .setCenter({ screen_center.x, screen_center.y, -mProjection.getNear() + 10000.0f })
                 .setSize({ 16.0f, 16.0f })
         );
     }
