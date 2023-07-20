@@ -21,8 +21,22 @@ class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 public:
     MainWindow();
 
+    void setZoom(f32 zoom)
+    {
+        mBgZoom = zoom;
+        mCamera.setZoomScale(/* s32(rio::Window::instance()->getHeight()) */ 720 / (zoom * 224.0f));
+    }
+
+    template <typename T>
+    inline void setZoomTileSize(T tile_size)
+    {
+        setZoom(16.f / tile_size * (/* s32(rio::Window::instance()->getHeight()) */ 720 / 224.0f));
+    }
+
     rio::Vector2f viewToWorldPos(const rio::Vector2f& pos) const;
     rio::Vector3f viewToWorldPos(const rio::Vector3f& pos) const;
+
+    rio::BaseVec2f worldToScreenPos(const rio::BaseVec2f& pos) const;
 
     const rio::Vector2f& getCursorPos() const
     {
@@ -69,6 +83,9 @@ private:
 
     void* mpArchive;
     SharcArchiveRes mArchiveRes;
+
+    f32 mBgZoom;
+    s32 mDVControlArea;
 
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;

@@ -25,7 +25,7 @@
 #include <distant_view/DistantViewMgr.h>
 #include <graphics/ShaderHolder.h>
 
-static const char* level_fname = "8-43.szs";
+static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
 
 MainWindow::MainWindow()
@@ -123,7 +123,11 @@ void MainWindow::prepare_()
 
     mLayer[SCENE_LAYER_DISTANT_VIEW].it = rio::lyr::Renderer::instance()->addLayer("DistantView", SCENE_LAYER_DISTANT_VIEW);
     mLayer[SCENE_LAYER_DISTANT_VIEW].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_DISTANT_VIEW].it);
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearColor({
+        119 / 255.f,
+        136 / 255.f,
+        153 / 255.f
+    });
     mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearDepthStencil();
     mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Calc");
     mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("CalcGPU");
@@ -213,7 +217,8 @@ void MainWindow::prepare_()
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
 
-    mCamera.setZoomScale(24.f / 16.f);
+    setZoomTileSize(24);
+    RIO_LOG("Zoom: %f\n", mBgZoom);
 
     mProjection.set(
         -10000.0f,                                   // Near
@@ -273,6 +278,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     mAreaItem.clear();
 
     Bg& bg = mCourseData.getBg();
+
+    mDVControlArea = -1;
 
     if (!mCourseData.getFile(id))
     {
@@ -369,6 +376,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
             {
                 const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
                 dv_name = dv_data.name;
+                mDVControlArea = area;
             }
             else
             {
@@ -393,6 +401,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
             const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
 
             dv_name = dv_data.name;
+            mDVControlArea = 0;
         }
         else
         {
@@ -405,7 +414,41 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
     RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
-    DistantViewMgr::instance()->initialize(dv_name, dv_path);
+    const f32 screen_world_h = 224 * mBgZoom;
+    const f32 screen_world_w = screen_world_h * 16 / 9;
+
+    rio::BaseVec2f bg_pos;
+    f32 bg_offset_area_bottom_to_screen_bottom;
+    if (mDVControlArea != -1)
+    {
+        const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
+
+        const f32 x =  s32(area_data.offset.x);
+        const f32 y = -s32(area_data.offset.y);
+        const f32 w =  s32(area_data.  size.x);
+        const f32 h =  s32(area_data.  size.y);
+
+        bg_pos.x = x + w * 0.5f;
+        bg_pos.y = y - h * 0.5f;
+
+        const f32 screen_world_bottom = camera_pos.y - screen_world_h;
+
+        bg_offset_area_bottom_to_screen_bottom = screen_world_bottom - (y - h);
+    }
+    else
+    {
+        bg_pos.x = 0.0f;
+        bg_pos.y = 0.0f;
+        bg_offset_area_bottom_to_screen_bottom = 0;
+    }
+
+    DistantViewMgr::instance()->initialize(
+        dv_name, dv_path,
+        bg_pos,
+        static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
+        bg_offset_area_bottom_to_screen_bottom,
+        mBgZoom
+    );
 
   //RIO_LOG("Initialized DistantViewMgr\n");
 }
@@ -441,11 +484,102 @@ void MainWindow::calc_()
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* 4, */ rio::Controller::PAD_IDX_START))
         mBlendEnable = !mBlendEnable;
 
-    DistantViewMgr::instance()->update();
+    const rio::BaseVec2f& camera_pos = mCamera.pos();
+
+    const f32 screen_world_h = 224 * mBgZoom;
+    const f32 screen_world_w = screen_world_h * 16 / 9;
+
+    f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
+    if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
+    {
+        RIO_ASSERT(mCurrentFile != -1);
+        const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
+        const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
+
+        const f32 y = -s32(area_data.offset.y);
+        const f32 h =  s32(area_data.  size.y);
+
+        const f32 screen_world_bottom = camera_pos.y - screen_world_h;
+
+        bg_offset_area_bottom_to_screen_bottom = screen_world_bottom - (y - h);
+    }
+
+    DistantViewMgr::instance()->update(
+        static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
+        bg_offset_area_bottom_to_screen_bottom,
+        mBgZoom
+    );
+}
+
+rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
+{
+    const rio::Vector2f& pos_vec = static_cast<const rio::Vector2f&>(pos);
+    const rio::Vector2f& camera_pos = static_cast<const rio::Vector2f&>(mCamera.pos());
+
+    const f32 screen_world_h = 224 * mBgZoom;
+    const f32 screen_world_w = screen_world_h * 16 / 9;
+
+    return (pos_vec - camera_pos) * (rio::Vector2f{ /* s32(rio::Window::instance()->getWidth()) */ 1280.0f, /* s32(rio::Window::instance()->getHeight()) */ 720.0f } / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
 void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
 {
+    if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
+    {
+        RIO_ASSERT(mCurrentFile != -1);
+        const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
+        const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
+
+        const f32 x =  s32(area_data.offset.x);
+        const f32 y = -s32(area_data.offset.y);
+        const f32 w =  s32(area_data.  size.x);
+        const f32 h =  s32(area_data.  size.y);
+
+        const rio::BaseVec2f& camera_pos = mCamera.pos();
+
+        const f32 screen_world_h = 224 * mBgZoom;
+        const f32 screen_world_w = screen_world_h * 16 / 9;
+
+        const rio::BaseVec2f screen_world_min {
+            camera_pos.x,
+            camera_pos.y - screen_world_h
+        };
+
+        const rio::BaseVec2f screen_world_max {
+            camera_pos.x + screen_world_w,
+            camera_pos.y
+        };
+
+        const rio::BaseVec2f area_world_min {
+            x,
+            y - h
+        };
+
+        const rio::BaseVec2f area_world_max {
+            x + w,
+            y
+        };
+
+        if (screen_world_min.x < area_world_max.x && area_world_min.x < screen_world_max.x &&
+            screen_world_min.y < area_world_max.y && area_world_min.y < screen_world_max.y)
+        {
+            const rio::BaseVec2f visible_area_world_min {
+                std::max<f32>(screen_world_min.x, area_world_min.x),
+                std::max<f32>(screen_world_min.y, area_world_min.y)
+            };
+
+            const rio::BaseVec2f visible_area_world_max {
+                std::min<f32>(screen_world_max.x, area_world_max.x),
+                std::min<f32>(screen_world_max.y, area_world_max.y)
+            };
+
+            const rio::BaseVec2f& visible_area_min = worldToScreenPos(visible_area_world_min);
+            const rio::BaseVec2f& visible_area_max = worldToScreenPos(visible_area_world_max);
+
+            rio::Graphics::setScissor(visible_area_min.x, visible_area_max.y, visible_area_max.x - visible_area_min.x, visible_area_min.y - visible_area_max.y);
+        }
+    }
+
     DistantViewMgr::instance()->calcMdl();
 }
 
@@ -466,6 +600,8 @@ void MainWindow::dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info)
 
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
 {
+    rio::Graphics::setScissor(0, 0, /* s32(rio::Window::instance()->getWidth()) */ 1280, /* s32(rio::Window::instance()->getHeight()) */ 720);
+
     DistantViewMgr::instance()->applyDepthOfField();
 }
 
@@ -517,6 +653,20 @@ void MainWindow::drawCursor_()
             rio::PrimitiveRenderer::QuadArg()
                 .setColor(rio::Color4f::cRed, rio::Color4f::cBlue)
                 .setCenter({ cursor_pos.x, cursor_pos.y, -mProjection.getNear() + 10000.0f })
+                .setSize({ 16.0f, 16.0f })
+        );
+
+        const rio::BaseVec2f& camera_pos = mCamera.pos();
+
+        const f32 screen_world_h = 224 * mBgZoom;
+        const f32 screen_world_w = screen_world_h * 16 / 9;
+
+        const rio::BaseVec2f& screen_center = static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f };
+
+        rio::PrimitiveRenderer::instance()->drawQuad(
+            rio::PrimitiveRenderer::QuadArg()
+                .setColor(rio::Color4f::cRed, rio::Color4f::cBlue)
+                .setCenter({ screen_center.x, screen_center.y, -mProjection.getNear() + 10000.0f })
                 .setSize({ 16.0f, 16.0f })
         );
     }
