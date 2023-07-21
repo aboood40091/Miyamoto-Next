@@ -416,6 +416,9 @@ bool BgUnitFile::load(std::span<const u8> data)
 
             tex_native.surface.image = image;
             tex_native.surface.mipmaps = mipmaps;
+
+            GX2CalcSurfaceSizeAndAlignment(&tex_native.surface);
+            GX2InitTextureRegs(&tex_native);
         }
         // Normal texture
         {
@@ -453,6 +456,9 @@ bool BgUnitFile::load(std::span<const u8> data)
 
             nml_native.surface.image = image;
             nml_native.surface.mipmaps = mipmaps;
+
+            GX2CalcSurfaceSizeAndAlignment(&nml_native.surface);
+            GX2InitTextureRegs(&nml_native);
         }
 #elif RIO_IS_WIN
         GFDFile tex_gfd;
