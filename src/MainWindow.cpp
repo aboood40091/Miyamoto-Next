@@ -269,6 +269,81 @@ void MainWindow::exit_()
 #endif // RIO_IS_CAFE
 }
 
+namespace {
+
+static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
+{
+    static const f32 FLOAT_ARRAY_1022ced0[12] = {
+        1.0000000f,
+        1.0000000f,
+        1.0000000f,
+        1.4285715f,
+        1.3571428f,
+        1.2142857f,
+        1.2142857f,
+        1.2142857f,
+        0.5000000f,
+        1.2142857f,
+        1.2142857f,
+        1.4285715f
+    };
+
+    static const f32 FLOAT_ARRAY_1022d020[9] = {
+        1.0f,
+        1.0f,
+        1.0f,
+        1.3571428f,
+        1.3571428f,
+        1.3571428f,
+        1.2142857f,
+        1.2142857f,
+        1.2142857f
+    };
+
+    static const f32 FLOAT_ARRAY_1022cea8[10] = {
+        1.0000000f,
+        1.3571428f,
+        1.7142857f,
+        2.0000000f,
+        1.2142857f,
+        1.4285715f,
+        1.1428572f,
+        2.0000000f,
+        0.5000000f,
+        0.7500000f
+    };
+
+    switch (zoom_type)
+    {
+    case 0:
+    case 1:
+    case 6:
+    case 7:
+        return FLOAT_ARRAY_1022ced0[zoom_id >= 12 ? 0 : zoom_id];
+    case 2:
+        return FLOAT_ARRAY_1022d020[zoom_id >= 9 ? 0 : zoom_id];
+    case 3:
+    case 4:
+    case 5:
+    default:
+        return FLOAT_ARRAY_1022cea8[zoom_id >= 10 ? 0 : zoom_id];
+    }
+
+    /*
+    if (zoom_type > 1) {
+        if (zoom_type == 2) {
+            return FLOAT_ARRAY_1022d020[zoom_id >= 9 ? 0 : zoom_id];
+        }
+        if ((zoom_type < 6) || (zoom_type > 7)) {
+            return FLOAT_ARRAY_1022cea8[zoom_id >= 10 ? 0 : zoom_id];
+        }
+    }
+    return FLOAT_ARRAY_1022ced0[zoom_id >= 12 ? 0 : zoom_id];
+    */
+}
+
+}
+
 void MainWindow::setCurrentCourseDataFile(u32 id)
 {
     // Clear items
@@ -428,8 +503,21 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         const f32 w =  s32(area_data.  size.x);
         const f32 h =  s32(area_data.  size.y);
 
+        setZoom(
+            std::min<f32>(
+                std::min<f32>(
+                    std::min<f32>(
+                        w / 398.22222222222222f,
+                        h / 224.0f
+                    ),
+                    2.0f
+                ),
+                GetZoomMult(area_data.zoom_type, area_data.zoom_id)
+            )
+        );
+
         bg_pos.x = x + w * 0.5f;
-        bg_pos.y = y - h * 0.5f;
+        bg_pos.y = (y - h) + 0.5f * mBgZoom * 224.0f;
 
         const f32 screen_world_bottom = camera_pos.y - screen_world_h;
 
