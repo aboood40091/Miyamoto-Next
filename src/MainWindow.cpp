@@ -328,18 +328,6 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
     default:
         return FLOAT_ARRAY_1022cea8[zoom_id >= 10 ? 0 : zoom_id];
     }
-
-    /*
-    if (zoom_type > 1) {
-        if (zoom_type == 2) {
-            return FLOAT_ARRAY_1022d020[zoom_id >= 9 ? 0 : zoom_id];
-        }
-        if ((zoom_type < 6) || (zoom_type > 7)) {
-            return FLOAT_ARRAY_1022cea8[zoom_id >= 10 ? 0 : zoom_id];
-        }
-    }
-    return FLOAT_ARRAY_1022ced0[zoom_id >= 12 ? 0 : zoom_id];
-    */
 }
 
 }
