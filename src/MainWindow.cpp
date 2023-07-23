@@ -413,6 +413,58 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     const char* dv_name = nullptr;
 
+    u8 area;
+
+    if (cd_file.getAreaData().size() > 0)
+    {
+        if (start_next_goto)
+        {
+          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size());
+            area =
+                (start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size())
+                    ? start_next_goto->area
+                    : 0;
+        }
+        else
+        {
+            area = 0;
+        }
+
+        const AreaData& area_data = cd_file.getAreaData()[area];
+
+      //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
+        if (area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size())
+        {
+            const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
+            dv_name = dv_data.name;
+            mDVControlArea = area;
+
+            const f32 w = s32(area_data.size.x);
+            const f32 h = s32(area_data.size.y);
+
+            setZoom(
+                std::min<f32>(
+                    std::min<f32>(
+                        std::min<f32>(
+                            w / 398.22222222222222f,
+                            h / 224.0f
+                        ),
+                        2.0f
+                    ),
+                    GetZoomMult(area_data.zoom_type, area_data.zoom_id)
+                )
+            );
+        }
+        else
+        {
+            dv_name = "Nohara";
+        }
+    }
+    else
+    {
+        dv_name = "Nohara";
+    }
+
     if (start_next_goto)
     {
         const f32 window_w = s32(rio::Window::instance()->getWidth());
@@ -423,53 +475,11 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
         camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_w_2);
         camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_h_2);
-
-        if (cd_file.getAreaData().size() > 0)
-        {
-          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size());
-            u8 area =
-                (start_next_goto->area >= 0 && start_next_goto->area < cd_file.getAreaData().size())
-                    ? start_next_goto->area
-                    : 0;
-
-            const AreaData& area_data = cd_file.getAreaData()[area];
-
-          //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
-            if (area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size())
-            {
-                const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
-                dv_name = dv_data.name;
-                mDVControlArea = area;
-            }
-            else
-            {
-                dv_name = "Nohara";
-            }
-        }
-        else
-        {
-            dv_name = "Nohara";
-        }
     }
     else
     {
         camera_pos.x = 0.0f;
         camera_pos.y = 0.0f;
-
-        if (cd_file.getAreaData().size() > 0)
-        {
-            const AreaData& area_data = cd_file.getAreaData()[0];
-
-            RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < cd_file.getDistantViewData().size());
-            const DistantViewData& dv_data = cd_file.getDistantViewData()[area_data.bg2];
-
-            dv_name = dv_data.name;
-            mDVControlArea = 0;
-        }
-        else
-        {
-            dv_name = "Nohara";
-        }
     }
 
     RIO_ASSERT(dv_name != nullptr);
@@ -490,19 +500,6 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         const f32 y = -s32(area_data.offset.y);
         const f32 w =  s32(area_data.  size.x);
         const f32 h =  s32(area_data.  size.y);
-
-        setZoom(
-            std::min<f32>(
-                std::min<f32>(
-                    std::min<f32>(
-                        w / 398.22222222222222f,
-                        h / 224.0f
-                    ),
-                    2.0f
-                ),
-                GetZoomMult(area_data.zoom_type, area_data.zoom_id)
-            )
-        );
 
         bg_pos.x = x + w * 0.5f;
         bg_pos.y = (y - h) + 0.5f * mBgZoom * 224.0f;
