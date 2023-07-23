@@ -8,7 +8,7 @@
 #include <item/AreaItem.h>
 #include <item/LocationItem.h>
 #include <item/NextGotoItem.h>
-#include <item/SpriteItem.h>
+#include <item/MapActorItem.h>
 
 #include <resource/SharcArchiveRes.h>
 
@@ -100,7 +100,7 @@ private:
     s32                         mCurrentFile;
 
     std::vector<NextGotoItem>   mNextGotoItem;
-    std::vector<SpriteItem>     mSpriteItem;
+    std::vector<MapActorItem>   mMapActorItem;
     std::vector<AreaItem>       mAreaItem;
     std::vector<LocationItem>   mLocationItem;
 

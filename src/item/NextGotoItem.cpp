@@ -9,8 +9,8 @@ static const rio::Color4f sColor{
     120 / 255.f
 };
 
-NextGotoItem::NextGotoItem(NextGoto& sprite)
-    : mNextGoto(sprite)
+NextGotoItem::NextGotoItem(NextGoto& next_goto)
+    : mNextGoto(next_goto)
 {
 }
 

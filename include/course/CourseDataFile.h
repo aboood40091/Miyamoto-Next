@@ -51,8 +51,8 @@ struct CourseDataFileHeader
             Block   distant_view_data;  // 5
             Block   _block6;            // 6
             Block   next_goto;          // 7
-            Block   sprite;             // 8
-            Block   sprite_load_res;    // 9
+            Block   map_actor_data;     // 8
+            Block   map_actor_res;      // 9
             Block   area_data;          // 10
             Block   location;           // 11
             Block   _block12;           // 12
@@ -165,7 +165,7 @@ struct NextGoto
 };
 static_assert(sizeof(NextGoto) == 0x18);
 
-struct Sprite
+struct MapActorData
 {
     // Official name not known.
 
@@ -184,7 +184,7 @@ struct Sprite
     u8  init_state;
     u8  _pad[3];
 };
-static_assert(sizeof(Sprite) == 0x18);
+static_assert(sizeof(MapActorData) == 0x18);
 
 struct AreaData
 {
@@ -389,13 +389,13 @@ public:
         return mNextGoto;
     }
 
-    std::vector<Sprite>& getSprite()
+    std::vector<MapActorData>& getMapActorData()
     {
-        return mSprite;
+        return mMapActorData;
     }
-    const std::vector<Sprite>& getSprite() const
+    const std::vector<MapActorData>& getMapActorData() const
     {
-        return mSprite;
+        return mMapActorData;
     }
 
     /*
@@ -478,8 +478,8 @@ private:
     std::vector<DistantViewData>    mDistantViewData;   // 5
                                                         // 6
     std::vector<NextGoto>           mNextGoto;          // 7
-    std::vector<Sprite>             mSprite;            // 8
-                                                        // 9 (List of used sprites' ids)
+    std::vector<MapActorData>       mMapActorData;      // 8
+                                                        // 9 (List of used map actors' ids)
     std::vector<AreaData>           mAreaData;          // 10
     std::vector<Location>           mLocation;          // 11
                                                         // 12

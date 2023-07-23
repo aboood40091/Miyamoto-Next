@@ -19,8 +19,8 @@ enum
     CD_FILE_BLOCK_DISTANT_VIEW_DATA =   5 - 1,
                                     //  6
     CD_FILE_BLOCK_NEXT_GOTO         =   7 - 1,
-    CD_FILE_BLOCK_SPRITE            =   8 - 1,
-    CD_FILE_BLOCK_SPRITE_LOAD_RES   =   9 - 1,
+    CD_FILE_BLOCK_MAP_ACTOR_DATA    =   8 - 1,
+    CD_FILE_BLOCK_MAP_ACTOR_RES     =   9 - 1,
     CD_FILE_BLOCK_AREA_DATA         =  10 - 1,
     CD_FILE_BLOCK_LOCATION          =  11 - 1,
                                     // 12

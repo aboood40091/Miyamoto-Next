@@ -335,7 +335,7 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 void MainWindow::setCurrentCourseDataFile(u32 id)
 {
     // Clear items
-    mSpriteItem.clear();
+    mMapActorItem.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
     mAreaItem.clear();
@@ -370,8 +370,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     bg.processBgCourseData(cd_file);
     mBgRenderer.createVertexBuffer(bg);
 
-    for (Sprite& sprite : cd_file.getSprite())
-        mSpriteItem.emplace_back(sprite);
+    for (MapActorData& map_actor_data : cd_file.getMapActorData())
+        mMapActorItem.emplace_back(map_actor_data);
 
     for (NextGoto& next_goto : cd_file.getNextGoto())
         mNextGotoItem.emplace_back(next_goto);
@@ -717,7 +717,7 @@ void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
         if (mLayerShown[LAYER_1])
             mBgRenderer.render(LAYER_1, bg, cd_file);
 
-        for (const auto& item : mSpriteItem)
+        for (const auto& item : mMapActorItem)
             item.draw();
 
         for (const auto& item : mNextGotoItem)

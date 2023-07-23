@@ -1,4 +1,4 @@
-#include <item/SpriteItem.h>
+#include <item/MapActorItem.h>
 
 #include <gfx/rio_PrimitiveRenderer.h>
 
@@ -9,18 +9,18 @@ static const rio::Color4f sColor{
     120 / 255.f
 };
 
-SpriteItem::SpriteItem(Sprite& sprite)
-    : mSprite(sprite)
+MapActorItem::MapActorItem(MapActorData& map_actor_data)
+    : mMapActorData(map_actor_data)
 {
 }
 
-void SpriteItem::draw() const
+void MapActorItem::draw() const
 {
     rio::PrimitiveRenderer::instance()->begin();
     {
-        f32 z = (mSprite.layer == LAYER_1) ? 2200.0f : -2500.0f; // Only layer 1 and 2
+        f32 z = (mMapActorData.layer == LAYER_1) ? 2200.0f : -2500.0f; // Only layer 1 and 2
 
-        rio::Vector3f offs { f32(mSprite.offset.x + 8), -f32(mSprite.offset.y + 8), z };
+        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), z };
         rio::Vector2f size { 16.0f, 16.0f };
 
         rio::PrimitiveRenderer::instance()->drawQuad(

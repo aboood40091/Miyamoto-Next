@@ -170,19 +170,19 @@ void CourseDataFile::loadFile_(const CourseDataFileHeader* p_header)
 
     // Block 8
     {
-        u32 size = p_header->getBlockSize(CD_FILE_BLOCK_SPRITE) - sizeof(u32);
-        RIO_ASSERT(size % sizeof(Sprite) == 0);
-        u32 count = size / sizeof(Sprite);
+        u32 size = p_header->getBlockSize(CD_FILE_BLOCK_MAP_ACTOR_DATA) - sizeof(u32);
+        RIO_ASSERT(size % sizeof(MapActorData) == 0);
+        u32 count = size / sizeof(MapActorData);
 
-        mSprite.resize(count);
+        mMapActorData.resize(count);
 
-        const Sprite* p_src = (const Sprite*)p_header->getBlock(CD_FILE_BLOCK_SPRITE);
+        const MapActorData* p_src = (const MapActorData*)p_header->getBlock(CD_FILE_BLOCK_MAP_ACTOR_DATA);
         RIO_ASSERT(*(u32*)(p_src + count) == u32(-1));
 
         for (u32 i = 0; i < count; i++)
         {
-            const Sprite&   src = p_src[i];
-            Sprite&         dst = mSprite[i];
+            const MapActorData& src = p_src[i];
+            MapActorData&       dst = mMapActorData[i];
 
             dst.id          = CD_FILE_READ_16_BE(src.id);
             dst.offset.x    = CD_FILE_READ_16_BE(src.offset.x);
@@ -315,15 +315,15 @@ void CourseDataFile::loadFile_(const CourseDataFileHeader* p_header)
 
 std::span<u8> CourseDataFile::saveFile_() const
 {
-    std::set<u16> used_sprites;
-    for (const Sprite& sprite : mSprite)
-        used_sprites.insert(sprite.id);
+    std::set<u16> used_map_actors;
+    for (const MapActorData& map_actor_data : mMapActorData)
+        used_map_actors.insert(map_actor_data.id);
 
     const u32 scroll_data_num       = mScrollData.size();
     const u32 distant_view_data_num = mDistantViewData.size();
     const u32 next_goto_num         = mNextGoto.size();
-    const u32 sprite_num            = mSprite.size();
-    const u32 used_sprites_num      = used_sprites.size();
+    const u32 map_actor_num         = mMapActorData.size();
+    const u32 used_map_actors_num   = used_map_actors.size();
     const u32 area_data_num         = mAreaData.size();
     const u32 location_num          = mLocation.size();
     const u32 rail_num              = mRailInfo.size();
@@ -358,13 +358,13 @@ std::span<u8> CourseDataFile::saveFile_() const
     header.next_goto.size = sizeof(NextGoto) * next_goto_num;
     file_size += header.next_goto.size;
 
-    header.sprite.offset = file_size;
-    header.sprite.size = sizeof(Sprite) * sprite_num + sizeof(u32);
-    file_size += header.sprite.size;
+    header.map_actor_data.offset = file_size;
+    header.map_actor_data.size = sizeof(MapActorData) * map_actor_num + sizeof(u32);
+    file_size += header.map_actor_data.size;
 
-    header.sprite_load_res.offset = file_size;
-    header.sprite_load_res.size = (2 * sizeof(u16)) * used_sprites_num;
-    file_size += header.sprite_load_res.size;
+    header.map_actor_res.offset = file_size;
+    header.map_actor_res.size = (2 * sizeof(u16)) * used_map_actors_num;
+    file_size += header.map_actor_res.size;
 
     header.area_data.offset = file_size;
     header.area_data.size = sizeof(AreaData) * area_data_num;
@@ -494,13 +494,13 @@ std::span<u8> CourseDataFile::saveFile_() const
 
     // Block 8
     {
-        Sprite* p_dst = (Sprite*)(file + header.sprite.offset);
-        *(u32*)(p_dst + sprite_num) = u32(-1);
+        MapActorData* p_dst = (MapActorData*)(file + header.map_actor_data.offset);
+        *(u32*)(p_dst + map_actor_num) = u32(-1);
 
-        for (u32 i = 0; i < sprite_num; i++)
+        for (u32 i = 0; i < map_actor_num; i++)
         {
-            const Sprite&   src = mSprite[i];
-            Sprite&         dst = p_dst[i];
+            const MapActorData& src = mMapActorData[i];
+            MapActorData&       dst = p_dst[i];
 
             dst.id          = CD_FILE_READ_16_BE(src.id);
             dst.offset.x    = CD_FILE_READ_16_BE(src.offset.x);
@@ -518,10 +518,10 @@ std::span<u8> CourseDataFile::saveFile_() const
 
     // Block 9
     {
-        u16* p_dst = (u16*)(file + header.sprite_load_res.offset);
+        u16* p_dst = (u16*)(file + header.map_actor_res.offset);
 
-        auto it = used_sprites.cbegin();
-        for (u32 i = 0; i < used_sprites_num; std::advance(it, 1), i++)
+        auto it = used_map_actors.cbegin();
+        for (u32 i = 0; i < used_map_actors_num; std::advance(it, 1), i++)
             p_dst[i * 2] = CD_FILE_READ_16_BE(*it);
 
     }
@@ -703,7 +703,7 @@ void CourseDataFile::clear()
     mScrollData.clear();
     mDistantViewData.clear();
     mNextGoto.clear();
-    mSprite.clear();
+    mMapActorData.clear();
     mAreaData.clear();
     mLocation.clear();
     mRailInfo.clear();
