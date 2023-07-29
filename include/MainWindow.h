@@ -5,6 +5,9 @@
 
 #include <graphics/OrthoCamera.h>
 
+#include <graphics/RenderMgr.h>
+#include <graphics/RenderObjLayer.h>
+
 #include <item/AreaItem.h>
 #include <item/LocationItem.h>
 #include <item/NextGotoItem.h>
@@ -15,6 +18,8 @@
 #include <gfx/rio_Projection.h>
 #include <gfx/lyr/rio_Layer.h>
 #include <task/rio_Task.h>
+
+class RenderObjLayer;
 
 class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 {
@@ -48,6 +53,11 @@ public:
         return viewToWorldPos(mCursorPos);
     }
 
+    RenderObjLayer* getDistantViewLayer() const
+    {
+        return static_cast<RenderObjLayer*>(mLayer[SCENE_LAYER_DISTANT_VIEW].ptr);
+    }
+
     void setCurrentCourseDataFile(u32 id);
 
 private:
@@ -59,19 +69,19 @@ private:
     void updateCursorPos_();
     void drawCursor_();
 
-    void dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info);
-    void dv_CalcGPU_(const rio::lyr::DrawInfo& draw_info);
-    void dv_DrawOpa_(const rio::lyr::DrawInfo& draw_info);
-    void dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info);
-    void dv_PostFx_ (const rio::lyr::DrawInfo& draw_info);
+    void gather_ (const rio::lyr::DrawInfo&);
+    void dispose_(const rio::lyr::DrawInfo&);
 
-    void bg_Render_ (const rio::lyr::DrawInfo& draw_info);
+    void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
+    void bg_Render_(const rio::lyr::DrawInfo& draw_info);
 
 private:
     enum SceneLayer
     {
-        SCENE_LAYER_BG = 0,
+        SCENE_LAYER_DISPOSE = 0,
+        SCENE_LAYER_BG,
         SCENE_LAYER_DISTANT_VIEW,
+        SCENE_LAYER_GATHER,
         SCENE_LAYER_NUM
     };
 
@@ -87,8 +97,9 @@ private:
     f32 mBgZoom;
     s32 mDVControlArea;
 
+    RenderMgr mDVRenderMgr;
+
     bool mDrawDV;
-    bool mRestoreScissor;
 
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;

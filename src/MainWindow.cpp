@@ -23,6 +23,7 @@
 #include <utility/aglVertexAttributeHolder.h>
 
 #include <distant_view/DistantViewMgr.h>
+#include <graphics/Renderer.h>
 #include <graphics/ShaderHolder.h>
 
 static const char* level_fname = "1-1.szs";
@@ -31,6 +32,7 @@ static const std::string nsmbu_content_path = "game/nsmbu";
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
 {
+    rio::MemUtil::set(mLayer, 0, sizeof(mLayer));
 }
 
 rio::Vector2f MainWindow::viewToWorldPos(const rio::Vector2f& pos) const
@@ -121,24 +123,28 @@ void MainWindow::prepare_()
 {
   //RIO_LOG("MainWindow::prepare_(): start\n");
 
-    mLayer[SCENE_LAYER_DISTANT_VIEW].it = rio::lyr::Renderer::instance()->addLayer("DistantView", SCENE_LAYER_DISTANT_VIEW);
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_DISTANT_VIEW].it);
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearColor({
+    mLayer[SCENE_LAYER_GATHER].it = rio::lyr::Renderer::instance()->addLayer("Gather", SCENE_LAYER_GATHER);
+    mLayer[SCENE_LAYER_GATHER].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_GATHER].it);
+    mLayer[SCENE_LAYER_GATHER].ptr->addRenderStep("Gather");
+    mLayer[SCENE_LAYER_GATHER].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::gather_));
+
+    mLayer[SCENE_LAYER_GATHER].ptr->setClearColor({
         119 / 255.f,
         136 / 255.f,
         153 / 255.f
     });
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->setClearDepthStencil();
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Calc");
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("CalcGPU");
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Opa");
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("Xlu");
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addRenderStep("PostFx");
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::dv_CalcMdl_));
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(1, rio::lyr::DrawMethod(this, &MainWindow::dv_CalcGPU_));
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(2, rio::lyr::DrawMethod(this, &MainWindow::dv_DrawOpa_));
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(3, rio::lyr::DrawMethod(this, &MainWindow::dv_DrawXlu_));
-    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr->addDrawMethod(4, rio::lyr::DrawMethod(this, &MainWindow::dv_PostFx_));
+    mLayer[SCENE_LAYER_GATHER].ptr->setClearDepthStencil();
+
+    mLayer[SCENE_LAYER_DISPOSE].it = rio::lyr::Renderer::instance()->addLayer("Dispose", SCENE_LAYER_DISPOSE);
+    mLayer[SCENE_LAYER_DISPOSE].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_DISPOSE].it);
+    mLayer[SCENE_LAYER_DISPOSE].ptr->addRenderStep("Dispose");
+    mLayer[SCENE_LAYER_DISPOSE].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::dispose_));
+
+    mLayer[SCENE_LAYER_DISTANT_VIEW].it = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", SCENE_LAYER_DISTANT_VIEW);
+    mLayer[SCENE_LAYER_DISTANT_VIEW].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_DISTANT_VIEW].it);
+    getDistantViewLayer()->initialize();
+    getDistantViewLayer()->setRenderMgr(&mDVRenderMgr);
+    getDistantViewLayer()->addDrawMethod(RenderObjLayer::cRenderStep_PostFx, rio::lyr::DrawMethod(this, &MainWindow::dv_PostFx_));
 
     mLayer[SCENE_LAYER_BG].it = rio::lyr::Renderer::instance()->addLayer("BG", SCENE_LAYER_BG);
     mLayer[SCENE_LAYER_BG].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_BG].it);
@@ -207,6 +213,10 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
+    Renderer::createSingleton();
+
+  //RIO_LOG("Initialized Renderer\n");
+
     DistantViewMgr::createSingleton();
     DistantViewMgr::instance()->setFlickerEnable(false);
 
@@ -217,7 +227,7 @@ void MainWindow::prepare_()
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
 
-    setZoomTileSize(24);
+  //setZoomTileSize(24);
   //RIO_LOG("Zoom: %f\n", mBgZoom);
 
     mProjection.set(
@@ -247,6 +257,8 @@ void MainWindow::prepare_()
 void MainWindow::exit_()
 {
     DistantViewMgr::destroySingleton();
+
+    Renderer::destroySingleton();
 
     ShaderHolder::destroySingleton();
 
@@ -578,6 +590,7 @@ void MainWindow::calc_()
     }
 
     DistantViewMgr::instance()->update(
+        getDistantViewLayer(),
         static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
@@ -595,10 +608,11 @@ rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
     return (pos_vec - camera_pos) * (rio::Vector2f{ /* s32(rio::Window::instance()->getWidth()) */ 1280.0f, /* s32(rio::Window::instance()->getHeight()) */ 720.0f } / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
-void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
+void MainWindow::gather_(const rio::lyr::DrawInfo&)
 {
+    getDistantViewLayer()->resetScissor();
+
     mDrawDV = true;
-    mRestoreScissor = false;
 
     if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
     {
@@ -655,44 +669,27 @@ void MainWindow::dv_CalcMdl_(const rio::lyr::DrawInfo& draw_info)
             const rio::BaseVec2f& visible_area_min = worldToScreenPos(visible_area_world_min);
             const rio::BaseVec2f& visible_area_max = worldToScreenPos(visible_area_world_max);
 
-            rio::Graphics::setScissor(visible_area_min.x, visible_area_max.y, visible_area_max.x - visible_area_min.x, visible_area_min.y - visible_area_max.y);
+            getDistantViewLayer()->setScissor(visible_area_min.x, visible_area_max.y, visible_area_max.x - visible_area_min.x, visible_area_min.y - visible_area_max.y);
 
             mDrawDV = true;
-            mRestoreScissor = true;
         }
     }
 
     if (mDrawDV)
-        DistantViewMgr::instance()->calcMdl();
+        DistantViewMgr::instance()->draw(getDistantViewLayer());
+
+    mDVRenderMgr.calc();
 }
 
-void MainWindow::dv_CalcGPU_(const rio::lyr::DrawInfo& draw_info)
+void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 {
-    if (mDrawDV)
-        DistantViewMgr::instance()->calcGPU();
-}
-
-void MainWindow::dv_DrawOpa_(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mDrawDV)
-        DistantViewMgr::instance()->drawOpa();
-}
-
-void MainWindow::dv_DrawXlu_(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mDrawDV)
-        DistantViewMgr::instance()->drawXlu();
+    mDVRenderMgr.clear();
 }
 
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
 {
     if (mDrawDV)
-    {
-        if (mRestoreScissor)
-            rio::Graphics::setScissor(0, 0, /* s32(rio::Window::instance()->getWidth()) */ 1280, /* s32(rio::Window::instance()->getHeight()) */ 720);
-
         DistantViewMgr::instance()->applyDepthOfField();
-    }
 }
 
 void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
