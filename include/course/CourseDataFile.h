@@ -112,7 +112,7 @@ static_assert(sizeof(ScrollData) == 0x1C);
 
 struct DistantViewData
 {
-    // Not certain if official name, but official name in NSMBW is Bg (which is conflicting with tile layers)
+    // Not certain if official name, but official name in NSMBW is Bg2 (which is conflicting with tile layers)
 
     u16     id;
     struct
@@ -188,7 +188,7 @@ static_assert(sizeof(MapActorData) == 0x18);
 
 struct AreaData
 {
-    // Is the official name. Called zone by the modding community.
+    // Is the official name. Called "zone" by the modding community.
 
     // NSMBW
     struct

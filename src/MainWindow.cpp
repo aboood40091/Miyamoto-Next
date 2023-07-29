@@ -221,12 +221,12 @@ void MainWindow::prepare_()
   //RIO_LOG("Zoom: %f\n", mBgZoom);
 
     mProjection.set(
-        -10000.0f,                                   // Near
-         20000.0f,                                   // Far
-         0.0f,                                       // Top
-        -s32(rio::Window::instance()->getHeight()),  // Bottom
-         0.0f,                                       // Left
-         s32(rio::Window::instance()->getWidth())    // Right
+         1.0f,                                      // Near
+         20000.0f,                                  // Far
+         0.0f,                                      // Top
+        -s32(rio::Window::instance()->getHeight()), // Bottom
+         0.0f,                                      // Left
+         s32(rio::Window::instance()->getWidth())   // Right
     );
 
     rio::PrimitiveRenderer::instance()->setProjection(mProjection);
