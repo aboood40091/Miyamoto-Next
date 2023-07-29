@@ -69,6 +69,8 @@ private:
     void updateCursorPos_();
     void drawCursor_();
 
+    void calcDistantViewScissor_();
+
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
 

@@ -595,6 +595,8 @@ void MainWindow::calc_()
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
     );
+
+    calcDistantViewScissor_();
 }
 
 rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
@@ -608,7 +610,7 @@ rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
     return (pos_vec - camera_pos) * (rio::Vector2f{ /* s32(rio::Window::instance()->getWidth()) */ 1280.0f, /* s32(rio::Window::instance()->getHeight()) */ 720.0f } / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
-void MainWindow::gather_(const rio::lyr::DrawInfo&)
+void MainWindow::calcDistantViewScissor_()
 {
     getDistantViewLayer()->resetScissor();
 
@@ -674,7 +676,10 @@ void MainWindow::gather_(const rio::lyr::DrawInfo&)
             mDrawDV = true;
         }
     }
+}
 
+void MainWindow::gather_(const rio::lyr::DrawInfo&)
+{
     if (mDrawDV)
         DistantViewMgr::instance()->draw(getDistantViewLayer());
 
