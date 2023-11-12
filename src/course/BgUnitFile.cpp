@@ -7,191 +7,10 @@
 #include <cstring>
 
 #if RIO_IS_CAFE
-
 #include <gfd.h>
 #include <gx2/mem.h>
-
 #elif RIO_IS_WIN
-
 #include <ninTexUtils/gfd/gfdStruct.h>
-
-static inline bool RIOTexFormatToNativeTextureFormat(rio::NativeSurface2D& surface)
-{
-    switch (surface.format)
-    {
-    case rio::TEXTURE_FORMAT_R8_UNORM:
-        surface.nativeFormat.internalformat = GL_R8;
-        surface.nativeFormat.format = GL_RED;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_UINT:
-        surface.nativeFormat.internalformat = GL_R8UI;
-        surface.nativeFormat.format = GL_RED_INTEGER;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_SNORM:
-        surface.nativeFormat.internalformat = GL_R8_SNORM;
-        surface.nativeFormat.format = GL_RED;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_SINT:
-        surface.nativeFormat.internalformat = GL_R8I;
-        surface.nativeFormat.format = GL_RED_INTEGER;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_UNORM:
-        surface.nativeFormat.internalformat = GL_RG8;
-        surface.nativeFormat.format = GL_RG;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_UINT:
-        surface.nativeFormat.internalformat = GL_RG8UI;
-        surface.nativeFormat.format = GL_RG_INTEGER;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_SNORM:
-        surface.nativeFormat.internalformat = GL_RG8_SNORM;
-        surface.nativeFormat.format = GL_RG;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_SINT:
-        surface.nativeFormat.internalformat = GL_RG8I;
-        surface.nativeFormat.format = GL_RG_INTEGER;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R5_G6_B5_UNORM:
-        surface.nativeFormat.internalformat = GL_RGB565;
-        surface.nativeFormat.format = GL_RGB;
-        surface.nativeFormat.type = GL_UNSIGNED_SHORT_5_6_5;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R5_G5_B5_A1_UNORM:
-        surface.nativeFormat.internalformat = GL_RGB5_A1;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_UNSIGNED_SHORT_5_5_5_1;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R4_G4_B4_A4_UNORM:
-        surface.nativeFormat.internalformat = GL_RGBA4;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_UNSIGNED_SHORT_4_4_4_4;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_B8_A8_UNORM:
-        surface.nativeFormat.internalformat = GL_RGBA8;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_B8_A8_UINT:
-        surface.nativeFormat.internalformat = GL_RGBA8UI;
-        surface.nativeFormat.format = GL_RGBA_INTEGER;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_B8_A8_SNORM:
-        surface.nativeFormat.internalformat = GL_RGBA8_SNORM;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_B8_A8_SINT:
-        surface.nativeFormat.internalformat = GL_RGBA8I;
-        surface.nativeFormat.format = GL_RGBA_INTEGER;
-        surface.nativeFormat.type = GL_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R8_G8_B8_A8_SRGB:
-        surface.nativeFormat.internalformat = GL_SRGB8_ALPHA8;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_UNSIGNED_BYTE;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R10_G10_B10_A2_UNORM:
-        surface.nativeFormat.internalformat = GL_RGB10_A2;
-        surface.nativeFormat.format = GL_RGBA;
-        surface.nativeFormat.type = GL_UNSIGNED_INT_2_10_10_10_REV;
-        return true;
-
-    case rio::TEXTURE_FORMAT_R10_G10_B10_A2_UINT:
-        surface.nativeFormat.internalformat = GL_RGB10_A2UI;
-        surface.nativeFormat.format = GL_RGBA_INTEGER;
-        surface.nativeFormat.type = GL_UNSIGNED_INT_2_10_10_10_REV;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC1_UNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC1_SRGB:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC2_UNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC2_SRGB:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC3_UNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC3_SRGB:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC4_UNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_RED_RGTC1;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC4_SNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_SIGNED_RED_RGTC1;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC5_UNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_RG_RGTC2;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    case rio::TEXTURE_FORMAT_BC5_SNORM:
-        surface.nativeFormat.internalformat = GL_COMPRESSED_SIGNED_RG_RGTC2;
-        surface.nativeFormat.format = 0;
-        surface.nativeFormat.type = 0;
-        return true;
-
-    default:
-        return false;
-    }
-}
-
 #endif
 
 BgUnitFile::BgUnitFile(const std::string& name)
@@ -485,22 +304,30 @@ bool BgUnitFile::load(std::span<const u8> data)
         const GX2Texture& nml_gx2 = nml_gfd.mTextures[0];
 
         tex_native.surface.format = rio::TextureFormat(tex_gx2.surface.format);
-        if (!RIOTexFormatToNativeTextureFormat(tex_native.surface))
+        if (!rio::TextureFormatUtil::getNativeTextureFormat(tex_native.surface.nativeFormat, tex_native.surface.format))
         {
             RIO_LOG("\"%s\" unsupported texture format.\n", mName.c_str());
             unload();
             return false;
         }
         tex_native.compMap = tex_gx2.compSel;
+        {
+            tex_native._footer.magic = 0x5101382D;
+            tex_native._footer.version = 0x01000000;
+        }
 
         nml_native.surface.format = rio::TextureFormat(nml_gx2.surface.format);
-        if (!RIOTexFormatToNativeTextureFormat(nml_native.surface))
+        if (!rio::TextureFormatUtil::getNativeTextureFormat(nml_native.surface.nativeFormat, nml_native.surface.format))
         {
             RIO_LOG("\"%s\" unsupported normal texture format.\n", mName.c_str());
             unload();
             return false;
         }
         nml_native.compMap = nml_gx2.compSel;
+        {
+            nml_native._footer.magic = 0x5101382D;
+            nml_native._footer.version = 0x01000000;
+        }
 
         // Texture
         {
