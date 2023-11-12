@@ -118,5 +118,6 @@ private:
     std::vector<LocationItem>   mLocationItem;
 
     bool    mBlendEnable;
+    bool    mRenderNormal;
     bool    mLayerShown[CD_FILE_LAYER_MAX_NUM];
 };

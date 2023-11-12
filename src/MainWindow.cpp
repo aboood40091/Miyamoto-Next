@@ -223,6 +223,7 @@ void MainWindow::prepare_()
   //RIO_LOG("Created DistantViewMgr\n");
 
     mBlendEnable = true;
+    mRenderNormal = false;
     mLayerShown[LAYER_0] = true;
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
@@ -569,6 +570,9 @@ void MainWindow::calc_()
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* 4, */ rio::Controller::PAD_IDX_START))
         mBlendEnable = !mBlendEnable;
 
+    if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* 5, */ rio::Controller::PAD_IDX_SELECT))
+        mRenderNormal = !mRenderNormal;
+
     const rio::BaseVec2f& camera_pos = mCamera.pos();
 
     const f32 screen_world_h = 224 * mBgZoom;
@@ -711,10 +715,10 @@ void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
         render_state.apply();
 
         if (mLayerShown[LAYER_2])
-            mBgRenderer.render(LAYER_2, bg, cd_file);
+            mBgRenderer.render(LAYER_2, bg, cd_file, mRenderNormal);
 
         if (mLayerShown[LAYER_1])
-            mBgRenderer.render(LAYER_1, bg, cd_file);
+            mBgRenderer.render(LAYER_1, bg, cd_file, mRenderNormal);
 
         for (const auto& item : mMapActorItem)
             item.draw();
@@ -726,7 +730,7 @@ void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
             item.draw();
 
         if (mLayerShown[LAYER_0])
-            mBgRenderer.render(LAYER_0, bg, cd_file);
+            mBgRenderer.render(LAYER_0, bg, cd_file, mRenderNormal);
 
         for (const auto& item : mAreaItem)
             item.draw();

@@ -192,7 +192,7 @@ void BgRenderer::createVertexBuffer(u8 layer, const Bg& bg)
     }
 }
 
-void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file)
+void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_normal)
 {
     RIO_ASSERT(mpCamera != nullptr);
     RIO_ASSERT(mpProjection != nullptr);
@@ -232,7 +232,16 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file)
 
         u32 block_start = block_count;
 
-        mTextureSampler.linkTexture2D(bg_unit_file[env]->getTexture());
+        const rio::Texture2D* p_texture = bg_unit_file[env]->getTexture();
+        const rio::Texture2D* p_nml_texture = bg_unit_file[env]->getNormalTexture();
+
+        RIO_ASSERT(p_texture);
+
+        mTextureSampler.linkTexture2D(
+            render_normal && p_nml_texture
+                ? p_nml_texture
+                : p_texture
+        );
         mTextureSampler.bindFS(mTexLocation, 0);
 
         u32 idx_start = cIdxPerBlock * block_start;

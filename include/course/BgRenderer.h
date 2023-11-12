@@ -41,7 +41,7 @@ public:
         createVertexBuffer(LAYER_2, bg);
     }
 
-    void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file);
+    void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_normal);
 
 private:
     void initialize_();
