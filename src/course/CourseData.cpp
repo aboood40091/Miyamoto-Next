@@ -68,49 +68,56 @@ bool CourseData::loadFromPack(const std::string& path)
         RIO_LOG("%s\n", entry.name);
     */
 
-    std::string level_name = "";
-
-    void* level_dat = nullptr;
-
-    u32     level_name_len = 0;
-    char*   level_name_dat = static_cast<char*>(pack_arc.getFile("levelname", &level_name_len));
-
-    if (level_name_len)
-    {
-        level_name = std::string(level_name_dat, level_name_len);
-        level_dat = pack_arc.getFile(level_name.c_str());
-    }
-
-    if (!level_dat)
-    {
-        level_name = remove_extension(path_basename(path));
-        level_dat = pack_arc.getFile(level_name.c_str());
-    }
-    else
-    {
-        read_files.insert(level_name);
-        read_files.emplace("levelname");
-    }
-
-    if (!level_dat)
-    {
-        RIO_LOG("Inner level not found...\n");
-        rio::MemUtil::free(pack_arc_dat);
-        return false;
-    }
-    else
-    {
-        read_files.insert(level_name);
-    }
-
-    // RIO_LOG("Level name is: %s\n", level_name.c_str());
-
     SharcArchiveRes archive;
-    if (!archive.prepareArchive(level_dat))
+
+    if (pack_arc.getFile("course/course1.bin") != nullptr)
+        archive = pack_arc;
+
+    else
     {
-        RIO_LOG("Could not load inner Sharc file...\n");
-        rio::MemUtil::free(pack_arc_dat);
-        return false;
+        std::string level_name = "";
+
+        void* level_dat = nullptr;
+
+        u32     level_name_len = 0;
+        char*   level_name_dat = static_cast<char*>(pack_arc.getFile("levelname", &level_name_len));
+
+        if (level_name_len)
+        {
+            level_name = std::string(level_name_dat, level_name_len);
+            level_dat = pack_arc.getFile(level_name.c_str());
+        }
+
+        if (!level_dat)
+        {
+            level_name = remove_extension(path_basename(path));
+            level_dat = pack_arc.getFile(level_name.c_str());
+        }
+        else
+        {
+            read_files.insert(level_name);
+            read_files.emplace("levelname");
+        }
+
+        if (!level_dat)
+        {
+            RIO_LOG("Inner level not found...\n");
+            rio::MemUtil::free(pack_arc_dat);
+            return false;
+        }
+        else
+        {
+            read_files.insert(level_name);
+        }
+
+        // RIO_LOG("Level name is: %s\n", level_name.c_str());
+
+        if (!archive.prepareArchive(level_dat))
+        {
+            RIO_LOG("Could not load inner Sharc file...\n");
+            rio::MemUtil::free(pack_arc_dat);
+            return false;
+        }
     }
 
     mBg.clear();
