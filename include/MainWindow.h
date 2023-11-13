@@ -58,6 +58,16 @@ public:
         return static_cast<RenderObjLayer*>(mLayer[SCENE_LAYER_DISTANT_VIEW].ptr);
     }
 
+    RenderObjLayer* getBgPrepareLayer() const
+    {
+        return static_cast<RenderObjLayer*>(mLayer[SCENE_LAYER_BG_PREPARE].ptr);
+    }
+
+    RenderObjLayer* get3DLayer() const
+    {
+        return static_cast<RenderObjLayer*>(mLayer[SCENE_LAYER_3D].ptr);
+    }
+
     void setCurrentCourseDataFile(u32 id);
 
 private:
@@ -75,16 +85,33 @@ private:
     void dispose_(const rio::lyr::DrawInfo&);
 
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
-    void bg_Render_(const rio::lyr::DrawInfo& draw_info);
 
 private:
     enum SceneLayer
     {
         SCENE_LAYER_DISPOSE = 0,
-        SCENE_LAYER_BG,
+        SCENE_LAYER_3D,
+        SCENE_LAYER_BG_PREPARE,
         SCENE_LAYER_DISTANT_VIEW,
         SCENE_LAYER_GATHER,
         SCENE_LAYER_NUM
+    };
+
+    class DrawCallback : public RenderMgr::CallbackBase
+    {
+    public:
+        DrawCallback(MainWindow& window)
+            : mWindow(window)
+        {
+        }
+
+        void preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
+        void preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
+        void postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
+        void postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
+
+    private:
+        MainWindow& mWindow;
     };
 
     struct
@@ -99,6 +126,10 @@ private:
     f32 mBgZoom;
     s32 mDVControlArea;
 
+    DrawCallback m3DDrawCallback;
+
+    RenderMgr mBgPrepareRenderMgr;
+    RenderMgr m3DRenderMgr;
     RenderMgr mDVRenderMgr;
 
     bool mDrawDV;

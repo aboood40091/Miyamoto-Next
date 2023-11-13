@@ -22,6 +22,8 @@
 #include <utility/aglPrimitiveTexture.h>
 #include <utility/aglVertexAttributeHolder.h>
 
+#include <course/BgTexMgr.h>
+#include <course/CoinOrigin.h>
 #include <distant_view/DistantViewMgr.h>
 #include <graphics/Renderer.h>
 #include <graphics/ShaderHolder.h>
@@ -31,6 +33,7 @@ static const std::string nsmbu_content_path = "game/nsmbu";
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
+    , m3DDrawCallback(*this)
 {
     rio::MemUtil::set(mLayer, 0, sizeof(mLayer));
 }
@@ -146,10 +149,18 @@ void MainWindow::prepare_()
     getDistantViewLayer()->setRenderMgr(&mDVRenderMgr);
     getDistantViewLayer()->addDrawMethod(RenderObjLayer::cRenderStep_PostFx, rio::lyr::DrawMethod(this, &MainWindow::dv_PostFx_));
 
-    mLayer[SCENE_LAYER_BG].it = rio::lyr::Renderer::instance()->addLayer("BG", SCENE_LAYER_BG);
-    mLayer[SCENE_LAYER_BG].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_BG].it);
-    mLayer[SCENE_LAYER_BG].ptr->addRenderStep("Render");
-    mLayer[SCENE_LAYER_BG].ptr->addDrawMethod(0, rio::lyr::DrawMethod(this, &MainWindow::bg_Render_));
+    mLayer[SCENE_LAYER_3D].it = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("3D", SCENE_LAYER_3D);
+    mLayer[SCENE_LAYER_3D].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_3D].it);
+    get3DLayer()->initialize();
+    get3DLayer()->setRenderMgr(&m3DRenderMgr);
+    m3DRenderMgr.setDrawCallback(&m3DDrawCallback);
+
+    mLayer[SCENE_LAYER_BG_PREPARE].it = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("BgPrepare", SCENE_LAYER_BG_PREPARE);
+    mLayer[SCENE_LAYER_BG_PREPARE].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_BG_PREPARE].it);
+    getBgPrepareLayer()->initialize();
+    getBgPrepareLayer()->setRenderMgr(&mBgPrepareRenderMgr);
+
+    BgTexMgr::createSingleton();
 
   //RIO_LOG("MainWindow::prepare_(): layer initialized\n");
 
@@ -240,15 +251,20 @@ void MainWindow::prepare_()
          s32(rio::Window::instance()->getWidth())   // Right
     );
 
-    rio::PrimitiveRenderer::instance()->setProjection(mProjection);
-    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
-
     mBgRenderer.setCamera(&mCamera);
     mBgRenderer.setProjection(&mProjection);
+
+    get3DLayer()->setCamera(&mCamera);
+    get3DLayer()->setProjection(&mProjection);
 
     updateCursorPos_();
     mLastCursorPos = mCursorPos;
 
+    CoinOrigin::createSingleton();
+
+    const std::string& pack_arc_path = nsmbu_content_path + "/Common/actor/jyotyuActorPack.szs";
+    CoinOrigin::instance()->initialize(pack_arc_path);
+    CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
     const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
     mCourseData.loadFromPack(level_path);
@@ -257,6 +273,8 @@ void MainWindow::prepare_()
 
 void MainWindow::exit_()
 {
+    CoinOrigin::destroySingleton();
+
     DistantViewMgr::destroySingleton();
 
     Renderer::destroySingleton();
@@ -280,6 +298,8 @@ void MainWindow::exit_()
 #if RIO_IS_CAFE
     agl::driver::GX2Resource::destroySingleton();
 #endif // RIO_IS_CAFE
+
+    BgTexMgr::destroySingleton();
 }
 
 namespace {
@@ -365,6 +385,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         bg.clearBgCourseData();
         mBgRenderer.createVertexBuffer(bg);
 
+        BgTexMgr::instance()->destroy(getBgPrepareLayer());
+
         const char* dv_name = "Nohara";
 
         const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
@@ -382,6 +404,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     bg.processBgCourseData(cd_file);
     mBgRenderer.createVertexBuffer(bg);
+
+    BgTexMgr::instance()->initialize(bg, cd_file, getBgPrepareLayer());
 
     for (MapActorData& map_actor_data : cd_file.getMapActorData())
         mMapActorItem.emplace_back(map_actor_data);
@@ -601,6 +625,8 @@ void MainWindow::calc_()
     );
 
     calcDistantViewScissor_();
+
+    CoinOrigin::instance()->update();
 }
 
 rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
@@ -687,12 +713,18 @@ void MainWindow::gather_(const rio::lyr::DrawInfo&)
     if (mDrawDV)
         DistantViewMgr::instance()->draw(getDistantViewLayer());
 
+    CoinOrigin::instance()->draw(getBgPrepareLayer());
+
     mDVRenderMgr.calc();
+    mBgPrepareRenderMgr.calc();
+    m3DRenderMgr.calc();
 }
 
 void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 {
     mDVRenderMgr.clear();
+    mBgPrepareRenderMgr.clear();
+    m3DRenderMgr.clear();
 }
 
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
@@ -700,45 +732,6 @@ void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
     if (mDrawDV)
         DistantViewMgr::instance()->applyDepthOfField();
 }
-
-void MainWindow::bg_Render_(const rio::lyr::DrawInfo&)
-{
-    rio::PrimitiveRenderer::instance()->setCamera(mCamera);
-
-    if (mCurrentFile != -1)
-    {
-        const Bg& bg = mCourseData.getBg();
-        const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
-
-        rio::RenderState render_state;
-        render_state.setBlendEnable(mBlendEnable);
-        render_state.apply();
-
-        if (mLayerShown[LAYER_2])
-            mBgRenderer.render(LAYER_2, bg, cd_file, mRenderNormal);
-
-        if (mLayerShown[LAYER_1])
-            mBgRenderer.render(LAYER_1, bg, cd_file, mRenderNormal);
-
-        for (const auto& item : mMapActorItem)
-            item.draw();
-
-        for (const auto& item : mNextGotoItem)
-            item.draw();
-
-        for (const auto& item : mLocationItem)
-            item.draw();
-
-        if (mLayerShown[LAYER_0])
-            mBgRenderer.render(LAYER_0, bg, cd_file, mRenderNormal);
-
-        for (const auto& item : mAreaItem)
-            item.draw();
-    }
-
-    drawCursor_();
-}
-
 void MainWindow::drawCursor_()
 {
     const rio::Vector2f& cursor_pos = getCursorWorldPos();
@@ -753,4 +746,85 @@ void MainWindow::drawCursor_()
         );
     }
     rio::PrimitiveRenderer::instance()->end();
+}
+
+void MainWindow::DrawCallback::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+    s32 current_file = mWindow.mCurrentFile;
+    if (current_file == -1)
+        return;
+
+    const CourseData& cd = mWindow.mCourseData;
+
+    const Bg& bg = cd.getBg();
+    const CourseDataFile& cd_file = *cd.getFile(current_file);
+
+    rio::RenderState render_state;
+    render_state.setBlendEnable(mWindow.mBlendEnable);
+    render_state.apply();
+
+    if (mWindow.mLayerShown[LAYER_2])
+        mWindow.mBgRenderer.render(LAYER_2, bg, cd_file, mWindow.mRenderNormal);
+
+    rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
+    rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
+    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+
+    for (const auto& item : mWindow.mMapActorItem)
+        if (item.getMapActorData().layer != LAYER_1)
+            item.draw();
+}
+
+void MainWindow::DrawCallback::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+}
+
+void MainWindow::DrawCallback::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+}
+
+void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+    rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
+    rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
+    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+
+    s32 current_file = mWindow.mCurrentFile;
+
+    if (current_file != -1)
+    {
+        const CourseData& cd = mWindow.mCourseData;
+
+        const Bg& bg = cd.getBg();
+        const CourseDataFile& cd_file = *cd.getFile(current_file);
+
+        rio::RenderState render_state;
+        render_state.setBlendEnable(mWindow.mBlendEnable);
+        render_state.apply();
+
+        BgRenderer& bg_renderer = mWindow.mBgRenderer;
+        bool render_normal = mWindow.mRenderNormal;
+        const bool* layer_shown = mWindow.mLayerShown;
+
+        if (layer_shown[LAYER_1])
+            bg_renderer.render(LAYER_1, bg, cd_file, render_normal);
+
+        for (const auto& item : mWindow.mMapActorItem)
+            if (item.getMapActorData().layer == LAYER_1)
+                item.draw();
+
+        for (const auto& item : mWindow.mNextGotoItem)
+            item.draw();
+
+        for (const auto& item : mWindow.mLocationItem)
+            item.draw();
+
+        if (layer_shown[LAYER_0])
+            bg_renderer.render(LAYER_0, bg, cd_file, render_normal);
+
+        for (const auto& item : mWindow.mAreaItem)
+            item.draw();
+    }
+
+    mWindow.drawCursor_();
 }
