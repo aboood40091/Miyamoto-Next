@@ -76,6 +76,9 @@ void BgTexMgr::DrawCallback::postDrawOpa(s32 view_index, const rio::lyr::DrawInf
 
 void BgTexMgr::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    RIO_ASSERT(mBgTexMgr.mTexRenderBuffer.getRenderTargetColor() != nullptr);
+    mBgTexMgr.mTexRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
+
     rio::Window::instance()->makeContextCurrent();
 
     u32 width = rio::Window::instance()->getWidth();
