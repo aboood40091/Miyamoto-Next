@@ -10,7 +10,14 @@ public:
     AreaData& getAreaData() { return mAreaData; }
     const AreaData& getAreaData() const { return mAreaData; }
 
-    void draw() const;
+    void drawOpa();
+    void drawXlu();
+
+private:
+    f32 getZPos_() const
+    {
+        return 3600.0f;
+    }
 
 private:
     AreaData& mAreaData;

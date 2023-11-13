@@ -22,11 +22,16 @@
 #include <utility/aglPrimitiveTexture.h>
 #include <utility/aglVertexAttributeHolder.h>
 
+#include <actor/ActorCreateMgr.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <distant_view/DistantViewMgr.h>
 #include <graphics/Renderer.h>
 #include <graphics/ShaderHolder.h>
+
+#if RIO_IS_CAFE
+#include <gx2/event.h>
+#endif // RIO_IS_CAFE
 
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
@@ -261,6 +266,7 @@ void MainWindow::prepare_()
     mLastCursorPos = mCursorPos;
 
     CoinOrigin::createSingleton();
+    ActorCreateMgr::createSingleton();
 
     const std::string& pack_arc_path = nsmbu_content_path + "/Common/actor/jyotyuActorPack.szs";
     CoinOrigin::instance()->initialize(pack_arc_path);
@@ -273,6 +279,7 @@ void MainWindow::prepare_()
 
 void MainWindow::exit_()
 {
+    ActorCreateMgr::destroySingleton();
     CoinOrigin::destroySingleton();
 
     DistantViewMgr::destroySingleton();
@@ -367,8 +374,14 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 void MainWindow::setCurrentCourseDataFile(u32 id)
 {
+#if RIO_IS_CAFE
+    GX2DrawDone();
+#elif RIO_IS_WIN
+    RIO_GL_CALL(glFinish());
+#endif
+
     // Clear items
-    mMapActorItem.clear();
+    mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
     mAreaItem.clear();
@@ -408,7 +421,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     BgTexMgr::instance()->initialize(bg, cd_file, getBgPrepareLayer());
 
     for (MapActorData& map_actor_data : cd_file.getMapActorData())
-        mMapActorItem.emplace_back(map_actor_data);
+        mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(map_actor_data));
 
     for (NextGoto& next_goto : cd_file.getNextGoto())
         mNextGotoItem.emplace_back(next_goto);
@@ -715,6 +728,13 @@ void MainWindow::gather_(const rio::lyr::DrawInfo&)
 
     CoinOrigin::instance()->draw(getBgPrepareLayer());
 
+    Renderer::instance()->setLayer(get3DLayer());
+    {
+        for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
+            p_item->scheduleDraw();
+    }
+    Renderer::instance()->resetLayer();
+
     mDVRenderMgr.calc();
     mBgPrepareRenderMgr.calc();
     m3DRenderMgr.calc();
@@ -750,6 +770,47 @@ void MainWindow::drawCursor_()
 
 void MainWindow::DrawCallback::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+}
+
+void MainWindow::DrawCallback::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+}
+
+void MainWindow::DrawCallback::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+    rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
+    rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
+    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+
+    rio::RenderState render_state;
+    render_state.setBlendEnable(false);
+    render_state.apply();
+
+    if (mWindow.mCurrentFile != -1)
+    {
+        for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
+            if (p_item->getMapActorData().layer != LAYER_1)
+                p_item->drawOpa();
+
+        for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
+            if (p_item->getMapActorData().layer == LAYER_1)
+                p_item->drawOpa();
+
+        for (NextGotoItem& item : mWindow.mNextGotoItem)
+            item.drawOpa();
+
+        for (LocationItem& item : mWindow.mLocationItem)
+            item.drawOpa();
+
+        for (AreaItem& item : mWindow.mAreaItem)
+            item.drawOpa();
+    }
+
+    mWindow.drawCursor_();
+}
+
+void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
     s32 current_file = mWindow.mCurrentFile;
     if (current_file == -1)
         return;
@@ -763,68 +824,37 @@ void MainWindow::DrawCallback::preDrawOpa(s32 view_index, const rio::lyr::DrawIn
     render_state.setBlendEnable(mWindow.mBlendEnable);
     render_state.apply();
 
-    if (mWindow.mLayerShown[LAYER_2])
-        mWindow.mBgRenderer.render(LAYER_2, bg, cd_file, mWindow.mRenderNormal);
+    BgRenderer& bg_renderer = mWindow.mBgRenderer;
+    bool render_normal = mWindow.mRenderNormal;
+    const bool* layer_shown = mWindow.mLayerShown;
+
+    if (layer_shown[LAYER_2])
+        bg_renderer.render(LAYER_2, bg, cd_file, render_normal);
 
     rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
     rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
     rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
 
-    for (const auto& item : mWindow.mMapActorItem)
-        if (item.getMapActorData().layer != LAYER_1)
-            item.draw();
-}
+    for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
+        if (p_item->getMapActorData().layer != LAYER_1)
+            p_item->drawXlu();
 
-void MainWindow::DrawCallback::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-}
+    if (layer_shown[LAYER_1])
+        bg_renderer.render(LAYER_1, bg, cd_file, render_normal);
 
-void MainWindow::DrawCallback::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-}
+    for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
+        if (p_item->getMapActorData().layer == LAYER_1)
+            p_item->drawXlu();
 
-void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-    rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
-    rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
-    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+    for (NextGotoItem& item : mWindow.mNextGotoItem)
+        item.drawXlu();
 
-    s32 current_file = mWindow.mCurrentFile;
+    for (LocationItem& item : mWindow.mLocationItem)
+        item.drawXlu();
 
-    if (current_file != -1)
-    {
-        const CourseData& cd = mWindow.mCourseData;
+    if (layer_shown[LAYER_0])
+        bg_renderer.render(LAYER_0, bg, cd_file, render_normal);
 
-        const Bg& bg = cd.getBg();
-        const CourseDataFile& cd_file = *cd.getFile(current_file);
-
-        rio::RenderState render_state;
-        render_state.setBlendEnable(mWindow.mBlendEnable);
-        render_state.apply();
-
-        BgRenderer& bg_renderer = mWindow.mBgRenderer;
-        bool render_normal = mWindow.mRenderNormal;
-        const bool* layer_shown = mWindow.mLayerShown;
-
-        if (layer_shown[LAYER_1])
-            bg_renderer.render(LAYER_1, bg, cd_file, render_normal);
-
-        for (const auto& item : mWindow.mMapActorItem)
-            if (item.getMapActorData().layer == LAYER_1)
-                item.draw();
-
-        for (const auto& item : mWindow.mNextGotoItem)
-            item.draw();
-
-        for (const auto& item : mWindow.mLocationItem)
-            item.draw();
-
-        if (layer_shown[LAYER_0])
-            bg_renderer.render(LAYER_0, bg, cd_file, render_normal);
-
-        for (const auto& item : mWindow.mAreaItem)
-            item.draw();
-    }
-
-    mWindow.drawCursor_();
+    for (AreaItem& item : mWindow.mAreaItem)
+        item.drawXlu();
 }

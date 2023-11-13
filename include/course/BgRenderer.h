@@ -1,6 +1,7 @@
 #pragma once
 
 #include <course/Constants.h>
+#include <course/UnitID.h>
 
 #include <gfx/rio_Camera.h>
 #include <gfx/rio_Projection.h>
@@ -41,6 +42,8 @@ public:
         createVertexBuffer(LAYER_2, bg);
     }
 
+    void drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
+
     void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_normal);
 
 private:
@@ -52,6 +55,8 @@ private:
         rio::BaseVec3f  pos;
         rio::BaseVec2f  tex;
     };
+
+    void setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile);
 
     static constexpr s32 cVtxPerBlock = 4;
     static constexpr s32 cIdxPerBlock = 6;
@@ -73,6 +78,8 @@ private:
     static constexpr f32 cPadXNorm          = f32(cPad) / cTilesetWidth;
     static constexpr f32 cPadYNorm          = f32(cPad) / cTilesetHeight;
 
+    static constexpr s32 cDynamicMaxNum = 0x800;
+
 private:
     std::span<Vertex>       mVtxData;
     std::span<   u32>       mIdxData;
@@ -91,4 +98,5 @@ private:
     u32                     mTexLocation;
 
     u32                     mDrawNum[CD_FILE_LAYER_MAX_NUM][CD_FILE_ENV_MAX_NUM];
+    u32                     mDynamicDrawNum[CD_FILE_LAYER_MAX_NUM][CD_FILE_ENV_MAX_NUM];
 };

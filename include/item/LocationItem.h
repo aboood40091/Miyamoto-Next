@@ -10,7 +10,14 @@ public:
     Location& getLocation() { return mLocation; }
     const Location& getLocation() const { return mLocation; }
 
-    void draw() const;
+    void drawOpa();
+    void drawXlu();
+
+private:
+    f32 getZPos_() const
+    {
+        return 3600.0f - 10;
+    }
 
 private:
     Location& mLocation;

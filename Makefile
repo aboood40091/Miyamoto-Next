@@ -37,9 +37,11 @@ SOURCES		:=	../rio/src \
 				../rio/src/math/impl \
 				../rio/src/task \
 				src \
+				src/actor \
 				src/course \
 				src/graphics \
 				src/item \
+				src/map_obj \
 				src/resource \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/codec \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/container \

@@ -53,6 +53,16 @@ public:
         return viewToWorldPos(mCursorPos);
     }
 
+    BgRenderer& getBgRenderer()
+    {
+        return mBgRenderer;
+    }
+
+    const BgRenderer& getBgRenderer() const
+    {
+        return mBgRenderer;
+    }
+
     RenderObjLayer* getDistantViewLayer() const
     {
         return static_cast<RenderObjLayer*>(mLayer[SCENE_LAYER_DISTANT_VIEW].ptr);
@@ -144,7 +154,7 @@ private:
     s32                         mCurrentFile;
 
     std::vector<NextGotoItem>   mNextGotoItem;
-    std::vector<MapActorItem>   mMapActorItem;
+    std::vector< std::unique_ptr<MapActorItem> > mMapActorItemPtr;
     std::vector<AreaItem>       mAreaItem;
     std::vector<LocationItem>   mLocationItem;
 

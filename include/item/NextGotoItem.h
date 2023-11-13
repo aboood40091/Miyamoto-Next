@@ -10,7 +10,14 @@ public:
     NextGoto& getNextGoto() { return mNextGoto; }
     const NextGoto& getNextGoto() const { return mNextGoto; }
 
-    void draw() const;
+    void drawOpa();
+    void drawXlu();
+
+private:
+    f32 getZPos_() const
+    {
+        return 3000.0f;
+    }
 
 private:
     NextGoto& mNextGoto;

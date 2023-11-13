@@ -14,23 +14,33 @@ NextGotoItem::NextGotoItem(NextGoto& next_goto)
 {
 }
 
-void NextGotoItem::draw() const
+void NextGotoItem::drawOpa()
 {
     rio::PrimitiveRenderer::instance()->begin();
     {
-        rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), 3000.0f };
+        rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() + 10 };
+        rio::Vector2f size { 16.0f, 16.0f };
+
+        rio::PrimitiveRenderer::instance()->drawBox(
+            rio::PrimitiveRenderer::QuadArg()
+                .setColor(rio::Color4f::cBlack, rio::Color4f::cBlack)
+                .setCenter(offs)
+                .setSize(size)
+        );
+    }
+    rio::PrimitiveRenderer::instance()->end();
+}
+
+void NextGotoItem::drawXlu()
+{
+    rio::PrimitiveRenderer::instance()->begin();
+    {
+        rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() };
         rio::Vector2f size { 16.0f, 16.0f };
 
         rio::PrimitiveRenderer::instance()->drawQuad(
             rio::PrimitiveRenderer::QuadArg()
                 .setColor(sColor, sColor)
-                .setCenter(offs)
-                .setSize(size)
-        );
-
-        rio::PrimitiveRenderer::instance()->drawBox(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f::cBlack, rio::Color4f::cBlack)
                 .setCenter(offs)
                 .setSize(size)
         );

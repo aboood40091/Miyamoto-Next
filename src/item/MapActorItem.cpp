@@ -14,25 +14,33 @@ MapActorItem::MapActorItem(MapActorData& map_actor_data)
 {
 }
 
-void MapActorItem::draw() const
+void MapActorItem::drawOpa()
 {
     rio::PrimitiveRenderer::instance()->begin();
     {
-        f32 z = (mMapActorData.layer == LAYER_1) ? 2200.0f : -2500.0f; // Only layer 1 and 2
+        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getZPos_() + 10 };
+        rio::Vector2f size { 16.0f, 16.0f };
 
-        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), z };
+        rio::PrimitiveRenderer::instance()->drawBox(
+            rio::PrimitiveRenderer::QuadArg()
+                .setColor(rio::Color4f::cBlack, rio::Color4f::cBlack)
+                .setCenter(offs)
+                .setSize(size)
+        );
+    }
+    rio::PrimitiveRenderer::instance()->end();
+}
+
+void MapActorItem::drawXlu()
+{
+    rio::PrimitiveRenderer::instance()->begin();
+    {
+        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getZPos_() };
         rio::Vector2f size { 16.0f, 16.0f };
 
         rio::PrimitiveRenderer::instance()->drawQuad(
             rio::PrimitiveRenderer::QuadArg()
                 .setColor(sColor, sColor)
-                .setCenter(offs)
-                .setSize(size)
-        );
-
-        rio::PrimitiveRenderer::instance()->drawBox(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f::cBlack, rio::Color4f::cBlack)
                 .setCenter(offs)
                 .setSize(size)
         );
