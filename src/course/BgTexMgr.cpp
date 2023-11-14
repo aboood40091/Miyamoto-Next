@@ -53,6 +53,9 @@ BgTexMgr::BgTexMgr()
 {
     mTexDepthTarget.linkTexture2D(mTexDepth);
     mTexRenderBuffer.setRenderTargetDepth(&mTexDepthTarget);
+
+    rio::MemUtil::set(mDelayTimer, 0, sizeof(mDelayTimer));
+    rio::MemUtil::set(mFrame, 0, sizeof(mFrame));
 }
 
 BgTexMgr::~BgTexMgr()
