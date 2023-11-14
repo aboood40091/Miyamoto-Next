@@ -1,17 +1,11 @@
 #include <course/BgUnitFile.h>
+#include <graphics/Texture2DUtil.h>
 #include <resource/SharcArchiveRes.h>
 #include <resource/SharcWriter.h>
 
 #include <misc/rio_MemUtil.h>
 
 #include <cstring>
-
-#if RIO_IS_CAFE
-#include <gfd.h>
-#include <gx2/mem.h>
-#elif RIO_IS_WIN
-#include <ninTexUtils/gfd/gfdStruct.h>
-#endif
 
 BgUnitFile::BgUnitFile(const std::string& name)
     : mName(name)
@@ -20,6 +14,7 @@ BgUnitFile::BgUnitFile(const std::string& name)
     , mpNormalTexture(nullptr)
 {
     RIO_ASSERT(!mName.empty());
+    rio::MemUtil::set(mpAnimeTexture, 0, sizeof(mpAnimeTexture));
 }
 
 BgUnitFile::~BgUnitFile()
@@ -33,27 +28,19 @@ void BgUnitFile::unload()
 
     mBgUnit.clear();
 
-    if (mpTexture)
-    {
-        const rio::NativeSurface2D& tex_surf = mpTexture->getNativeTexture().surface;
-        rio::MemUtil::free(tex_surf.image);
-        if (tex_surf.mipmaps)
-            rio::MemUtil::free(tex_surf.mipmaps);
+    if (mTextureFromGTX)
+        Texture2DUtil::destroy(&mpTexture);
 
+    else if (mpTexture)
+    {
         delete mpTexture;
         mpTexture = nullptr;
     }
 
-    if (mpNormalTexture)
-    {
-        const rio::NativeSurface2D& nml_surf = mpNormalTexture->getNativeTexture().surface;
-        rio::MemUtil::free(nml_surf.image);
-        if (nml_surf.mipmaps)
-            rio::MemUtil::free(nml_surf.mipmaps);
+    Texture2DUtil::destroy(&mpNormalTexture);
 
-        delete mpNormalTexture;
-        mpNormalTexture = nullptr;
-    }
+    for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
+        Texture2DUtil::destroy(&(mpAnimeTexture[i]));
 
     if (mData.data())
     {
@@ -158,243 +145,84 @@ bool BgUnitFile::load(std::span<const u8> data)
     void* tex = archive.getFile(tex_name.c_str(), &tex_filesize);
     void* nml = archive.getFile(nml_name.c_str(), &nml_filesize);
 
-    if (!(tex_filesize >= sizeof(GFDHeader) && nml_filesize >= sizeof(GFDHeader)))
-    {
-        RIO_LOG("\"%s\" missing textures.\n", mName.c_str());
-        unload();
-        return false;
-    }
-
-    if (std::strncmp((char*)tex, "Gfx2", 4) != 0 ||
-        std::strncmp((char*)nml, "Gfx2", 4) != 0)
-    {
-        RIO_LOG("\"%s\" invalid GFD textures.\n", mName.c_str());
-        unload();
-        return false;
-    }
-
     if (mName == "Pa0_jyotyu")
     {
         mpTexture       = new rio::Texture2D("Pa0_jyotyu");
-        mpNormalTexture = nullptr;
+        mTextureFromGTX = false;
     }
     else if (mName == "Pa0_jyotyu_chika")
     {
         mpTexture       = new rio::Texture2D("Pa0_jyotyu_chika");
-        mpNormalTexture = nullptr;
+        mTextureFromGTX = false;
     }
     else if (mName == "Pa0_jyotyu_yougan")
     {
         mpTexture       = new rio::Texture2D("Pa0_jyotyu_yougan");
-        mpNormalTexture = nullptr;
+        mTextureFromGTX = false;
     }
     else if (mName == "Pa0_jyotyu_yougan2")
     {
         mpTexture       = new rio::Texture2D("Pa0_jyotyu_yougan2");
-        mpNormalTexture = nullptr;
+        mTextureFromGTX = false;
     }
     else
     {
-        rio::NativeTexture2D tex_native;
-        rio::NativeTexture2D nml_native;
-
-#if RIO_IS_CAFE
-        // Texture
+        switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mpTexture))
         {
-            u32 alignment = GFDGetTextureAlignmentSize(0, tex);
-
-            u32 imageSize = GFDGetTextureImageSize(0, tex);
-            void* image = imageSize ? rio::MemUtil::alloc(imageSize, alignment) : nullptr;
-
-            u32 mipSize = GFDGetTextureMipImageSize(0, tex);
-            void* mipmaps = mipSize ? rio::MemUtil::alloc(mipSize, alignment) : nullptr;
-
-            GFDGetTexture(&tex_native,
-                          image,
-                          mipmaps,
-                          0,
-                          tex);
-
-            RIO_ASSERT(tex_native.surface.imageSize == imageSize);
-            if (imageSize)
-            {
-                RIO_ASSERT(image);
-                RIO_ASSERT((uintptr_t)image % alignment == 0);
-
-                GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, image, imageSize);
-            }
-
-            RIO_ASSERT(tex_native.surface.mipmapSize == mipSize);
-            if (mipSize)
-            {
-                RIO_ASSERT(mipmaps);
-                RIO_ASSERT((uintptr_t)mipmaps % alignment == 0);
-
-                GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, mipmaps, mipSize);
-            }
-
-            tex_native.surface.image = image;
-            tex_native.surface.mipmaps = mipmaps;
-
-            GX2CalcSurfaceSizeAndAlignment(&tex_native.surface);
-            GX2InitTextureRegs(&tex_native);
-        }
-        // Normal texture
-        {
-            u32 alignment = GFDGetTextureAlignmentSize(0, nml);
-
-            u32 imageSize = GFDGetTextureImageSize(0, nml);
-            void* image = imageSize ? rio::MemUtil::alloc(imageSize, alignment) : nullptr;
-
-            u32 mipSize = GFDGetTextureMipImageSize(0, nml);
-            void* mipmaps = mipSize ? rio::MemUtil::alloc(mipSize, alignment) : nullptr;
-
-            GFDGetTexture(&nml_native,
-                          image,
-                          mipmaps,
-                          0,
-                          nml);
-
-            RIO_ASSERT(nml_native.surface.imageSize == imageSize);
-            if (imageSize)
-            {
-                RIO_ASSERT(image);
-                RIO_ASSERT((uintptr_t)image % alignment == 0);
-
-                GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, image, imageSize);
-            }
-
-            RIO_ASSERT(nml_native.surface.mipmapSize == mipSize);
-            if (mipSize)
-            {
-                RIO_ASSERT(mipmaps);
-                RIO_ASSERT((uintptr_t)mipmaps % alignment == 0);
-
-                GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, mipmaps, mipSize);
-            }
-
-            nml_native.surface.image = image;
-            nml_native.surface.mipmaps = mipmaps;
-
-            GX2CalcSurfaceSizeAndAlignment(&nml_native.surface);
-            GX2InitTextureRegs(&nml_native);
-        }
-#elif RIO_IS_WIN
-        GFDFile tex_gfd;
-        tex_gfd.load(tex);
-
-        if (tex_gfd.mTextures.size() < 1)
-        {
-            RIO_LOG("\"%s\" missing main texture.\n", mName.c_str());
+        case Texture2DUtil::GTX_ERROR_OK:
+            break;
+        case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
+        case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
+            RIO_LOG("\"%s\" texture: missing.\n", mName.c_str());
+            unload();
+            return false;
+        case Texture2DUtil::GTX_ERROR_SRC_INVALID:
+            RIO_LOG("\"%s\" texture: invalid GFD texture.\n", mName.c_str());
+            unload();
+            return false;
+        case Texture2DUtil::GTX_ERROR_UNSUPPORTED_FORMAT:
+            RIO_LOG("\"%s\" texture: unsupported format.\n", mName.c_str());
             unload();
             return false;
         }
 
-        GFDFile nml_gfd;
-        nml_gfd.load(nml);
+        mTextureFromGTX = true;
+    }
 
-        if (nml_gfd.mTextures.size() < 1)
-        {
-            RIO_LOG("\"%s\" missing normal texture.\n", mName.c_str());
-            unload();
-            return false;
-        }
+    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)nml, nml_filesize }, &mpNormalTexture))
+    {
+    case Texture2DUtil::GTX_ERROR_OK:
+        break;
+    case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
+    case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
+        RIO_LOG("\"%s\" normal texture: missing.\n", mName.c_str());
+        unload();
+        return false;
+    case Texture2DUtil::GTX_ERROR_SRC_INVALID:
+        RIO_LOG("\"%s\" normal texture: invalid GFD texture.\n", mName.c_str());
+        unload();
+        return false;
+    case Texture2DUtil::GTX_ERROR_UNSUPPORTED_FORMAT:
+        RIO_LOG("\"%s\" normal texture: unsupported format.\n", mName.c_str());
+        unload();
+        return false;
+    }
 
-        const GX2Texture& tex_gx2 = tex_gfd.mTextures[0];
-        const GX2Texture& nml_gx2 = nml_gfd.mTextures[0];
+    static const char* const cAnimeFilename[ANIME_TYPE_MAX] = {
+        "BG_tex/hatena_anime.gtx",
+        "BG_tex/block_anime.gtx",
+        "BG_tex/tuka_coin_anime.gtx",
+        "BG_tex/belt_conveyor_anime.gtx",
+        "BG_tex/hatena_anime_L.gtx",
+        "BG_tex/block_anime_L.gtx"
+    };
 
-        tex_native.surface.format = rio::TextureFormat(tex_gx2.surface.format);
-        if (!rio::TextureFormatUtil::getNativeTextureFormat(tex_native.surface.nativeFormat, tex_native.surface.format))
-        {
-            RIO_LOG("\"%s\" unsupported texture format.\n", mName.c_str());
-            unload();
-            return false;
-        }
-        tex_native.compMap = tex_gx2.compSel;
-        {
-            tex_native._footer.magic = 0x5101382D;
-            tex_native._footer.version = 0x01000000;
-        }
-
-        nml_native.surface.format = rio::TextureFormat(nml_gx2.surface.format);
-        if (!rio::TextureFormatUtil::getNativeTextureFormat(nml_native.surface.nativeFormat, nml_native.surface.format))
-        {
-            RIO_LOG("\"%s\" unsupported normal texture format.\n", mName.c_str());
-            unload();
-            return false;
-        }
-        nml_native.compMap = nml_gx2.compSel;
-        {
-            nml_native._footer.magic = 0x5101382D;
-            nml_native._footer.version = 0x01000000;
-        }
-
-        // Texture
-        {
-            RIO_ASSERT(tex_gx2.surface.dim == GX2_SURFACE_DIM_2D);
-            RIO_ASSERT(tex_gx2.surface.depth <= 1);
-
-            GX2Surface linear_surface = tex_gx2.surface;
-            linear_surface.depth = 1;
-            linear_surface.numMips = std::max(linear_surface.numMips, 1u);
-            linear_surface.use = GX2_SURFACE_USE_TEXTURE;
-            linear_surface.tileMode = GX2_TILE_MODE_LINEAR_SPECIAL;
-            linear_surface.swizzle = 0;
-            GX2CalcSurfaceSizeAndAlignment(&linear_surface);
-
-            linear_surface.imagePtr = rio::MemUtil::alloc(linear_surface.imageSize, linear_surface.alignment);
-            if (linear_surface.mipSize)
-                linear_surface.mipPtr = rio::MemUtil::alloc(linear_surface.mipSize, linear_surface.alignment);
-
-            for (u32 i = 0; i < linear_surface.numMips; i++)
-                GX2CopySurface(&tex_gx2.surface, i, 0, &linear_surface, i, 0);
-
-            tex_native.surface.width = linear_surface.width;
-            tex_native.surface.height = linear_surface.height;
-            tex_native.surface.mipLevels = linear_surface.numMips;
-            tex_native.surface.imageSize = linear_surface.imageSize;
-            tex_native.surface.image = linear_surface.imagePtr;
-            tex_native.surface.mipmapSize = linear_surface.mipSize;
-            tex_native.surface.mipmaps = linear_surface.mipPtr;
-
-            rio::MemUtil::copy(tex_native.surface.mipLevelOffset, linear_surface.mipOffset, 13 * sizeof(u32));
-            tex_native.surface.mipLevelOffset[0] = 0;
-        }
-        // Normal texture
-        {
-            RIO_ASSERT(nml_gx2.surface.dim == GX2_SURFACE_DIM_2D);
-            RIO_ASSERT(nml_gx2.surface.depth <= 1);
-
-            GX2Surface linear_surface = nml_gx2.surface;
-            linear_surface.depth = 1;
-            linear_surface.numMips = std::max(linear_surface.numMips, 1u);
-            linear_surface.use = GX2_SURFACE_USE_TEXTURE;
-            linear_surface.tileMode = GX2_TILE_MODE_LINEAR_SPECIAL;
-            linear_surface.swizzle = 0;
-            GX2CalcSurfaceSizeAndAlignment(&linear_surface);
-
-            linear_surface.imagePtr = rio::MemUtil::alloc(linear_surface.imageSize, linear_surface.alignment);
-            if (linear_surface.mipSize)
-                linear_surface.mipPtr = rio::MemUtil::alloc(linear_surface.mipSize, linear_surface.alignment);
-
-            for (u32 i = 0; i < linear_surface.numMips; i++)
-                GX2CopySurface(&nml_gx2.surface, i, 0, &linear_surface, i, 0);
-
-            nml_native.surface.width = linear_surface.width;
-            nml_native.surface.height = linear_surface.height;
-            nml_native.surface.mipLevels = linear_surface.numMips;
-            nml_native.surface.imageSize = linear_surface.imageSize;
-            nml_native.surface.image = linear_surface.imagePtr;
-            nml_native.surface.mipmapSize = linear_surface.mipSize;
-            nml_native.surface.mipmaps = linear_surface.mipPtr;
-
-            rio::MemUtil::copy(nml_native.surface.mipLevelOffset, linear_surface.mipOffset, 13 * sizeof(u32));
-            nml_native.surface.mipLevelOffset[0] = 0;
-        }
-#endif
-
-        mpTexture       = new rio::Texture2D(tex_native);
-        mpNormalTexture = new rio::Texture2D(nml_native);
+    for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
+    {
+        u32 anm_filesize = 0;
+        void* anm = archive.getFile(cAnimeFilename[i], &anm_filesize);
+        if (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)anm, anm_filesize }, &(mpAnimeTexture[i])) == Texture2DUtil::GTX_ERROR_OK)
+            RIO_LOG("\"%s\": loaded: %s\n", mName.c_str(), cAnimeFilename[i]);
     }
 
     return true;

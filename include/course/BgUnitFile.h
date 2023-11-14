@@ -56,6 +56,11 @@ public:
         return mpNormalTexture;
     }
 
+    const rio::Texture2D* getAnimeTexture(AnimeType type) const
+    {
+        return mpAnimeTexture[type];
+    }
+
 private:
     std::string         mName;
     std::span<u8>       mData;
@@ -66,6 +71,9 @@ private:
 
     rio::Texture2D*     mpTexture;
     rio::Texture2D*     mpNormalTexture;
+    rio::Texture2D*     mpAnimeTexture[ANIME_TYPE_MAX];
+
+    bool                mTextureFromGTX;
 
     friend class Bg;
 };

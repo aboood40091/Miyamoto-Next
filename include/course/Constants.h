@@ -53,6 +53,18 @@ enum
 };
 static_assert(s32(LAYER_0_ACTOR) == s32(CD_FILE_LAYER_MAX_NUM));
 
+enum AnimeType
+{
+    ANIME_TYPE_HATENA = 0,
+    ANIME_TYPE_BLOCK,
+    ANIME_TYPE_TUKA_COIN,
+    ANIME_TYPE_BELT_CONVEYOR,
+    ANIME_TYPE_HATENA_L,
+    ANIME_TYPE_BLOCK_L,
+    ANIME_TYPE_MAX
+};
+static_assert(ANIME_TYPE_MAX == 6);
+
 static inline s16 CD_FILE_READ_16_BE(s16 val)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

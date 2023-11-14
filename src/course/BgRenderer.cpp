@@ -273,10 +273,10 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
             const rio::Texture2D* p_texture = bg_unit_file[env]->getTexture();
             const rio::Texture2D* p_nml_texture = bg_unit_file[env]->getNormalTexture();
 
-            RIO_ASSERT(p_texture);
+            RIO_ASSERT(p_texture && p_nml_texture);
 
             mTextureSampler.linkTexture2D(
-                render_normal && p_nml_texture
+                render_normal
                     ? p_nml_texture
                     : p_texture
             );
