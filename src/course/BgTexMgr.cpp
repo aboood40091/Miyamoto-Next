@@ -76,8 +76,9 @@ void BgTexMgr::initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObj
     mTexColorTarget.linkTexture2D(*texture);
     mTexRenderBuffer.setRenderTargetColor(&mTexColorTarget);
 
-    p_bg_prepare_layer->getRenderMgr()->setDrawCallback(&mDrawCallback);
+    p_bg_prepare_layer->initialize();
     p_bg_prepare_layer->addDrawMethod(RenderObjLayer::cRenderStep_Xlu, rio::lyr::DrawMethod(this, &BgTexMgr::drawXlu_));
+    p_bg_prepare_layer->getRenderMgr()->setDrawCallback(&mDrawCallback);
 }
 
 void BgTexMgr::destroy(RenderObjLayer* p_bg_prepare_layer)
@@ -86,6 +87,7 @@ void BgTexMgr::destroy(RenderObjLayer* p_bg_prepare_layer)
 
     p_bg_prepare_layer->getRenderMgr()->setDrawCallback(nullptr);
     p_bg_prepare_layer->clearDrawMethodsAll();
+    p_bg_prepare_layer->clearRenderSteps();
 }
 
 void BgTexMgr::bindTexRenderBuffer_() const

@@ -162,7 +162,6 @@ void MainWindow::prepare_()
 
     mLayer[SCENE_LAYER_BG_PREPARE].it = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("BgPrepare", SCENE_LAYER_BG_PREPARE);
     mLayer[SCENE_LAYER_BG_PREPARE].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_BG_PREPARE].it);
-    getBgPrepareLayer()->initialize();
     getBgPrepareLayer()->setRenderMgr(&mBgPrepareRenderMgr);
 
     BgTexMgr::createSingleton();
@@ -385,6 +384,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     mLocationItem.clear();
     mAreaItem.clear();
 
+    BgTexMgr::instance()->destroy(getBgPrepareLayer());
+
     Bg& bg = mCourseData.getBg();
 
     mDVControlArea = -1;
@@ -396,8 +397,6 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         // Clear BG
         bg.clearBgCourseData();
         mBgRenderer.createVertexBuffer(bg);
-
-        BgTexMgr::instance()->destroy(getBgPrepareLayer());
 
         const char* dv_name = "Nohara";
 
