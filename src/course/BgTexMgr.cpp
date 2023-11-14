@@ -167,11 +167,11 @@ void BgTexMgr::update()
     }
 }
 
-static inline void clearUnit(u16 tile)
+static inline void clearRow(u16 tile, f32 width)
 {
     rio::PrimitiveRenderer::QuadArg arg;
     rio::Vector3f p { tile % cUnitPerRow * cUnitSize, cTexHeight - (tile / cUnitPerRow + 1) * cUnitSize, 0.0f };
-    rio::Vector2f size { cUnitSize, cUnitSize };
+    rio::Vector2f size { width, cUnitSize };
     arg.setCornerAndSize(p, size);
     rio::Color4f color { 1.0f, 0.0f, 0.0f, 0.0f };
     arg.setColor(color, color);
@@ -216,7 +216,7 @@ void BgTexMgr::drawAnime_(UnitID unit, s32 frame, AnimeType type, bool square, c
     primitive_renderer->begin();
     {
         for (s32 i = 0; i < size; i++)
-            clearUnit(tile + i * cUnitPerRowReal);
+            clearRow(tile + i * cUnitPerRowReal, f32(tex_width));
     }
     primitive_renderer->end();
 
