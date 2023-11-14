@@ -55,4 +55,6 @@ private:
     DrawCallback            mDrawCallback;
     rio::RenderBuffer       mTexRenderBuffer;
     rio::RenderTargetColor  mTexColorTarget;
+    rio::RenderTargetDepth  mTexDepthTarget;
+    rio::Texture2D          mTexDepth;
 };

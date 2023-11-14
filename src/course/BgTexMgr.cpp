@@ -30,7 +30,10 @@ void BgTexMgr::destroySingleton()
 BgTexMgr::BgTexMgr()
     : mDrawCallback(*this)
     , mTexRenderBuffer(2048, 512)
+    , mTexDepth(rio::DEPTH_TEXTURE_FORMAT_R32_FLOAT, 2048, 512, 1)
 {
+    mTexDepthTarget.linkTexture2D(mTexDepth);
+    mTexRenderBuffer.setRenderTargetDepth(&mTexDepthTarget);
 }
 
 BgTexMgr::~BgTexMgr()
@@ -47,7 +50,6 @@ void BgTexMgr::initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObj
 
     mTexColorTarget.linkTexture2D(*texture);
     mTexRenderBuffer.setRenderTargetColor(&mTexColorTarget);
-    mTexRenderBuffer.setRenderTargetDepthNull();
 
     p_bg_prepare_layer->getRenderMgr()->setDrawCallback(&mDrawCallback);
 }
@@ -55,7 +57,6 @@ void BgTexMgr::initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObj
 void BgTexMgr::destroy(RenderObjLayer* p_bg_prepare_layer)
 {
     mTexRenderBuffer.setRenderTargetColorNull();
-    mTexRenderBuffer.setRenderTargetDepthNull();
 
     p_bg_prepare_layer->getRenderMgr()->setDrawCallback(nullptr);
 }
