@@ -1,21 +1,20 @@
 #pragma once
 
-#include <item/MapActorItem.h>
+#include <map_obj/BlockCoinBase.h>
 
-class ActorCoin : public MapActorItem
+class ActorCoin : public BlockCoinBase
 {
     MAP_ACTOR_ITEM_CREATE(ActorCoin)
 
 public:
-    ActorCoin(MapActorData& map_actor_data);
-
-    void drawOpa() override
+    ActorCoin(MapActorData& map_actor_data)
+        : BlockCoinBase(map_actor_data)
     {
     }
 
-    void drawXlu() override
+protected:
+    UnitID getUnitID_() override
     {
+        return cUnitID_Coin;
     }
-
-    void scheduleDraw() override;
 };
