@@ -1,5 +1,8 @@
 #include <actor/ActorCreateMgr.h>
+#include <map_obj/ActorBlockHatena.h>
+#include <map_obj/ActorBlockRenga.h>
 #include <map_obj/ActorCoin.h>
+#include <map_obj/CollectionCoin.h>
 
 ActorCreateMgr* ActorCreateMgr::sInstance = nullptr;
 
@@ -23,7 +26,51 @@ void ActorCreateMgr::destroySingleton()
 
 ActorCreateMgr::ActorCreateMgr()
 {
+    addActorFactory(45, &CollectionCoin::create);
+
+    addActorFactory(47, &CollectionCoin::create);
+
+    addActorFactory(59, &ActorBlockHatena::create);
+    addActorFactory(60, &ActorBlockRenga::create);
+
     addActorFactory(65, &ActorCoin::create);
+    addActorFactory(66, &ActorCoin::create);
+
+    addActorFactory(147, &ActorBlockHatena::create);
+    addActorFactory(148, &ActorBlockRenga::create);
+
+    addActorFactory(149, &ActorCoin::create);
+
+    addActorFactory(205, &ActorBlockHatena::create);
+
+    addActorFactory(233, &ActorBlockHatena::create);
+    addActorFactory(234, &ActorBlockRenga::create);
+
+    addActorFactory(279, &ActorCoin::create);
+
+    addActorFactory(325, &ActorCoin::create);
+
+    addActorFactory(328, &ActorCoin::create);
+
+    addActorFactory(397, &ActorBlockHatena::create);
+    addActorFactory(398, &ActorBlockRenga::create);
+
+    addActorFactory(480, &CollectionCoin::create);
+
+    addActorFactory(496, &ActorCoin::create);
+
+    addActorFactory(525, &ActorBlockHatena::create);
+    addActorFactory(526, &ActorBlockRenga::create);
+
+    addActorFactory(663, &ActorCoin::create);
+
+    addActorFactory(683, &ActorBlockHatena::create);
+
+    addActorFactory(692, &ActorBlockRenga::create);
+
+    addActorFactory(701, &ActorBlockRenga::create);
+
+    addActorFactory(704, &ActorBlockRenga::create);
 }
 
 ActorCreateMgr::~ActorCreateMgr()
