@@ -53,6 +53,16 @@ public:
         return viewToWorldPos(mCursorPos);
     }
 
+    CourseData& getCourseData()
+    {
+        return mCourseData;
+    }
+
+    const CourseData& getCourseData() const
+    {
+        return mCourseData;
+    }
+
     BgRenderer& getBgRenderer()
     {
         return mBgRenderer;
