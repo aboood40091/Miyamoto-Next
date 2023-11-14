@@ -137,7 +137,7 @@ void CoinOrigin::update()
 
 void CoinOrigin::draw(RenderObjLayer* p_bg_prepare_layer)
 {
-    if (BgTexMgr::instance()->getTexRenderBuffer().getRenderTargetColor() == nullptr)
+    if (!mIsInitialized || BgTexMgr::instance()->getTexRenderBuffer().getRenderTargetColor() == nullptr)
         return;
 
     static const rio::Vector3f zero { 0.0f, 0.0f, 0.0f };
@@ -147,6 +147,9 @@ void CoinOrigin::draw(RenderObjLayer* p_bg_prepare_layer)
 
 void CoinOrigin::calcMdl_()
 {
+    if (!mIsInitialized)
+        return;
+
     f32 x = cUnitSize * 0.5f;
     f32 y = (cUnitSize + cUnitSizeNoPad) * 0.5f;
 
@@ -176,7 +179,7 @@ void CoinOrigin::calcMdl_()
 
 void CoinOrigin::apply_(const rio::lyr::DrawInfo& draw_info)
 {
-    if (BgTexMgr::instance()->getTexRenderBuffer().getRenderTargetColor() == nullptr)
+    if (!mIsInitialized || BgTexMgr::instance()->getTexRenderBuffer().getRenderTargetColor() == nullptr)
         return;
 
     BgTexMgr::instance()->getTexRenderBuffer().bind();
