@@ -63,6 +63,22 @@ public:
         return mCourseData;
     }
 
+    CourseDataFile* getCurrentCourseDataFile()
+    {
+        if (mCurrentFile == -1)
+            return nullptr;
+
+        return mCourseData.getFile(mCurrentFile);
+    }
+
+    const CourseDataFile* getCurrentCourseDataFile() const
+    {
+        if (mCurrentFile == -1)
+            return nullptr;
+
+        return mCourseData.getFile(mCurrentFile);
+    }
+
     BgRenderer& getBgRenderer()
     {
         return mBgRenderer;

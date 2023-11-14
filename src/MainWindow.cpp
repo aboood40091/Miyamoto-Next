@@ -270,7 +270,6 @@ void MainWindow::prepare_()
 
     const std::string& pack_arc_path = nsmbu_content_path + "/Common/actor/jyotyuActorPack.szs";
     CoinOrigin::instance()->initialize(pack_arc_path);
-    CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
     const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
     mCourseData.loadFromPack(level_path);
@@ -419,6 +418,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     mBgRenderer.createVertexBuffer(bg);
 
     BgTexMgr::instance()->initialize(bg, cd_file, getBgPrepareLayer());
+    CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
     for (MapActorData& map_actor_data : cd_file.getMapActorData())
         mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(map_actor_data));
@@ -639,6 +639,7 @@ void MainWindow::calc_()
 
     calcDistantViewScissor_();
 
+    BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
 }
 
