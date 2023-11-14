@@ -168,10 +168,10 @@ bool CourseData::loadFromPack(const std::string& path)
         u32 size = 0;
         u8* data = static_cast<u8*>(pack_arc.getFile(entry.name, &size));
 
-        u8* new_data = static_cast<u8*>(rio::MemUtil::alloc(size, 4));
+        u8* new_data = static_cast<u8*>(rio::MemUtil::alloc(size, 0x2000));
         rio::MemUtil::copy(new_data, data, size);
 
-        mResData.emplace_back(entry.name, std::span{ new_data, size });
+        mResData.try_emplace(entry.name, std::span{ new_data, size });
     }
 
 #if 0
@@ -242,6 +242,15 @@ std::span<u8> CourseData::save(const std::string& level_name) const
     rio::MemUtil::free(out_level_archive.data());
 
     return out_archive;
+}
+
+std::span<u8> CourseData::getRes(const std::string& name) const
+{
+    const auto& it = mResData.find(name);
+    if (it == mResData.end())
+        return std::span<u8>();
+
+    return it->second;
 }
 
 void CourseData::clearResData_()

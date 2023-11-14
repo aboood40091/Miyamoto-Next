@@ -46,6 +46,8 @@ public:
         return mBg;
     }
 
+    std::span<u8> getRes(const std::string& name) const;
+
 private:
     void clearResData_();
 
@@ -54,7 +56,7 @@ private:
     Bg                                          mBg;
 
     // Unused res data to be included at saving
-    std::vector<std::pair<std::string, std::span<u8>>> mResData;
+    std::unordered_map< std::string, std::span<u8> > mResData;
 
     enum
     {
