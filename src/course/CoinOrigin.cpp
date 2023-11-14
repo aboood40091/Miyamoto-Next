@@ -18,7 +18,7 @@ static const f32 cUnitSizeNoPad = 60;
 static const s32 cUnitPerRow = 2048 / 64;
 //static const s32 cUnitPerColumn = 512 / 64;
 
-static const f32 cCoinAngleStep = 0.09790206201385253f;
+static const u32 cCoinAngleStep = 0x3fd27d2;
 
 CoinOrigin* CoinOrigin::sInstance = nullptr;
 
@@ -152,13 +152,13 @@ void CoinOrigin::calcMdl_()
 
     rio::Matrix34f mtx;
     {
-        const rio::Vector3f r { 0.0f, mCoinAngle, 0.0f };
+        const rio::Vector3f r { 0.0f, getCoinAngle(), 0.0f };
         const rio::Vector3f t { (cUnitID_Coin     % cUnitPerRow) * cUnitSize + x, cTexHeight - (cUnitID_Coin     / cUnitPerRow + 1.5f) * cUnitSize + y, -500.0f };
         mtx.makeRT(r, t);
         mpModelCoin->setMtxRT(mtx);
     }
     {
-        const rio::Vector3f r { 0.0f, mCoinAngle, 0.0f };
+        const rio::Vector3f r { 0.0f, getCoinAngle(), 0.0f };
         const rio::Vector3f t { (cUnitID_BlueCoin % cUnitPerRow) * cUnitSize + x, cTexHeight - (cUnitID_BlueCoin / cUnitPerRow + 1.5f) * cUnitSize + y, -500.0f };
         mtx.makeRT(r, t);
         mpModelBlueCoin->setMtxRT(mtx);

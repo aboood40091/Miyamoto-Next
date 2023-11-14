@@ -37,7 +37,7 @@ public:
 
     f32 getCoinAngle() const
     {
-        return mCoinAngle;
+        return mCoinAngle * rio::Mathf::pi() / 0x80000000;
     }
 
 private:
@@ -51,7 +51,7 @@ private:
     SharcArchiveRes         mArchiveRes;
     ModelResource           mModelResource;
 
-    f32                     mCoinAngle;
+    u32                     mCoinAngle;
     ModelG3d*               mpModelCoin;
     ModelG3d*               mpModelBlueCoin;
     rio::OrthoProjection    mProjection;
