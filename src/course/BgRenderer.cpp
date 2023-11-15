@@ -21,14 +21,8 @@ BgRenderer::BgRenderer()
     mTextureSampler.setMinFilter(rio::TEX_XY_FILTER_MODE_LINEAR);
     mTextureSampler.setMipFilter(rio::TEX_MIP_FILTER_MODE_NONE);
 
-    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
-    {
-        for (s32 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
-        {
-            mDrawNum[layer][env] = 0;
-            mDynamicDrawNum[layer][env] = 0;
-        }
-    }
+    rio::MemUtil::set(mDrawNum, 0, sizeof(mDrawNum));
+    rio::MemUtil::set(mDynamicDrawNum, 0, sizeof(mDynamicDrawNum));
 
     initialize_();
 }
@@ -232,8 +226,14 @@ void BgRenderer::drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer)
     mVertexBuffer.setSubDataInvalidate(base_vtx_data + vtx_start, sizeof(Vertex) * vtx_start, sizeof(Vertex) * vtx_count);
 }
 
-void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_normal)
+void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_static, bool render_dynamic, bool render_normal)
 {
+    if (!render_static && !render_dynamic)
+    {
+        rio::MemUtil::set(mDynamicDrawNum[layer], 0, sizeof(mDynamicDrawNum[layer]));
+        return;
+    }
+
     RIO_ASSERT(mpCamera != nullptr);
     RIO_ASSERT(mpProjection != nullptr);
 
@@ -267,7 +267,7 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
         u32 draw_num = mDrawNum[layer][env];
         u32 dynamic_draw_num = mDynamicDrawNum[layer][env];
 
-        if (draw_num || dynamic_draw_num)
+        if ((draw_num && render_static) || (dynamic_draw_num && render_dynamic))
         {
             RIO_ASSERT(bg_unit_file[env] != nullptr);
 
@@ -284,7 +284,7 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
             mTextureSampler.bindFS(mTexLocation, 0);
         }
 
-        if (draw_num)
+        if (draw_num && render_static)
         {
             u32 block_start = block_count;
 
@@ -296,7 +296,7 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
             block_count += draw_num;
         }
 
-        if (dynamic_draw_num)
+        if (dynamic_draw_num && render_dynamic)
         {
             u32 block_start = BG_MAX_UNIT_X * BG_MAX_UNIT_Y * CD_FILE_LAYER_MAX_NUM
                             + cDynamicMaxNum * env * layer;
@@ -305,8 +305,8 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
             u32 idx_count = cIdxPerBlock * dynamic_draw_num;
 
             rio::Drawer::DrawElements(rio::Drawer::TRIANGLES, idx_count, base_idx_data + idx_start);
-
-            mDynamicDrawNum[layer][env] = 0;
         }
     }
+
+    rio::MemUtil::set(mDynamicDrawNum[layer], 0, sizeof(mDynamicDrawNum[layer]));
 }

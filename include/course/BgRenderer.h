@@ -44,7 +44,7 @@ public:
 
     void drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
 
-    void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_normal);
+    void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_static, bool render_dynamic = true, bool render_normal = false);
 
 private:
     void initialize_();

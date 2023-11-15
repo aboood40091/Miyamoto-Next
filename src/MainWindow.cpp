@@ -828,8 +828,7 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
     bool render_normal = mWindow.mRenderNormal;
     const bool* layer_shown = mWindow.mLayerShown;
 
-    if (layer_shown[LAYER_2])
-        bg_renderer.render(LAYER_2, bg, cd_file, render_normal);
+    bg_renderer.render(LAYER_2, bg, cd_file, layer_shown[LAYER_2], true, render_normal);
 
     rio::PrimitiveRenderer::instance()->setCamera(mWindow.mCamera);
     rio::PrimitiveRenderer::instance()->setProjection(mWindow.mProjection);
@@ -839,8 +838,7 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
         if (p_item->getMapActorData().layer != LAYER_1)
             p_item->drawXlu(draw_info);
 
-    if (layer_shown[LAYER_1])
-        bg_renderer.render(LAYER_1, bg, cd_file, render_normal);
+    bg_renderer.render(LAYER_1, bg, cd_file, layer_shown[LAYER_1], true, render_normal);
 
     for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
         if (p_item->getMapActorData().layer == LAYER_1)
@@ -852,8 +850,7 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
     for (LocationItem& item : mWindow.mLocationItem)
         item.drawXlu();
 
-    if (layer_shown[LAYER_0])
-        bg_renderer.render(LAYER_0, bg, cd_file, render_normal);
+    bg_renderer.render(LAYER_0, bg, cd_file, layer_shown[LAYER_0], true, render_normal);
 
     for (AreaItem& item : mWindow.mAreaItem)
         item.drawXlu();
