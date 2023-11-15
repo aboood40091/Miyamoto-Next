@@ -12,9 +12,8 @@ public:
     {
     }
 
+    void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
+
 protected:
-    UnitID getUnitID_() override
-    {
-        return cUnitID_QBlock;
-    }
+    UnitID getUnitID_() const override;
 };

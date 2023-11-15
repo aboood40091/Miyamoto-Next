@@ -19,8 +19,8 @@ static const s32 cTexHeightI = 512;
 static const f32 cTexHeight = cTexHeightI;
 static const s32 cUnitSizeI = 64;
 static const f32 cUnitSize = cUnitSizeI;
-//static const s32 cUnitSizeNoPadI = 60;
-//static const f32 cUnitSizeNoPad = cUnitSizeNoPadI;
+static const s32 cUnitSizeNoPadI = 60;
+static const f32 cUnitSizeNoPad = cUnitSizeNoPadI;
 static const s32 cUnitPerRow = cTexWidthI / cUnitSizeI;
 static const s32 cUnitPerRowReal = 16;  // sqrt(cTexWidthI * cTexHeightI) / cUnitSizeI
 //static const s32 cUnitPerColumn = cTexHeightI / cUnitSizeI;
@@ -53,6 +53,7 @@ BgTexMgr::BgTexMgr()
     , mpBgUnitFile(nullptr)
     , mOverridesType(OVERRIDES_NORMAL)
     , mOverridesDrawn(false)
+    , mItemsTexture("Items")
 {
     mTexColorTarget.linkTexture2D(mTexColor);
     mTexRenderBuffer.setRenderTargetColor(&mTexColorTarget);
@@ -242,6 +243,56 @@ static inline void drawTexture(const rio::Texture2D* texture, const rio::BaseMtx
     );
 }
 
+static inline void drawItem(UnitID unit, BgTexMgr::ItemType type, const rio::Texture2D& texture, const rio::BaseMtx44f& proj_mtx)
+{
+    RIO_ASSERT(unit < cUnitID_Pa0_Unit_Num);
+    RIO_ASSERT(type < BgTexMgr::ITEM_MAX);
+
+    u16 tile = unit & 0xFF;
+
+    agl::TextureSampler sampler(texture);
+
+    rio::Matrix34f mtx;
+    mtx.makeST(
+        { cUnitSizeNoPad, cUnitSizeNoPad, 1.0f },
+        { (tile % cUnitPerRow) * cUnitSize + cUnitSize * 0.5f, cTexHeight - (tile / cUnitPerRow + 1) * cUnitSize + cUnitSize * 0.5f, 0.0f }
+    );
+
+    agl::utl::DevTools::drawTextureTexCoord(
+        sampler, mtx, proj_mtx,
+        { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
+        0.0f,
+        { s32(type) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f },
+        agl::cShaderMode_Invalid
+    );
+}
+
+const BgTexMgr::ItemOverrideInfo BgTexMgr::cItemOverrideInfo[cItemOverrideNum] = {
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockFireFlower,   BgTexMgr::ITEM_FIRE_FLOWER },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockStar,         BgTexMgr::ITEM_STAR },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlock1UP,          BgTexMgr::ITEM_1UP },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockVine,         BgTexMgr::ITEM_VINE },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockMiniMushroom, BgTexMgr::ITEM_MINI_MUSHROOM },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockPropeller,    BgTexMgr::ITEM_PROPELLER },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockPenguin,      BgTexMgr::ITEM_PENGUIN },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockIceFlower,    BgTexMgr::ITEM_ICE_FLOWER },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockAcorn,        BgTexMgr::ITEM_ACORN },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockYoshiEgg,     BgTexMgr::ITEM_YOSHI_EGG },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockCoin,         BgTexMgr::ITEM_COIN },
+    { BgTexMgr::ANIME_INFO_TYPE_BLOCK,  cUnitID_BrickBlockCoin10,       BgTexMgr::ITEM_COIN_10 },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockFireFlower,       BgTexMgr::ITEM_FIRE_FLOWER },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockStar,             BgTexMgr::ITEM_STAR },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockCoinStar,         BgTexMgr::ITEM_COIN_STAR },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockVine,             BgTexMgr::ITEM_VINE },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockMiniMushroom,     BgTexMgr::ITEM_MINI_MUSHROOM },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockPropeller,        BgTexMgr::ITEM_PROPELLER },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockPenguin,          BgTexMgr::ITEM_PENGUIN },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockIceFlower,        BgTexMgr::ITEM_ICE_FLOWER },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockAcorn,            BgTexMgr::ITEM_ACORN },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockYoshiEgg,         BgTexMgr::ITEM_YOSHI_EGG },
+    { BgTexMgr::ANIME_INFO_TYPE_HATENA, cUnitID_QBlockSpring,           BgTexMgr::ITEM_SPRING }
+};
+
 void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
 {
     if (!isReady())
@@ -276,6 +327,21 @@ void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
     {
         const AnimeInfo& anime_info = cAnimeInfo[i];
         drawAnime(cAnimeInfoUnitID[i], mFrame[i], mpBgUnitFile->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
+    }
+
+    for (s32 i = 0; i < cItemOverrideNum; i++)
+    {
+        const ItemOverrideInfo& item_override_info = cItemOverrideInfo[i];
+        const AnimeInfo& anime_info = cAnimeInfo[item_override_info.anime_info_type];
+        drawAnime(item_override_info.unit, mFrame[item_override_info.anime_info_type], mpBgUnitFile->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
+
+        render_state.setBlendFactorDst(rio::Graphics::BLEND_MODE_ONE_MINUS_SRC_ALPHA);
+        render_state.applyBlendAndFastZ();
+
+        drawItem(item_override_info.unit, item_override_info.item_type, mItemsTexture, proj_mtx);
+
+        render_state.setBlendFactorDst(rio::Graphics::BLEND_MODE_ZERO);
+        render_state.applyBlendAndFastZ();
     }
 
     restoreFramebuffer_();

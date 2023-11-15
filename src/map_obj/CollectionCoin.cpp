@@ -83,20 +83,20 @@ CollectionCoin::~CollectionCoin()
     }
 }
 
-void CollectionCoin::drawOpa()
+void CollectionCoin::drawOpa(const rio::lyr::DrawInfo& draw_info)
 {
     if (mpModel)
         return;
 
-    MapActorItem::drawOpa();
+    MapActorItem::drawOpa(draw_info);
 }
 
-void CollectionCoin::drawXlu()
+void CollectionCoin::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
     if (mpModel)
         return;
 
-    MapActorItem::drawXlu();
+    MapActorItem::drawXlu(draw_info);
 }
 
 void CollectionCoin::scheduleDraw()

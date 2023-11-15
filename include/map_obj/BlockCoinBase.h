@@ -11,16 +11,16 @@ public:
     {
     }
 
-    void drawOpa() override
+    void drawOpa(const rio::lyr::DrawInfo& draw_info) override
     {
     }
 
-    void drawXlu() override
+    void drawXlu(const rio::lyr::DrawInfo& draw_info) override
     {
     }
 
     void scheduleDraw() override;
 
 protected:
-    virtual UnitID getUnitID_() = 0;
+    virtual UnitID getUnitID_() const = 0;
 };

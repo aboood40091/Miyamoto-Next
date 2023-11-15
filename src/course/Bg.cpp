@@ -1,9 +1,50 @@
 #include <course/Bg.h>
 #include <course/BgUnitFile.h>
 #include <course/CourseDataFile.h>
+#include <course/UnitID.h>
 #include <resource/SharcArchiveRes.h>
 
 #include <misc/rio_MemUtil.h>
+
+namespace {
+
+static const u8 cUnit[24] = {
+    cUnitID_BrickBlockCoin,
+    cUnitID_BrickBlockCoin10,
+    cUnitID_BrickBlockFireFlower,
+    cUnitID_BrickBlockStar,
+    cUnitID_BrickBlock1UP,
+    cUnitID_BrickBlockVine,
+    cUnitID_BrickBlockMiniMushroom,
+    cUnitID_BrickBlockPropeller,
+    cUnitID_BrickBlockPenguin,
+    cUnitID_BrickBlockYoshiEgg,
+    cUnitID_BrickBlockIceFlower,
+    cUnitID_BrickBlockAcorn,
+    cUnitID_QBlock,
+    cUnitID_QBlockFireFlower,
+    cUnitID_QBlockStar,
+    cUnitID_QBlockCoinStar,
+    cUnitID_QBlockVine,
+    cUnitID_QBlockSpring,
+    cUnitID_QBlockMiniMushroom,
+    cUnitID_QBlockPropeller,
+    cUnitID_QBlockPenguin,
+    cUnitID_QBlockYoshiEgg,
+    cUnitID_QBlockIceFlower,
+    cUnitID_QBlockAcorn
+};
+
+static inline u16 mapUnitNo(u8 env, u8 number, u8 flag)
+{
+    if (flag == 0)
+        return env << 8 | number;
+
+    RIO_ASSERT(flag <= 24);
+    return cUnit[flag - 1];
+}
+
+}
 
 Bg::Bg()
 {
@@ -80,11 +121,11 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
         for (u32 x = 0; x < obj.size.x; x++)
         {
             const BgUnit::Tile& tile = *(repeat_before[x % bc]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
     }
     else if (obj.size.x <= bc + ac)
@@ -92,21 +133,21 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
         for (u32 x = 0; x < bc; x++)
         {
             const BgUnit::Tile& tile = *(repeat_before[x]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
 
         for (u32 x = bc; x < obj.size.x; x++)
         {
             const BgUnit::Tile& tile = *(repeat_after[x - bc]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
     }
     else
@@ -116,31 +157,31 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
         for (u32 x = 0; x < bc; x++)
         {
             const BgUnit::Tile& tile = *(repeat_before[x]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
 
         for (u32 x = bc; x < after_threshold; x++)
         {
             const BgUnit::Tile& tile = *(repeat_in[(x - bc) % ic]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
 
         for (u32 x = after_threshold; x < obj.size.x; x++)
         {
             const BgUnit::Tile& tile = *(repeat_after[x - after_threshold]);
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            dest[x] = tile.env << 8 |
-                      tile.number;
+            dest[x] = value;
         }
     }
 }
@@ -226,11 +267,11 @@ void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row
         for (s32 x = xS; x < xE; x++)
         {
             const BgUnit::Tile& tile = srow[x - xS];
-            if (tile.env == 0 && tile.number == 0)
+            u16 value = mapUnitNo(tile.env, tile.number, obj.flag);
+            if (value == 0)
                 continue;
 
-            drow[x] = tile.env << 8 |
-                      tile.number;
+            drow[x] = value;
         }
     }
 }

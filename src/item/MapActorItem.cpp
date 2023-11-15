@@ -14,7 +14,7 @@ MapActorItem::MapActorItem(MapActorData& map_actor_data)
 {
 }
 
-void MapActorItem::drawOpa()
+void MapActorItem::drawOpa(const rio::lyr::DrawInfo& draw_info)
 {
     rio::PrimitiveRenderer::instance()->begin();
     {
@@ -31,7 +31,7 @@ void MapActorItem::drawOpa()
     rio::PrimitiveRenderer::instance()->end();
 }
 
-void MapActorItem::drawXlu()
+void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
     rio::PrimitiveRenderer::instance()->begin();
     {

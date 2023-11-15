@@ -37,6 +37,27 @@ public:
         OVERRIDES_MAX
     };
 
+    enum ItemType
+    {
+        ITEM_COIN = 0,
+        ITEM_FIRE_FLOWER,
+        ITEM_PROPELLER,
+        ITEM_PENGUIN,
+        ITEM_MINI_MUSHROOM,
+        ITEM_STAR,
+        ITEM_COIN_STAR,
+        ITEM_YOSHI_EGG,
+        ITEM_COIN_10,
+        ITEM_1UP,
+        ITEM_VINE,
+        ITEM_SPRING,
+        ITEM_COIN_MUSHROOM,
+        ITEM_ICE_FLOWER,
+        ITEM_ACORN,
+        ITEM_MAX
+    };
+    static_assert(ITEM_MAX == 15);
+
 public:
     void initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer);
     void destroy(RenderObjLayer* p_bg_prepare_layer);
@@ -62,6 +83,11 @@ public:
     {
         mOverridesType = type;
         mOverridesDrawn = false;
+    }
+
+    const rio::Texture2D& getItemsTexture() const
+    {
+        return mItemsTexture;
     }
 
 private:
@@ -96,6 +122,16 @@ private:
     static const AnimeInfo cAnimeInfo[ANIME_INFO_TYPE_MAX];
     static const UnitID cAnimeInfoUnitID[ANIME_INFO_TYPE_MAX];
 
+    struct ItemOverrideInfo
+    {
+        AnimeInfoType   anime_info_type;
+        UnitID          unit;
+        ItemType        item_type;
+    };
+
+    static const s32 cItemOverrideNum = 23;
+    static const ItemOverrideInfo cItemOverrideInfo[cItemOverrideNum];
+
 private:
     void drawXlu_(const rio::lyr::DrawInfo& draw_info);
 
@@ -129,4 +165,5 @@ private:
     rio::Texture2D*         mOverrides[OVERRIDES_MAX];
     OverridesType           mOverridesType;
     bool                    mOverridesDrawn;
+    rio::Texture2D          mItemsTexture;
 };

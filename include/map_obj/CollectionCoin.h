@@ -12,8 +12,8 @@ public:
     CollectionCoin(MapActorData& map_actor_data);
     virtual ~CollectionCoin();
 
-    void drawOpa() override;
-    void drawXlu() override;
+    void drawOpa(const rio::lyr::DrawInfo& draw_info) override;
+    void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
     void scheduleDraw() override;
 
 private:

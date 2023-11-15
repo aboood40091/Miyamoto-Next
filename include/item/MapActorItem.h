@@ -2,6 +2,8 @@
 
 #include <course/CourseDataFile.h>
 
+#include <gfx/lyr/rio_Drawable.h>
+
 #include <memory>
 
 class MapActorItem
@@ -17,8 +19,8 @@ public:
     {
     }
 
-    virtual void drawOpa();
-    virtual void drawXlu();
+    virtual void drawOpa(const rio::lyr::DrawInfo& draw_info);
+    virtual void drawXlu(const rio::lyr::DrawInfo& draw_info);
 
 protected:
     f32 getZPos_() const

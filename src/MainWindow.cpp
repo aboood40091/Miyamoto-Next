@@ -790,11 +790,11 @@ void MainWindow::DrawCallback::postDrawOpa(s32 view_index, const rio::lyr::DrawI
     {
         for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
             if (p_item->getMapActorData().layer != LAYER_1)
-                p_item->drawOpa();
+                p_item->drawOpa(draw_info);
 
         for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
             if (p_item->getMapActorData().layer == LAYER_1)
-                p_item->drawOpa();
+                p_item->drawOpa(draw_info);
 
         for (NextGotoItem& item : mWindow.mNextGotoItem)
             item.drawOpa();
@@ -837,14 +837,14 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
 
     for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
         if (p_item->getMapActorData().layer != LAYER_1)
-            p_item->drawXlu();
+            p_item->drawXlu(draw_info);
 
     if (layer_shown[LAYER_1])
         bg_renderer.render(LAYER_1, bg, cd_file, render_normal);
 
     for (std::unique_ptr<MapActorItem>& p_item : mWindow.mMapActorItemPtr)
         if (p_item->getMapActorData().layer == LAYER_1)
-            p_item->drawXlu();
+            p_item->drawXlu(draw_info);
 
     for (NextGotoItem& item : mWindow.mNextGotoItem)
         item.drawXlu();

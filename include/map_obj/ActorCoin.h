@@ -13,7 +13,7 @@ public:
     }
 
 protected:
-    UnitID getUnitID_() override
+    UnitID getUnitID_() const override
     {
         return cUnitID_Coin;
     }
