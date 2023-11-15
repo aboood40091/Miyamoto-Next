@@ -1,4 +1,6 @@
 #include <actor/ActorCreateMgr.h>
+#include <map_obj/ActorBlockBigHatena.h>
+#include <map_obj/ActorBlockBigRenga.h>
 #include <map_obj/ActorBlockHatena.h>
 #include <map_obj/ActorBlockRenga.h>
 #include <map_obj/ActorCoin.h>
@@ -54,6 +56,10 @@ ActorCreateMgr::ActorCreateMgr()
 
     addActorFactory(397, &ActorBlockHatena::create);
     addActorFactory(398, &ActorBlockRenga::create);
+
+    addActorFactory(422, &ActorBlockBigRenga::create);
+
+    addActorFactory(475, &ActorBlockBigHatena::create);
 
     addActorFactory(480, &CollectionCoin::create);
 
