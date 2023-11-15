@@ -73,7 +73,5 @@ private:
     rio::Texture2D*     mpNormalTexture;
     rio::Texture2D*     mpAnimeTexture[ANIME_TYPE_MAX];
 
-    bool                mTextureFromGTX;
-
     friend class Bg;
 };

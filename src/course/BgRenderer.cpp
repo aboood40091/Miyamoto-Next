@@ -1,4 +1,5 @@
 #include <course/Bg.h>
+#include <course/BgTexMgr.h>
 #include <course/BgUnitFile.h>
 #include <course/BgRenderer.h>
 #include <course/CourseDataFile.h>
@@ -270,7 +271,7 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
         {
             RIO_ASSERT(bg_unit_file[env] != nullptr);
 
-            const rio::Texture2D* p_texture = bg_unit_file[env]->getTexture();
+            const rio::Texture2D* p_texture = env == 0 ? &BgTexMgr::instance()->getTexColor() : bg_unit_file[env]->getTexture();
             const rio::Texture2D* p_nml_texture = bg_unit_file[env]->getNormalTexture();
 
             RIO_ASSERT(p_texture && p_nml_texture);

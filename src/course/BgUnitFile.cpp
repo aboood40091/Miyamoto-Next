@@ -28,15 +28,7 @@ void BgUnitFile::unload()
 
     mBgUnit.clear();
 
-    if (mTextureFromGTX)
-        Texture2DUtil::destroy(&mpTexture);
-
-    else if (mpTexture)
-    {
-        delete mpTexture;
-        mpTexture = nullptr;
-    }
-
+    Texture2DUtil::destroy(&mpTexture);
     Texture2DUtil::destroy(&mpNormalTexture);
 
     for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
@@ -145,48 +137,23 @@ bool BgUnitFile::load(std::span<const u8> data)
     void* tex = archive.getFile(tex_name.c_str(), &tex_filesize);
     void* nml = archive.getFile(nml_name.c_str(), &nml_filesize);
 
-    if (mName == "Pa0_jyotyu")
+    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mpTexture))
     {
-        mpTexture       = new rio::Texture2D("Pa0_jyotyu");
-        mTextureFromGTX = false;
-    }
-    else if (mName == "Pa0_jyotyu_chika")
-    {
-        mpTexture       = new rio::Texture2D("Pa0_jyotyu_chika");
-        mTextureFromGTX = false;
-    }
-    else if (mName == "Pa0_jyotyu_yougan")
-    {
-        mpTexture       = new rio::Texture2D("Pa0_jyotyu_yougan");
-        mTextureFromGTX = false;
-    }
-    else if (mName == "Pa0_jyotyu_yougan2")
-    {
-        mpTexture       = new rio::Texture2D("Pa0_jyotyu_yougan2");
-        mTextureFromGTX = false;
-    }
-    else
-    {
-        switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mpTexture))
-        {
-        case Texture2DUtil::GTX_ERROR_OK:
-            break;
-        case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
-        case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
-            RIO_LOG("\"%s\" texture: missing.\n", mName.c_str());
-            unload();
-            return false;
-        case Texture2DUtil::GTX_ERROR_SRC_INVALID:
-            RIO_LOG("\"%s\" texture: invalid GFD texture.\n", mName.c_str());
-            unload();
-            return false;
-        case Texture2DUtil::GTX_ERROR_UNSUPPORTED_FORMAT:
-            RIO_LOG("\"%s\" texture: unsupported format.\n", mName.c_str());
-            unload();
-            return false;
-        }
-
-        mTextureFromGTX = true;
+    case Texture2DUtil::GTX_ERROR_OK:
+        break;
+    case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
+    case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
+        RIO_LOG("\"%s\" texture: missing.\n", mName.c_str());
+        unload();
+        return false;
+    case Texture2DUtil::GTX_ERROR_SRC_INVALID:
+        RIO_LOG("\"%s\" texture: invalid GFD texture.\n", mName.c_str());
+        unload();
+        return false;
+    case Texture2DUtil::GTX_ERROR_UNSUPPORTED_FORMAT:
+        RIO_LOG("\"%s\" texture: unsupported format.\n", mName.c_str());
+        unload();
+        return false;
     }
 
     switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)nml, nml_filesize }, &mpNormalTexture))

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <course/Constants.h>
+#include <course/BgUnitFile.h>
 #include <course/UnitID.h>
 #include <graphics/RenderMgr.h>
 
@@ -28,14 +28,40 @@ private:
     BgTexMgr& operator=(const BgTexMgr&);
 
 public:
+    enum OverridesType
+    {
+        OVERRIDES_NORMAL = 0,
+        OVERRIDES_FOREST,
+        OVERRIDES_SKY,
+        OVERRIDES_UNDERGROUND,
+        OVERRIDES_MAX
+    };
+
+public:
     void initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer);
     void destroy(RenderObjLayer* p_bg_prepare_layer);
 
     void update();
 
+    bool isReady() const
+    {
+        return mpBgUnitFile && mpBgUnitFile->getTexture();
+    }
+
+    const rio::Texture2D& getTexColor() const
+    {
+        return mTexColor;
+    }
+
     const rio::RenderBuffer& getTexRenderBuffer() const
     {
         return mTexRenderBuffer;
+    }
+
+    void setCurrentOverridesType(OverridesType type)
+    {
+        mOverridesType = type;
+        mOverridesDrawn = false;
     }
 
 private:
@@ -71,7 +97,6 @@ private:
     static const UnitID cAnimeInfoUnitID[ANIME_INFO_TYPE_MAX];
 
 private:
-    static void drawAnime_(UnitID unit, s32 frame, AnimeType type, bool square, const rio::BaseMtx44f& proj_mtx);
     void drawXlu_(const rio::lyr::DrawInfo& draw_info);
 
 private:
@@ -95,8 +120,13 @@ private:
     DrawCallback            mDrawCallback;
     rio::RenderBuffer       mTexRenderBuffer;
     rio::RenderTargetColor  mTexColorTarget;
+    rio::Texture2D          mTexColor;
     rio::RenderTargetDepth  mTexDepthTarget;
     rio::Texture2D          mTexDepth;
+    const BgUnitFile*       mpBgUnitFile;
     s32                     mDelayTimer[ANIME_INFO_TYPE_MAX];
     s32                     mFrame[ANIME_INFO_TYPE_MAX];
+    rio::Texture2D*         mOverrides[OVERRIDES_MAX];
+    OverridesType           mOverridesType;
+    bool                    mOverridesDrawn;
 };
