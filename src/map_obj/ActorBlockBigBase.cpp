@@ -97,7 +97,7 @@ void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
 
     rio::Matrix34f model_mtx;
     model_mtx.makeST(
-        { 16.0f, 16.0f, 1.0f },
+        { 32.0f, 32.0f, 1.0f },
         { f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y + 32), getZPos_() }
     );
 
