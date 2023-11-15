@@ -64,10 +64,10 @@ BgTexMgr::BgTexMgr()
     rio::MemUtil::set(mFrame, 0, sizeof(mFrame));
 
     static const char* const cOverridesFilenames[OVERRIDES_MAX] = {
-        "Overrides",
-        "Overrides-Forest",
-        "Overrides-Sky",
-        "Overrides-Underground"
+        "Overrides/Normal",
+        "Overrides/Forest",
+        "Overrides/Sky",
+        "Overrides/Underground"
     };
 
     for (s32 i = 0; i < OVERRIDES_MAX; i++)
