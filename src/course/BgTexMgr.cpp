@@ -6,7 +6,6 @@
 
 #include <MainWindow.h>
 
-#include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>
@@ -172,17 +171,6 @@ void BgTexMgr::update()
     }
 }
 
-static inline void clearRow(u16 tile, f32 width)
-{
-    rio::PrimitiveRenderer::QuadArg arg;
-    rio::Vector3f p { tile % cUnitPerRow * cUnitSize, cTexHeight - (tile / cUnitPerRow + 1) * cUnitSize, 0.0f };
-    rio::Vector2f size { width, cUnitSize };
-    arg.setCornerAndSize(p, size);
-    rio::Color4f color { 1.0f, 0.0f, 0.0f, 0.0f };
-    arg.setColor(color, color);
-    rio::PrimitiveRenderer::instance()->drawQuad(arg);
-}
-
 void BgTexMgr::drawAnime_(UnitID unit, s32 frame, AnimeType type, bool square, const rio::BaseMtx44f& proj_mtx)
 {
     RIO_ASSERT(unit < cUnitID_Pa0_Unit_Num);
@@ -213,21 +201,6 @@ void BgTexMgr::drawAnime_(UnitID unit, s32 frame, AnimeType type, bool square, c
             ? tex_width / cUnitSizeI
             : 1;
 
-    rio::RenderState render_state;
-    render_state.setBlendEnable(false);
-    render_state.applyBlendAndFastZ();
-
-    rio::PrimitiveRenderer* primitive_renderer = rio::PrimitiveRenderer::instance();
-    primitive_renderer->begin();
-    {
-        for (s32 i = 0; i < size; i++)
-            clearRow(tile + i * cUnitPerRowReal, f32(tex_width));
-    }
-    primitive_renderer->end();
-
-    render_state.setBlendEnable(true);
-    render_state.applyBlendAndFastZ();
-
     for (s32 i = 0; i < size; i++)
     {
         rio::Matrix34f mtx;
@@ -252,15 +225,11 @@ void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
 
     rio::RenderState render_state;
     render_state.setDepthEnable(false, false);
+    render_state.setBlendFactor(rio::Graphics::BLEND_MODE_SRC_ALPHA, rio::Graphics::BLEND_MODE_ZERO);
     render_state.setCullingMode(rio::Graphics::CULLING_MODE_NONE);
     render_state.apply();
 
     const rio::BaseMtx44f& proj_mtx = draw_info.parent_layer.projection()->getMatrix();
-
-    rio::PrimitiveRenderer* primitive_renderer = rio::PrimitiveRenderer::instance();
-    primitive_renderer->setProjMtx(proj_mtx);
-    primitive_renderer->setCamera(rio::lyr::Layer::defaultCamera());
-    primitive_renderer->setModelMatrix(rio::Matrix34f::ident);
 
     for (s32 i = 0; i < ANIME_INFO_TYPE_MAX; i++)
     {
