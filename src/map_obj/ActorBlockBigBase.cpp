@@ -46,7 +46,7 @@ void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
         default:
             return;
         case 1:
-            if (!setCoin_())
+            if (!mSetCoin)
                 return;
             type = BgTexMgr::ITEM_COIN;
             break;

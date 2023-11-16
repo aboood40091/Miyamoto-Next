@@ -8,7 +8,7 @@ class ActorBlockBigRenga : public ActorBlockBigBase
 
 public:
     ActorBlockBigRenga(MapActorData& map_actor_data)
-        : ActorBlockBigBase(map_actor_data)
+        : ActorBlockBigBase(map_actor_data, true)
     {
     }
 
@@ -16,10 +16,5 @@ protected:
     UnitID getUnitID_() const override
     {
         return UnitID(112);
-    }
-
-    virtual bool setCoin_() const
-    {
-        return true;
     }
 };

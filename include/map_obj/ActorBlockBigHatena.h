@@ -8,7 +8,7 @@ class ActorBlockBigHatena : public ActorBlockBigBase
 
 public:
     ActorBlockBigHatena(MapActorData& map_actor_data)
-        : ActorBlockBigBase(map_actor_data)
+        : ActorBlockBigBase(map_actor_data, false)
     {
     }
 
@@ -16,10 +16,5 @@ protected:
     UnitID getUnitID_() const override
     {
         return UnitID(114);
-    }
-
-    virtual bool setCoin_() const
-    {
-        return false;
     }
 };

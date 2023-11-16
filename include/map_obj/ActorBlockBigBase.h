@@ -6,8 +6,9 @@
 class ActorBlockBigBase : public MapActorItem
 {
 public:
-    ActorBlockBigBase(MapActorData& map_actor_data)
+    ActorBlockBigBase(MapActorData& map_actor_data, bool set_coin)
         : MapActorItem(map_actor_data)
+        , mSetCoin(set_coin)
     {
     }
 
@@ -20,5 +21,7 @@ public:
 
 protected:
     virtual UnitID getUnitID_() const = 0;
-    virtual bool setCoin_() const = 0;
+
+private:
+    bool    mSetCoin;
 };
