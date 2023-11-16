@@ -68,8 +68,13 @@ ActorCreateMgr::ActorCreateMgr()
 
     addActorFactory(496, &ActorCoin::create);
 
+    addActorFactory(503, &GoalPole::create);
+
     addActorFactory(525, &ActorBlockHatena::create);
     addActorFactory(526, &ActorBlockRenga::create);
+
+    addActorFactory(630, &GoalPole::create);
+    addActorFactory(631, &GoalPole::create);
 
     addActorFactory(663, &ActorCoin::create);
 

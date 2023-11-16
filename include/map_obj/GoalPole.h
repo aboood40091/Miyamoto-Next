@@ -22,6 +22,7 @@ public:
     void scheduleDraw() override;
 
 private:
+    const std::string* mpResName;
     struct
     {
         BasicModel*                 p_model;
