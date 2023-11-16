@@ -3,6 +3,9 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/CollectionCoin.h>
+#include <resource/ResMgr.h>
+
+#include <MainWindow.h>
 
 static const std::string cResName = "star_coin";
 
@@ -10,10 +13,12 @@ CollectionCoin::CollectionCoin(MapActorData& map_actor_data)
     : MapActorItem(map_actor_data)
     , mpModel(nullptr)
 {
-    if (!ModelResMgr::instance()->loadResFile(cResName, cResName))
+    static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".szs";
+    const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, true);
+    if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->getResource(cResName);
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str());
     RIO_ASSERT(model_res);
 
     mpModel = Model::createG3d(
@@ -30,6 +35,7 @@ CollectionCoin::~CollectionCoin()
     {
         delete mpModel;
         ModelResMgr::instance()->destroyResFile(cResName);
+        ResMgr::instance()->destroyArchiveRes(cResName);
     }
 }
 
