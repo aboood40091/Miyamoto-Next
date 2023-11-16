@@ -31,20 +31,20 @@ ModelResMgr::~ModelResMgr()
     RIO_ASSERT(mResMap.empty());
 }
 
-bool ModelResMgr::loadResFile(const std::string& key, const std::string& archive_name)
+ModelResource* ModelResMgr::loadResFile(const std::string& key, const std::string& archive_name)
 {
     {
         const auto& it = mResMap.find(key);
         if (it != mResMap.end())
         {
             it->second.ref_counter++;
-            return true;
+            return it->second.mdl_resource;
         }
     }
 
     const SharcArchiveRes* archive = ResMgr::instance()->getArchiveRes(archive_name);
     if (archive == nullptr)
-        return false;
+        return nullptr;
 
     ModelResource* mdl_resource = new ModelResource;
     mdl_resource->load(archive, archive_name.c_str());
@@ -53,18 +53,19 @@ bool ModelResMgr::loadResFile(const std::string& key, const std::string& archive
     res.ref_counter = 1;
     res.mdl_resource = mdl_resource;
 
-    mResMap.try_emplace(key, std::move(res));
-    return true;
+    const auto& it = mResMap.try_emplace(key, std::move(res));
+    RIO_ASSERT(it.second);
+    return it.first->second.mdl_resource;
 }
 
-void ModelResMgr::loadResFile(const std::string& key, const SharcArchiveRes* archive, const char* filename)
+ModelResource* ModelResMgr::loadResFile(const std::string& key, const SharcArchiveRes* archive, const char* filename)
 {
     {
         const auto& it = mResMap.find(key);
         if (it != mResMap.end())
         {
             it->second.ref_counter++;
-            return;
+            return it->second.mdl_resource;
         }
     }
 
@@ -75,7 +76,9 @@ void ModelResMgr::loadResFile(const std::string& key, const SharcArchiveRes* arc
     res.ref_counter = 1;
     res.mdl_resource = mdl_resource;
 
-    mResMap.try_emplace(key, std::move(res));
+    const auto& it = mResMap.try_emplace(key, std::move(res));
+    RIO_ASSERT(it.second);
+    return it.first->second.mdl_resource;
 }
 
 void ModelResMgr::destroyResFile(const std::string& key)

@@ -24,8 +24,8 @@ private:
     ResMgr& operator=(const ResMgr&);
 
 public:
-    bool loadArchiveRes(const std::string& key, const std::string& archive_path, bool decompress);
-    bool loadArchiveRes(const std::string& key, void* archive, bool fatal_errors);
+    const SharcArchiveRes* loadArchiveRes(const std::string& key, const std::string& archive_path, bool decompress);
+    const SharcArchiveRes* loadArchiveRes(const std::string& key, void* archive, bool fatal_errors);
     void destroyArchiveRes(const std::string& key);
 
     const SharcArchiveRes* getArchiveRes(const std::string& key) const;

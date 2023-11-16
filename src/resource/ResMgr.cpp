@@ -33,14 +33,14 @@ ResMgr::~ResMgr()
     RIO_ASSERT(mResMap.empty());
 }
 
-bool ResMgr::loadArchiveRes(const std::string& key, const std::string& archive_path, bool decompress)
+const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, const std::string& archive_path, bool decompress)
 {
     {
         const auto& it = mResMap.find(key);
         if (it != mResMap.end())
         {
             it->second.ref_counter++;
-            return true;
+            return &it->second.archive_res;
         }
     }
 
@@ -54,27 +54,28 @@ bool ResMgr::loadArchiveRes(const std::string& key, const std::string& archive_p
             : rio::FileDeviceMgr::instance()->tryLoad(arg);
 
     if (!data)
-        return false;
+        return nullptr;
 
     Resource res;
     res.ref_counter = 1;
     res.archive = data;
     res.self_alloc = true;
     if (!res.archive_res.prepareArchive(res.archive))
-        return false;
+        return nullptr;
 
-    mResMap.try_emplace(key, std::move(res));
-    return true;
+    const auto& it = mResMap.try_emplace(key, std::move(res));
+    RIO_ASSERT(it.second);
+    return &it.first->second.archive_res;
 }
 
-bool ResMgr::loadArchiveRes(const std::string& key, void* archive, bool fatal_errors)
+const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, void* archive, bool fatal_errors)
 {
     {
         const auto& it = mResMap.find(key);
         if (it != mResMap.end())
         {
             it->second.ref_counter++;
-            return true;
+            return &it->second.archive_res;
         }
     }
 
@@ -83,10 +84,11 @@ bool ResMgr::loadArchiveRes(const std::string& key, void* archive, bool fatal_er
     res.archive = archive;
     res.self_alloc = false;
     if (!res.archive_res.prepareArchive(res.archive, fatal_errors))
-        return false;
+        return nullptr;
 
-    mResMap.try_emplace(key, std::move(res));
-    return true;
+    const auto& it = mResMap.try_emplace(key, std::move(res));
+    RIO_ASSERT(it.second);
+    return &it.first->second.archive_res;
 }
 
 void ResMgr::destroyArchiveRes(const std::string& key)

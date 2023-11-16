@@ -24,8 +24,8 @@ private:
     ModelResMgr& operator=(const ModelResMgr&);
 
 public:
-    bool loadResFile(const std::string& key, const std::string& archive_name);
-    void loadResFile(const std::string& key, const SharcArchiveRes* archive, const char* filename);
+    ModelResource* loadResFile(const std::string& key, const std::string& archive_name);
+    ModelResource* loadResFile(const std::string& key, const SharcArchiveRes* archive, const char* filename);
     void destroyResFile(const std::string& key);
 
     ModelResource* getResource(const std::string& key) const;
