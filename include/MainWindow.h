@@ -53,30 +53,20 @@ public:
         return viewToWorldPos(mCursorPos);
     }
 
-    CourseData& getCourseData()
-    {
-        return mCourseData;
-    }
-
-    const CourseData& getCourseData() const
-    {
-        return mCourseData;
-    }
-
     CourseDataFile* getCurrentCourseDataFile()
     {
-        if (mCurrentFile == -1)
+        if (CourseData::instance() == nullptr || mCurrentFile == -1)
             return nullptr;
 
-        return mCourseData.getFile(mCurrentFile);
+        return CourseData::instance()->getFile(mCurrentFile);
     }
 
     const CourseDataFile* getCurrentCourseDataFile() const
     {
-        if (mCurrentFile == -1)
+        if (CourseData::instance() == nullptr || mCurrentFile == -1)
             return nullptr;
 
-        return mCourseData.getFile(mCurrentFile);
+        return CourseData::instance()->getFile(mCurrentFile);
     }
 
     BgRenderer& getBgRenderer()
@@ -175,7 +165,6 @@ private:
     rio::Vector2f               mCursorPos;
     rio::Vector2f               mLastCursorPos;
 
-    CourseData                  mCourseData;
     BgRenderer                  mBgRenderer;
     s32                         mCurrentFile;
 

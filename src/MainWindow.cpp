@@ -26,8 +26,10 @@
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <distant_view/DistantViewMgr.h>
+#include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <graphics/ShaderHolder.h>
+#include <resource/ResMgr.h>
 
 #if RIO_IS_CAFE
 #include <gx2/event.h>
@@ -228,6 +230,15 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
+    ResMgr::createSingleton();
+    ModelResMgr::createSingleton();
+
+  //RIO_LOG("Initialized ResMgr & ModelResMgr\n");
+
+    CourseData::createSingleton();
+
+  //RIO_LOG("Created CourseData\n");
+
     Renderer::createSingleton();
 
   //RIO_LOG("Initialized Renderer\n");
@@ -271,18 +282,28 @@ void MainWindow::prepare_()
     CoinOrigin::instance()->initialize(pack_arc_path);
 
     const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
-    mCourseData.loadFromPack(level_path);
+    CourseData::instance()->loadFromPack(level_path);
     setCurrentCourseDataFile(0);
 }
 
 void MainWindow::exit_()
 {
+    mMapActorItemPtr.clear();
+    mNextGotoItem.clear();
+    mLocationItem.clear();
+    mAreaItem.clear();
+
     ActorCreateMgr::destroySingleton();
     CoinOrigin::destroySingleton();
 
     DistantViewMgr::destroySingleton();
 
     Renderer::destroySingleton();
+
+    CourseData::destroySingleton();
+
+    ModelResMgr::destroySingleton();
+    ResMgr::destroySingleton();
 
     ShaderHolder::destroySingleton();
 
@@ -305,6 +326,12 @@ void MainWindow::exit_()
 #endif // RIO_IS_CAFE
 
     BgTexMgr::destroySingleton();
+
+    for (s32 i = 0; i < SCENE_LAYER_NUM; i++)
+    {
+        rio::lyr::Renderer::instance()->removeLayer(mLayer[i].it);
+        mLayer[i].ptr = nullptr;
+    }
 }
 
 namespace {
@@ -386,11 +413,11 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
 
-    Bg& bg = mCourseData.getBg();
+    Bg& bg = CourseData::instance()->getBg();
 
     mDVControlArea = -1;
 
-    if (!mCourseData.getFile(id))
+    if (!CourseData::instance()->getFile(id))
     {
         mCurrentFile = -1;
 
@@ -411,7 +438,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     }
 
     mCurrentFile = id;
-    CourseDataFile& cd_file = *mCourseData.getFile(id);
+    CourseDataFile& cd_file = *CourseData::instance()->getFile(id);
 
     bg.processBgCourseData(cd_file);
     mBgRenderer.createVertexBuffer(bg);
@@ -595,7 +622,7 @@ void MainWindow::calc_()
         {
             s32 prev_file = mCurrentFile;
 
-            while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !mCourseData.getFile(mCurrentFile))
+            while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getFile(mCurrentFile))
                 continue;
 
             if (mCurrentFile != prev_file)
@@ -618,7 +645,7 @@ void MainWindow::calc_()
     if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
     {
         RIO_ASSERT(mCurrentFile != -1);
-        const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
+        const CourseDataFile& cd_file = *CourseData::instance()->getFile(mCurrentFile);
         const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
 
         const f32 y = -s32(area_data.offset.y);
@@ -665,7 +692,7 @@ void MainWindow::calcDistantViewScissor_()
 
         RIO_ASSERT(mCurrentFile != -1);
 
-        const CourseDataFile& cd_file = *mCourseData.getFile(mCurrentFile);
+        const CourseDataFile& cd_file = *CourseData::instance()->getFile(mCurrentFile);
         const AreaData& area_data = cd_file.getAreaData()[mDVControlArea];
 
         const f32 x =  s32(area_data.offset.x);
@@ -815,10 +842,8 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
     if (current_file == -1)
         return;
 
-    const CourseData& cd = mWindow.mCourseData;
-
-    const Bg& bg = cd.getBg();
-    const CourseDataFile& cd_file = *cd.getFile(current_file);
+    const Bg& bg = CourseData::instance()->getBg();
+    const CourseDataFile& cd_file = *CourseData::instance()->getFile(current_file);
 
     rio::RenderState render_state;
     render_state.setBlendEnable(mWindow.mBlendEnable);

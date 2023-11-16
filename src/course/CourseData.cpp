@@ -1,5 +1,6 @@
 #include <course/BgUnitFile.h>
 #include <course/CourseData.h>
+#include <resource/ResMgr.h>
 #include <resource/SharcArchiveRes.h>
 #include <resource/SharcWriter.h>
 #include <resource/SZSCompressor.h>
@@ -29,6 +30,26 @@ char CourseData::sCourseDataFileName  [COURSE_DATA_FILE_NAME_LEN       + 1] = "c
 char CourseData::sCourseDataFileL0Name[COURSE_DATA_FILE_LAYER_NAME_LEN + 1] = "course/courseX_bgdatL0.bin";
 char CourseData::sCourseDataFileL1Name[COURSE_DATA_FILE_LAYER_NAME_LEN + 1] = "course/courseX_bgdatL1.bin";
 char CourseData::sCourseDataFileL2Name[COURSE_DATA_FILE_LAYER_NAME_LEN + 1] = "course/courseX_bgdatL2.bin";
+
+CourseData* CourseData::sInstance = nullptr;
+
+bool CourseData::createSingleton()
+{
+    if (sInstance)
+        return false;
+
+    sInstance = new CourseData();
+    return true;
+}
+
+void CourseData::destroySingleton()
+{
+    if (!sInstance)
+        return;
+
+    delete sInstance;
+    sInstance = nullptr;
+}
 
 CourseData::CourseData()
 {
@@ -162,16 +183,20 @@ bool CourseData::loadFromPack(const std::string& path)
     const std::vector<SharcArchiveRes::Entry>& entries = pack_arc.readEntry();
     for (const SharcArchiveRes::Entry& entry : entries)
     {
-        if (read_files.find(entry.name) != read_files.end())
+        const std::string& name = entry.name;
+
+        if (read_files.find(name) != read_files.end())
             continue;
 
         u32 size = 0;
-        u8* data = static_cast<u8*>(pack_arc.getFile(entry.name, &size));
+        u8* data = static_cast<u8*>(pack_arc.getFile(name.c_str(), &size));
 
         u8* new_data = static_cast<u8*>(rio::MemUtil::alloc(size, 0x2000));
         rio::MemUtil::copy(new_data, data, size);
 
-        mResData.try_emplace(entry.name, std::span{ new_data, size });
+        mResData.try_emplace(name, std::span{ new_data, size });
+
+        ResMgr::instance()->loadArchiveRes(name, new_data, false);
     }
 
 #if 0
@@ -244,19 +269,13 @@ std::span<u8> CourseData::save(const std::string& level_name) const
     return out_archive;
 }
 
-std::span<u8> CourseData::getRes(const std::string& name) const
-{
-    const auto& it = mResData.find(name);
-    if (it == mResData.end())
-        return std::span<u8>();
-
-    return it->second;
-}
-
 void CourseData::clearResData_()
 {
     for (const auto& file : mResData)
+    {
+        ResMgr::instance()->destroyArchiveRes(file.first);
         rio::MemUtil::free(file.second.data());
+    }
 
     mResData.clear();
 }

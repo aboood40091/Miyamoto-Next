@@ -8,9 +8,20 @@
 class CourseData
 {
 public:
+    static bool createSingleton();
+    static void destroySingleton();
+    static CourseData* instance() { return sInstance; }
+
+private:
+    static CourseData* sInstance;
+
     CourseData();
     ~CourseData();
 
+    CourseData(const CourseData&);
+    CourseData& operator=(const CourseData&);
+
+public:
     bool loadFromPack(const std::string& path);
     std::span<u8> save(const std::string& level_name) const;
 
@@ -45,8 +56,6 @@ public:
     {
         return mBg;
     }
-
-    std::span<u8> getRes(const std::string& name) const;
 
 private:
     void clearResData_();
