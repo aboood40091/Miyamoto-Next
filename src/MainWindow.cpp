@@ -727,6 +727,9 @@ void MainWindow::calc_()
 
     BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
+
+    for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
+        p_item->update();
 }
 
 rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const

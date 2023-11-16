@@ -12,8 +12,17 @@ public:
     MapActorItem(MapActorData& map_actor_data);
     virtual ~MapActorItem() {}
 
+    MapActorItem(const MapActorItem&) = delete;
+    MapActorItem(MapActorItem&&) = delete;
+    MapActorItem& operator=(const MapActorItem&) = delete;
+    MapActorItem& operator=(MapActorItem&&) = delete;
+
     MapActorData& getMapActorData() { return mMapActorData; }
     const MapActorData& getMapActorData() const { return mMapActorData; }
+
+    virtual void update()
+    {
+    }
 
     virtual void scheduleDraw()
     {

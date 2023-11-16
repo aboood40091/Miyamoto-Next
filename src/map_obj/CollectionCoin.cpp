@@ -27,6 +27,8 @@ CollectionCoin::CollectionCoin(MapActorData& map_actor_data)
         1, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
+
+    update();
 }
 
 CollectionCoin::~CollectionCoin()
@@ -55,7 +57,7 @@ void CollectionCoin::drawXlu(const rio::lyr::DrawInfo& draw_info)
     MapActorItem::drawXlu(draw_info);
 }
 
-void CollectionCoin::scheduleDraw()
+void CollectionCoin::update()
 {
     if (mpModel == nullptr)
         return;
@@ -68,6 +70,12 @@ void CollectionCoin::scheduleDraw()
 
     mpModel->setMtxRT(mtx);
     mpModel->updateModel();
+}
+
+void CollectionCoin::scheduleDraw()
+{
+    if (mpModel == nullptr)
+        return;
 
     Renderer::instance()->drawModel(mpModel, true, false);
 }

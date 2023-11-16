@@ -14,6 +14,8 @@ public:
 
     void drawOpa(const rio::lyr::DrawInfo& draw_info) override;
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
+
+    void update() override;
     void scheduleDraw() override;
 
 private:
