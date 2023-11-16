@@ -13,7 +13,6 @@ GoalPole::GoalPole(MapActorData& map_actor_data)
 {
     rio::MemUtil::set(&mBase, 0, sizeof(mBase));
     rio::MemUtil::set(&mGoalFlag, 0, sizeof(mGoalFlag));
-  //rio::MemUtil::set(&mGoalFlagPlayer, 0, sizeof(mGoalFlagPlayer));
     rio::MemUtil::set(&mTorideStd, 0, sizeof(mTorideStd));
 
     static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".szs";
@@ -58,29 +57,6 @@ GoalPole::GoalPole(MapActorData& map_actor_data)
     mGoalFlag.p_shu_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
     mGoalFlag.p_shu_anim->getFrameCtrl().setRate(1.0f);
 
-    /*
-    mGoalFlagPlayer.p_model = BasicModel::create(
-        const_cast<ModelResource*>(model_res),
-        "goal_flag_player",
-        1, 1, 1, 0, 0,
-        Model::cBoundingMode_Disable
-    );
-
-    mGoalFlagPlayer.p_model->getSklAnim(0)->play(model_res, "goal_flag_player_wait");
-    mGoalFlagPlayer.p_model->getSklAnim(0)->getFrameCtrl().setRate(1.0f);
-    mGoalFlagPlayer.p_model->getSklAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
-    mGoalFlagPlayer.p_model->getSklAnim(0)->getFrameCtrl().reset();
-
-    mGoalFlagPlayer.p_tex_anim = mGoalFlagPlayer.p_model->getTexAnim(0);
-    mGoalFlagPlayer.p_tex_anim->play(model_res, "goal_flag_player");
-    mGoalFlagPlayer.p_tex_anim->getFrameCtrl().set(FrameCtrl::cMode_NoRepeat, 0.0f, frame);
-
-    mGoalFlagPlayer.p_shu_anim = mGoalFlagPlayer.p_model->getShuAnim(0);
-    mGoalFlagPlayer.p_shu_anim->playTexSrtAnim(model_res, "goal_flag_player_wait");
-    mGoalFlagPlayer.p_shu_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
-    mGoalFlagPlayer.p_shu_anim->getFrameCtrl().setRate(1.0f);
-    */
-
     mTorideStd.p_model = BasicModel::create(
         const_cast<ModelResource*>(model_res),
         "toride_std",
@@ -108,9 +84,6 @@ GoalPole::~GoalPole()
 
         delete mGoalFlag.p_model->getModel();
         delete mGoalFlag.p_model;
-
-      //delete mGoalFlagPlayer.p_model->getModel();
-      //delete mGoalFlagPlayer.p_model;
 
         delete mTorideStd.p_model->getModel();
         delete mTorideStd.p_model;
@@ -162,27 +135,8 @@ void GoalPole::update()
         mGoalFlag.p_model->getModel()->setMtxRT(mtx);
         mGoalFlag.p_model->updateAnimations();
         mGoalFlag.p_model->getModel()->updateAnimations();
-      //s32 index = mGoalFlag.p_model->getModel()->searchBoneIndex("position_root");
-      //rio::Matrix34f bone_mtxRT;
-      //rio::Vector3f bone_scale;
-      //mGoalFlag.p_model->getModel()->getBoneLocalMatrix(index, &bone_mtxRT, &bone_scale);
-      //bone_mtxRT.applyTranslationWorld({ 0.0f, 0.0f, 0.0f });
-      //mGoalFlag.p_model->getModel()->setBoneLocalMatrix(index, bone_mtxRT, bone_scale);
         mGoalFlag.p_model->getModel()->updateModel();
     }
-    /*
-    {
-        rio::Matrix34f mtx;
-        mtx.makeRT(
-            { 0.0f, rio::Mathf::deg2rad(270), 0.0f },
-            { f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y + 106), 2900.0f }
-        );
-        mGoalFlagPlayer.p_model->getModel()->setMtxRT(mtx);
-        mGoalFlagPlayer.p_model->updateAnimations();
-        mGoalFlagPlayer.p_model->getModel()->updateAnimations();
-        mGoalFlagPlayer.p_model->getModel()->updateModel();
-    }
-    */
 }
 
 void GoalPole::scheduleDraw()
@@ -195,7 +149,4 @@ void GoalPole::scheduleDraw()
 
     if (!(mMapActorData.settings[0] >> 4 & 1))
         Renderer::instance()->drawModel(*mTorideStd.p_model, true, true);
-
-  //if (true)
-  //    Renderer::instance()->drawModel(*mGoalFlagPlayer.p_model, true, true);
 }

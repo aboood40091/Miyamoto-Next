@@ -32,7 +32,7 @@ private:
         BasicModel*                 p_model;
         TexturePatternAnimation*    p_tex_anim;
         ShaderParamAnimation*       p_shu_anim;
-    } mGoalFlag /* , mGoalFlagPlayer */;
+    } mGoalFlag;
     struct
     {
         BasicModel*                 p_model;
