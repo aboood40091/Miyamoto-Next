@@ -38,6 +38,11 @@
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
 
+const std::string& MainWindow::getContentPath()
+{
+    return nsmbu_content_path;
+}
+
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
     , m3DDrawCallback(*this)
@@ -204,7 +209,7 @@ void MainWindow::prepare_()
     rio::FileDevice::LoadArg arg;
     arg.path =
 #if RIO_IS_CAFE
-        nsmbu_content_path + "/CAFE/agl_resource_cafe.sarc";
+        getContentPath() + "/CAFE/agl_resource_cafe.sarc";
 #else
         "agl_resource_cafe_dev.sarc";
 #endif
@@ -226,7 +231,7 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized agl!\n");
 
     ShaderHolder::createSingleton();
-    ShaderHolder::instance()->initialize(nsmbu_content_path + "/Common/shader/shaderfb");
+    ShaderHolder::instance()->initialize(getContentPath() + "/Common/shader/shaderfb");
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
@@ -278,10 +283,10 @@ void MainWindow::prepare_()
     CoinOrigin::createSingleton();
     ActorCreateMgr::createSingleton();
 
-    const std::string& pack_arc_path = nsmbu_content_path + "/Common/actor/jyotyuActorPack.szs";
+    const std::string& pack_arc_path = getContentPath() + "/Common/actor/jyotyuActorPack.szs";
     CoinOrigin::instance()->initialize(pack_arc_path);
 
-    const std::string& level_path = nsmbu_content_path + "/Common/course_res_pack/" + level_fname;
+    const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
     setCurrentCourseDataFile(0);
 }
@@ -427,7 +432,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
         const char* dv_name = "Nohara";
 
-        const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
+        const std::string& dv_path = getContentPath() + "/Common/distant_view";
         RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
         DistantViewMgr::instance()->initialize(dv_name, dv_path);
@@ -560,7 +565,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     RIO_ASSERT(dv_name != nullptr);
 
-    const std::string& dv_path = nsmbu_content_path + "/Common/distant_view";
+    const std::string& dv_path = getContentPath() + "/Common/distant_view";
     RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
     const f32 screen_world_h = 224 * mBgZoom;

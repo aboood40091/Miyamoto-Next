@@ -24,6 +24,9 @@ class RenderObjLayer;
 class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 {
 public:
+    static const std::string& getContentPath();
+
+public:
     MainWindow();
 
     void setZoom(f32 zoom)
