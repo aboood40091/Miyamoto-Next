@@ -1,8 +1,5 @@
 #pragma once
 
-#include <graphics/ModelResource.h>
-#include <resource/SharcArchiveRes.h>
-
 #include <gfx/rio_Projection.h>
 #include <gfx/lyr/rio_Drawable.h>
 
@@ -28,7 +25,7 @@ private:
     CoinOrigin& operator=(const CoinOrigin&);
 
 public:
-    bool initialize(const std::string& pack_arc_path);
+    bool initialize();
 
     void pushBackDrawMethod(RenderObjLayer* p_bg_prepare_layer);
 
@@ -47,9 +44,6 @@ private:
 
 private:
     bool                    mIsInitialized;
-    void*                   mpArchive;
-    SharcArchiveRes         mArchiveRes;
-    ModelResource           mModelResource;
 
     u32                     mCoinAngle;
     ModelG3d*               mpModelCoin;

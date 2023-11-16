@@ -149,8 +149,11 @@ private:
         rio::lyr::Layer* ptr;
     } mLayer[SCENE_LAYER_NUM];
 
-    void* mpArchive;
-    SharcArchiveRes mArchiveRes;
+    struct
+    {
+        void* p_archive;
+        SharcArchiveRes archive_res;
+    } mAglRes, mJyotyuActorPack, mCobPack;
 
     f32 mBgZoom;
     s32 mDVControlArea;

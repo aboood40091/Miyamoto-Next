@@ -206,22 +206,24 @@ void MainWindow::prepare_()
   //agl::utl::PrimitiveVertex::createSingleton();
   //agl::utl::PrimitiveVertex::instance()->initialize();
 
-    rio::FileDevice::LoadArg arg;
-    arg.path =
+    {
+        rio::FileDevice::LoadArg arg;
+        arg.path =
 #if RIO_IS_CAFE
-        getContentPath() + "/CAFE/agl_resource_cafe.sarc";
+            getContentPath() + "/CAFE/agl_resource_cafe.sarc";
 #else
-        "agl_resource_cafe_dev.sarc";
+            "agl_resource_cafe_dev.sarc";
 #endif
-    arg.alignment = 0x2000;
+        arg.alignment = 0x2000;
 
-    mpArchive = rio::FileDeviceMgr::instance()->load(arg);
-    RIO_ASSERT(mpArchive);
+        mAglRes.p_archive = rio::FileDeviceMgr::instance()->load(arg);
+    }
+    RIO_ASSERT(mAglRes.p_archive);
 
-    mArchiveRes.prepareArchive(mpArchive);
-  //RIO_LOG("MainWindow::prepare_(): mArchiveRes.prepareArchive() done\n");
+    mAglRes.archive_res.prepareArchive(mAglRes.p_archive);
+  //RIO_LOG("MainWindow::prepare_(): mAglRes.archive_res.prepareArchive() done\n");
 
-    agl::detail::ShaderHolder::instance()->initialize(&mArchiveRes);
+    agl::detail::ShaderHolder::instance()->initialize(&mAglRes.archive_res);
 
   //RIO_LOG("Initialized shader holder\n");
 
@@ -236,9 +238,46 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized ShaderHolder\n");
 
     ResMgr::createSingleton();
+
+  //RIO_LOG("Created ResMgr\n");
+
+    {
+        rio::FileDevice::LoadArg arg;
+        arg.path = getContentPath() + "/Common/actor/jyotyuActorPack.szs";
+        arg.alignment = 0x2000;
+
+        mJyotyuActorPack.p_archive = SZSDecompressor::tryDecomp(arg);
+    }
+    RIO_ASSERT(mJyotyuActorPack.p_archive);
+
+    mJyotyuActorPack.archive_res.prepareArchive(mJyotyuActorPack.p_archive);
+  //RIO_LOG("MainWindow::prepare_(): mJyotyuActorPack.archive_res.prepareArchive() done\n");
+
+    for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
+        ResMgr::instance()->loadArchiveRes(entry.name, mJyotyuActorPack.archive_res.getFile(entry.name), true);
+
+  //RIO_LOG("Initialized jyotyuActorPack\n");
+
+    {
+        rio::FileDevice::LoadArg arg;
+        arg.path = getContentPath() + "/Common/actor/cobPack.szs";
+        arg.alignment = 0x2000;
+
+        mCobPack.p_archive = SZSDecompressor::tryDecomp(arg);
+    }
+    RIO_ASSERT(mCobPack.p_archive);
+
+    mCobPack.archive_res.prepareArchive(mCobPack.p_archive);
+  //RIO_LOG("MainWindow::prepare_(): mCobPack.archive_res.prepareArchive() done\n");
+
+    for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
+        ResMgr::instance()->loadArchiveRes(entry.name, mCobPack.archive_res.getFile(entry.name), true);
+
+  //RIO_LOG("Initialized cobPack\n");
+
     ModelResMgr::createSingleton();
 
-  //RIO_LOG("Initialized ResMgr & ModelResMgr\n");
+  //RIO_LOG("Initialized ModelResMgr\n");
 
     CourseData::createSingleton();
 
@@ -283,8 +322,7 @@ void MainWindow::prepare_()
     CoinOrigin::createSingleton();
     ActorCreateMgr::createSingleton();
 
-    const std::string& pack_arc_path = getContentPath() + "/Common/actor/jyotyuActorPack.szs";
-    CoinOrigin::instance()->initialize(pack_arc_path);
+    CoinOrigin::instance()->initialize();
 
     const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
@@ -308,6 +346,23 @@ void MainWindow::exit_()
     CourseData::destroySingleton();
 
     ModelResMgr::destroySingleton();
+
+    for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
+        ResMgr::instance()->destroyArchiveRes(entry.name);
+
+    mJyotyuActorPack.archive_res.destroy();
+
+    rio::MemUtil::free(mJyotyuActorPack.p_archive);
+    mJyotyuActorPack.p_archive = nullptr;
+
+    for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
+        ResMgr::instance()->destroyArchiveRes(entry.name);
+
+    mCobPack.archive_res.destroy();
+
+    rio::MemUtil::free(mCobPack.p_archive);
+    mCobPack.p_archive = nullptr;
+
     ResMgr::destroySingleton();
 
     ShaderHolder::destroySingleton();
@@ -321,10 +376,10 @@ void MainWindow::exit_()
 
     agl::detail::ShaderHolder::destroySingleton();
 
-    mArchiveRes.destroy();
+    mAglRes.archive_res.destroy();
 
-    rio::MemUtil::free(mpArchive);
-    mpArchive = nullptr;
+    rio::MemUtil::free(mAglRes.p_archive);
+    mAglRes.p_archive = nullptr;
 
 #if RIO_IS_CAFE
     agl::driver::GX2Resource::destroySingleton();

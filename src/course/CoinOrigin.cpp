@@ -2,9 +2,12 @@
 #include <course/CoinOrigin.h>
 #include <course/UnitID.h>
 #include <graphics/ModelG3d.h>
+#include <graphics/ModelResMgr.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
-#include <resource/SZSDecompressor.h>
+#include <resource/ResMgr.h>
+
+#include <MainWindow.h>
 
 #include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
@@ -19,6 +22,8 @@ static const s32 cUnitPerRow = 2048 / 64;
 //static const s32 cUnitPerColumn = 512 / 64;
 
 static const u32 cCoinAngleStep = 0x3fd27d2;
+
+static const std::string cResName = "obj_coin";
 
 CoinOrigin* CoinOrigin::sInstance = nullptr;
 
@@ -51,61 +56,32 @@ CoinOrigin::~CoinOrigin()
     {
         delete mpModelBlueCoin;
         delete mpModelCoin;
-        mModelResource.destroy();
-        mArchiveRes.destroy();
-        rio::MemUtil::free(mpArchive);
+        ModelResMgr::instance()->destroyResFile(cResName);
+        ResMgr::instance()->destroyArchiveRes(cResName);
         mIsInitialized = false;
     }
 }
 
-bool CoinOrigin::initialize(const std::string& pack_arc_path)
+bool CoinOrigin::initialize()
 {
     RIO_ASSERT(mIsInitialized == false);
 
-    rio::FileDevice::LoadArg arg;
-    arg.path = pack_arc_path;
-
-    u8* pack_arc_dat = SZSDecompressor::tryDecomp(arg);
-    if (!pack_arc_dat)
+    static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".sarc";
+    const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, false);
+    if (archive_res == nullptr)
         return false;
 
-    SharcArchiveRes pack_arc;
-    if (!pack_arc.prepareArchive(pack_arc_dat))
-    {
-        RIO_LOG("Could not load Sharc file...\n");
-        rio::MemUtil::free(pack_arc_dat);
-        return false;
-    }
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str());
+    RIO_ASSERT(model_res);
 
-    u32 size = 0;
-    void* ptr = pack_arc.getFile("obj_coin", &size);
-    if (ptr == nullptr)
-    {
-        RIO_LOG("Could not locate obj_coin file...\n");
-        rio::MemUtil::free(pack_arc_dat);
-        return false;
-    }
-
-    mpArchive = rio::MemUtil::alloc(size, 0x2000);
-    rio::MemUtil::copy(mpArchive, ptr, size);
-    rio::MemUtil::free(pack_arc_dat);
-
-    if (!mArchiveRes.prepareArchive(mpArchive))
-    {
-        RIO_LOG("Could not load Sharc file...\n");
-        rio::MemUtil::free(mpArchive);
-        return false;
-    }
-
-    mModelResource.load(&mArchiveRes, "obj_coin");
     mpModelCoin = Model::createG3d(
-        mModelResource,
+        *model_res,
         "obj_coin",
         1, 1, 1, 1, 0,
         Model::cBoundingMode_Disable
     );
     mpModelBlueCoin = Model::createG3d(
-        mModelResource,
+        *model_res,
         "obj_coin_blue",
         1, 1, 1, 1, 0,
         Model::cBoundingMode_Disable
