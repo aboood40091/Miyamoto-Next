@@ -5,6 +5,7 @@
 #include <map_obj/ActorBlockRenga.h>
 #include <map_obj/ActorCoin.h>
 #include <map_obj/CollectionCoin.h>
+#include <map_obj/GoalPole.h>
 
 ActorCreateMgr* ActorCreateMgr::sInstance = nullptr;
 
@@ -28,6 +29,8 @@ void ActorCreateMgr::destroySingleton()
 
 ActorCreateMgr::ActorCreateMgr()
 {
+    addActorFactory(31, &GoalPole::create);
+
     addActorFactory(45, &CollectionCoin::create);
 
     addActorFactory(47, &CollectionCoin::create);
