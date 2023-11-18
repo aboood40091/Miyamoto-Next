@@ -1,5 +1,6 @@
 #include <actor/ActorCreateMgr.h>
 #include <enemy/Kuribo.h>
+#include <enemy/Nokonoko.h>
 #include <map_obj/ActorBlockBigHatena.h>
 #include <map_obj/ActorBlockBigRenga.h>
 #include <map_obj/ActorBlockHatena.h>
@@ -40,11 +41,15 @@ ActorCreateMgr::ActorCreateMgr()
 {
     addActorFactory(0, &Kuribo::create);
 
+    addActorFactory(19, &Nokonoko::create);
+
     addActorFactory(31, &GoalPole::create);
 
     addActorFactory(45, &CollectionCoin::create);
 
     addActorFactory(47, &CollectionCoin::create);
+
+    addActorFactory(55, &Nokonoko::create);
 
     addActorFactory(59, &ActorBlockHatena::create);
     addActorFactory(60, &ActorBlockRenga::create);
@@ -84,6 +89,7 @@ ActorCreateMgr::ActorCreateMgr()
     addActorFactory(438, &Kuribo::create);
 
     addActorFactory(475, &ActorBlockBigHatena::create);
+    addActorFactory(476, &Nokonoko::create);
 
     addActorFactory(480, &CollectionCoin::create);
 
