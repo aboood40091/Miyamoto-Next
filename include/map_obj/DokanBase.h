@@ -10,13 +10,15 @@ class DokanBase : public MapActorItem
 public:
     DokanBase(MapActorData& map_actor_data, Dokan::Direction dir, bool cb, bool group);
 
-    void drawOpa(const rio::lyr::DrawInfo& draw_info) override;
-    void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
-
     void update() override = 0;
     void scheduleDraw() override;
 
 protected:
+    bool drawBox_() const override
+    {
+        return mDokan == nullptr;
+    }
+
     f32 getZPos_() const
     {
         switch (mMapActorData.layer)

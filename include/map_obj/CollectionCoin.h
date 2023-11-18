@@ -12,13 +12,15 @@ public:
     CollectionCoin(MapActorData& map_actor_data);
     virtual ~CollectionCoin();
 
-    void drawOpa(const rio::lyr::DrawInfo& draw_info) override;
-    void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
-
     void update() override;
     void scheduleDraw() override;
 
 private:
+    bool drawBox_() const override
+    {
+        return mpModel == nullptr;
+    }
+
     f32 getZPos_() const
     {
         if (mMapActorData.layer == LAYER_1)

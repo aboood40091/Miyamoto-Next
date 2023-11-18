@@ -24,22 +24,6 @@ DokanBase::DokanBase(MapActorData& map_actor_data, Dokan::Direction dir, bool cb
         mDokan.reset();
 }
 
-void DokanBase::drawOpa(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mDokan)
-        return;
-
-    MapActorItem::drawOpa(draw_info);
-}
-
-void DokanBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mDokan)
-        return;
-
-    MapActorItem::drawXlu(draw_info);
-}
-
 void DokanBase::scheduleDraw()
 {
     if (mDokan == nullptr)

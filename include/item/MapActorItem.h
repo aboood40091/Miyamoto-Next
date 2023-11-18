@@ -32,6 +32,11 @@ public:
     virtual void drawXlu(const rio::lyr::DrawInfo& draw_info);
 
 protected:
+    virtual bool drawBox_() const
+    {
+        return true;
+    }
+
     f32 getZPos_() const
     {
         return (mMapActorData.layer == LAYER_1) ? 2200.0f : -2500.0f; // Only layer 1 and 2

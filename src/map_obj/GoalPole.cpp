@@ -122,22 +122,6 @@ GoalPole::~GoalPole()
     }
 }
 
-void GoalPole::drawOpa(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mBase.p_model)
-        return;
-
-    MapActorItem::drawOpa(draw_info);
-}
-
-void GoalPole::drawXlu(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mBase.p_model)
-        return;
-
-    MapActorItem::drawXlu(draw_info);
-}
-
 void GoalPole::update()
 {
     if (mBase.p_model == nullptr)

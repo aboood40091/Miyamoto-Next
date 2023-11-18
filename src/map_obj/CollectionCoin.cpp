@@ -41,22 +41,6 @@ CollectionCoin::~CollectionCoin()
     }
 }
 
-void CollectionCoin::drawOpa(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mpModel)
-        return;
-
-    MapActorItem::drawOpa(draw_info);
-}
-
-void CollectionCoin::drawXlu(const rio::lyr::DrawInfo& draw_info)
-{
-    if (mpModel)
-        return;
-
-    MapActorItem::drawXlu(draw_info);
-}
-
 void CollectionCoin::update()
 {
     if (mpModel == nullptr)

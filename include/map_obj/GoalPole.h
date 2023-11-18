@@ -15,11 +15,14 @@ public:
     GoalPole(MapActorData& map_actor_data);
     virtual ~GoalPole();
 
-    void drawOpa(const rio::lyr::DrawInfo& draw_info) override;
-    void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
-
     void update() override;
     void scheduleDraw() override;
+
+private:
+    bool drawBox_() const override
+    {
+        return mBase.p_model == nullptr;
+    }
 
 private:
     const std::string* mpResName;
