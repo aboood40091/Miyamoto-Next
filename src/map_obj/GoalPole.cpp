@@ -157,9 +157,9 @@ void GoalPole::scheduleDraw()
     if (mBase.p_model == nullptr)
         return;
 
-    Renderer::instance()->drawModel(*mBase.p_model, true, true);
-    Renderer::instance()->drawModel(*mGoalFlag.p_model, true, true);
+    Renderer::instance()->drawModel(*mBase.p_model);
+    Renderer::instance()->drawModel(*mGoalFlag.p_model);
 
     if (!(mMapActorData.settings[0] >> 4 & 1))
-        Renderer::instance()->drawModel(*mTorideStd.p_model, true, true);
+        Renderer::instance()->drawModel(*mTorideStd.p_model);
 }
