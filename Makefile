@@ -39,6 +39,7 @@ SOURCES		:=	../rio/src \
 				src \
 				src/actor \
 				src/course \
+				src/enemy \
 				src/graphics \
 				src/item \
 				src/map_obj \

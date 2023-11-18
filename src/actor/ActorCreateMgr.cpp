@@ -1,4 +1,5 @@
 #include <actor/ActorCreateMgr.h>
+#include <enemy/Kuribo.h>
 #include <map_obj/ActorBlockBigHatena.h>
 #include <map_obj/ActorBlockBigRenga.h>
 #include <map_obj/ActorBlockHatena.h>
@@ -37,6 +38,8 @@ void ActorCreateMgr::destroySingleton()
 
 ActorCreateMgr::ActorCreateMgr()
 {
+    addActorFactory(0, &Kuribo::create);
+
     addActorFactory(31, &GoalPole::create);
 
     addActorFactory(45, &CollectionCoin::create);
@@ -77,6 +80,9 @@ ActorCreateMgr::ActorCreateMgr()
 
     addActorFactory(422, &ActorBlockBigRenga::create);
 
+    addActorFactory(437, &Kuribo::create);
+    addActorFactory(438, &Kuribo::create);
+
     addActorFactory(475, &ActorBlockBigHatena::create);
 
     addActorFactory(480, &CollectionCoin::create);
@@ -96,6 +102,8 @@ ActorCreateMgr::ActorCreateMgr()
     addActorFactory(576, &DokanRight::create);
     addActorFactory(577, &DokanUp::create);
     addActorFactory(578, &DokanDown::create);
+
+    addActorFactory(595, &Kuribo::create);
 
     addActorFactory(630, &GoalPole::create);
     addActorFactory(631, &GoalPole::create);
