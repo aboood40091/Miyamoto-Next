@@ -7,6 +7,7 @@
 #include <map_obj/ActorBlockRenga.h>
 #include <map_obj/ActorCoin.h>
 #include <map_obj/CollectionCoin.h>
+#include <map_obj/DokanJoint.h>
 #include <map_obj/GoalPole.h>
 #include <map_obj/ObjDokanActorDown.h>
 #include <map_obj/ObjDokanActorDownNextGoto.h>
@@ -100,6 +101,8 @@ ActorCreateMgr::ActorCreateMgr()
     addActorFactory(509, &ObjDokanActorRightNextGoto::create);
     addActorFactory(510, &ObjDokanActorLeftNextGoto::create);
     addActorFactory(511, &ObjDokanActorDownNextGoto::create);
+
+    addActorFactory(513, &DokanJoint::create);
 
     addActorFactory(525, &ActorBlockHatena::create);
     addActorFactory(526, &ActorBlockRenga::create);
