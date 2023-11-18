@@ -47,7 +47,7 @@ ModelResource* ModelResMgr::loadResFile(const std::string& key, const std::strin
         return nullptr;
 
     ModelResource* mdl_resource = new ModelResource;
-    mdl_resource->load(archive, archive_name.c_str());
+    mdl_resource->load(archive, archive_name.c_str(), true);
 
     Resource res;
     res.ref_counter = 1;
@@ -70,7 +70,7 @@ ModelResource* ModelResMgr::loadResFile(const std::string& key, const SharcArchi
     }
 
     ModelResource* mdl_resource = new ModelResource;
-    mdl_resource->load(archive, filename);
+    mdl_resource->load(archive, filename, true);
 
     Resource res;
     res.ref_counter = 1;

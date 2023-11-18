@@ -490,7 +490,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
         const std::string& dv_path = getContentPath() + "/Common/distant_view";
         RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
-        DistantViewMgr::instance()->initialize(dv_name, dv_path);
+        DistantViewMgr::instance()->initialize(dv_name, dv_path, true);
 
       //RIO_LOG("Initialized DistantViewMgr\n");
 
@@ -653,6 +653,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     DistantViewMgr::instance()->initialize(
         dv_name, dv_path,
+        true,
         bg_pos,
         static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
         bg_offset_area_bottom_to_screen_bottom,
