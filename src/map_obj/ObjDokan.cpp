@@ -1,12 +1,12 @@
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
-#include <map_obj/Dokan.h>
+#include <map_obj/ObjDokan.h>
 #include <resource/ResMgr.h>
 
 #include <MainWindow.h>
 
-static const std::string cResName[Dokan::TYPE_MAX] = {
+static const std::string cResName[ObjDokan::TYPE_MAX] = {
     "obj_dokan",
     "obj_dokan_kaiga",
     "obj_dokan",
@@ -14,7 +14,7 @@ static const std::string cResName[Dokan::TYPE_MAX] = {
     "obj_dokan_CB"
 };
 
-static const char* const cModelNameA[Dokan::TYPE_MAX] = {
+static const char* const cModelNameA[ObjDokan::TYPE_MAX] = {
     "obj_dokan_A",
     "obj_dokan_kaiga_A",
     "obj_dokan_mame_A",
@@ -22,7 +22,7 @@ static const char* const cModelNameA[Dokan::TYPE_MAX] = {
     "obj_dokan_CB_A"
 };
 
-static const char* const cModelNameB[Dokan::TYPE_MAX] = {
+static const char* const cModelNameB[ObjDokan::TYPE_MAX] = {
     "obj_dokan_B",
     "obj_dokan_kaiga_B",
     "obj_dokan_mame_B",
@@ -30,14 +30,14 @@ static const char* const cModelNameB[Dokan::TYPE_MAX] = {
     "obj_dokan_CB_B"
 };
 
-static const f32 cAngle[Dokan::DIRECTION_MAX] = {
+static const f32 cAngle[ObjDokan::DIRECTION_MAX] = {
     rio::Mathf::pi() + rio::Mathf::piHalf(),
     rio::Mathf::piHalf(),
     0,
     rio::Mathf::pi()
 };
 
-Dokan::Dokan(Direction dir, Type type, f32 length, bool a_visible, Color color)
+ObjDokan::ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color color)
     : mIsAVisible(a_visible)
 {
     rio::MemUtil::set(&mA, 0, sizeof(mA));
@@ -156,7 +156,7 @@ Dokan::Dokan(Direction dir, Type type, f32 length, bool a_visible, Color color)
     }
 }
 
-Dokan::~Dokan()
+ObjDokan::~ObjDokan()
 {
     if (isCreated())
     {
@@ -173,7 +173,7 @@ Dokan::~Dokan()
     }
 }
 
-void Dokan::update(const rio::BaseVec3f& position)
+void ObjDokan::update(const rio::BaseVec3f& position)
 {
     rio::Matrix34f mtxRT;
     mtxRT.makeRT(static_cast<const rio::Vector3f&>(mRotate), static_cast<const rio::Vector3f&>(position));
@@ -211,7 +211,7 @@ void Dokan::update(const rio::BaseVec3f& position)
     }
 }
 
-void Dokan::scheduleDraw() const
+void ObjDokan::scheduleDraw() const
 {
     Renderer::instance()->drawModel(*mB.p_model);
     if (mIsAVisible)

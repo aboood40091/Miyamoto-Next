@@ -1,14 +1,14 @@
 #pragma once
 
 #include <item/MapActorItem.h>
-#include <map_obj/Dokan.h>
+#include <map_obj/ObjDokan.h>
 
 #include <memory>
 
-class DokanBase : public MapActorItem
+class ObjDokanActorBase : public MapActorItem
 {
 public:
-    DokanBase(MapActorData& map_actor_data, Dokan::Direction dir, bool cb, bool group);
+    ObjDokanActorBase(MapActorData& map_actor_data, ObjDokan::Direction dir, bool cb, bool group);
 
     void update() override = 0;
     void scheduleDraw() override;
@@ -16,7 +16,7 @@ public:
 protected:
     bool drawBox_() const override
     {
-        return mDokan == nullptr;
+        return mObjDokan == nullptr;
     }
 
     f32 getZPos_() const
@@ -33,5 +33,5 @@ protected:
     }
 
 protected:
-    std::unique_ptr<Dokan>  mDokan;
+    std::unique_ptr<ObjDokan>   mObjDokan;
 };

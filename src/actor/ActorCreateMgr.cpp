@@ -7,15 +7,15 @@
 #include <map_obj/ActorBlockRenga.h>
 #include <map_obj/ActorCoin.h>
 #include <map_obj/CollectionCoin.h>
-#include <map_obj/DokanDown.h>
-#include <map_obj/DokanDownNextGoto.h>
-#include <map_obj/DokanLeft.h>
-#include <map_obj/DokanLeftNextGoto.h>
-#include <map_obj/DokanRight.h>
-#include <map_obj/DokanRightNextGoto.h>
-#include <map_obj/DokanUp.h>
-#include <map_obj/DokanUpNextGoto.h>
 #include <map_obj/GoalPole.h>
+#include <map_obj/ObjDokanActorDown.h>
+#include <map_obj/ObjDokanActorDownNextGoto.h>
+#include <map_obj/ObjDokanActorLeft.h>
+#include <map_obj/ObjDokanActorLeftNextGoto.h>
+#include <map_obj/ObjDokanActorRight.h>
+#include <map_obj/ObjDokanActorRightNextGoto.h>
+#include <map_obj/ObjDokanActorUp.h>
+#include <map_obj/ObjDokanActorUpNextGoto.h>
 
 ActorCreateMgr* ActorCreateMgr::sInstance = nullptr;
 
@@ -57,10 +57,10 @@ ActorCreateMgr::ActorCreateMgr()
     addActorFactory(65, &ActorCoin::create);
     addActorFactory(66, &ActorCoin::create);
 
-    addActorFactory(139, &DokanUp::create);
-    addActorFactory(140, &DokanDown::create);
-    addActorFactory(141, &DokanLeft::create);
-    addActorFactory(142, &DokanRight::create);
+    addActorFactory(139, &ObjDokanActorUp::create);
+    addActorFactory(140, &ObjDokanActorDown::create);
+    addActorFactory(141, &ObjDokanActorLeft::create);
+    addActorFactory(142, &ObjDokanActorRight::create);
 
     addActorFactory(147, &ActorBlockHatena::create);
     addActorFactory(148, &ActorBlockRenga::create);
@@ -81,7 +81,7 @@ ActorCreateMgr::ActorCreateMgr()
     addActorFactory(397, &ActorBlockHatena::create);
     addActorFactory(398, &ActorBlockRenga::create);
 
-    addActorFactory(404, &DokanUpNextGoto::create);
+    addActorFactory(404, &ObjDokanActorUpNextGoto::create);
 
     addActorFactory(422, &ActorBlockBigRenga::create);
 
@@ -97,17 +97,17 @@ ActorCreateMgr::ActorCreateMgr()
 
     addActorFactory(503, &GoalPole::create);
 
-    addActorFactory(509, &DokanRightNextGoto::create);
-    addActorFactory(510, &DokanLeftNextGoto::create);
-    addActorFactory(511, &DokanDownNextGoto::create);
+    addActorFactory(509, &ObjDokanActorRightNextGoto::create);
+    addActorFactory(510, &ObjDokanActorLeftNextGoto::create);
+    addActorFactory(511, &ObjDokanActorDownNextGoto::create);
 
     addActorFactory(525, &ActorBlockHatena::create);
     addActorFactory(526, &ActorBlockRenga::create);
 
-    addActorFactory(575, &DokanLeft::create);
-    addActorFactory(576, &DokanRight::create);
-    addActorFactory(577, &DokanUp::create);
-    addActorFactory(578, &DokanDown::create);
+    addActorFactory(575, &ObjDokanActorLeft::create);
+    addActorFactory(576, &ObjDokanActorRight::create);
+    addActorFactory(577, &ObjDokanActorUp::create);
+    addActorFactory(578, &ObjDokanActorDown::create);
 
     addActorFactory(595, &Kuribo::create);
 

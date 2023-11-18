@@ -6,7 +6,7 @@ class BasicModel;
 class ShaderParamAnimation;
 class TexturePatternAnimation;
 
-class Dokan
+class ObjDokan
 {
 public:
     enum Type
@@ -36,13 +36,13 @@ public:
     };
 
 public:
-    Dokan(Direction dir, Type type, f32 length, bool a_visible, Color color = COLOR_INVALID);
-    ~Dokan();
+    ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color color = COLOR_INVALID);
+    ~ObjDokan();
 
-    Dokan(const Dokan&) = delete;
-    Dokan(Dokan&&) = delete;
-    Dokan& operator=(const Dokan&) = delete;
-    Dokan& operator=(Dokan&&) = delete;
+    ObjDokan(const ObjDokan&) = delete;
+    ObjDokan(ObjDokan&&) = delete;
+    ObjDokan& operator=(const ObjDokan&) = delete;
+    ObjDokan& operator=(ObjDokan&&) = delete;
 
     bool isCreated() const
     {
