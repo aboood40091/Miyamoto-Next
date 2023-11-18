@@ -10,6 +10,7 @@ public:
     DokanLeft(MapActorData& map_actor_data)
         : DokanBase(map_actor_data, Dokan::DIRECTION_LEFT, false, map_actor_data.id == 575)
     {
+        update();
     }
 
     void update() override

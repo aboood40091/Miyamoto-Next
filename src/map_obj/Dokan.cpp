@@ -202,7 +202,7 @@ void Dokan::update(const rio::BaseVec3f& position)
         mtx.applyTranslationLocal({ 0.0f, mLength, 0.0f });
 
         mA.p_model->getModel()->setMtxRT(mtx);
-        mA.p_model->getModel()->setScale({ 1.0f, 1.0f, 1.0f });
+      //mA.p_model->getModel()->setScale({ 1.0f, 1.0f, 1.0f });
 
         if (mType == TYPE_CB)
             mA.p_model->updateAnimations();

@@ -10,6 +10,7 @@ public:
     DokanDownNextGoto(MapActorData& map_actor_data)
         : DokanBase(map_actor_data, Dokan::DIRECTION_DOWN, false, false)
     {
+        update();
     }
 
     void update() override
