@@ -23,7 +23,7 @@ private:
 
     f32 getZPos_() const
     {
-        return LAYER_1 ? 1500.0f : -2500.0f;
+        return mMapActorData.layer == LAYER_1 ? 1500.0f : -2500.0f;
     }
 
 private:
