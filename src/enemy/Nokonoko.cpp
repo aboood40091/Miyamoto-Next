@@ -138,7 +138,24 @@ void Nokonoko::update()
         mpModel->getModel()->setMtxRT(mtx);
         mpModel->getModel()->setScale(scale);
         mpModel->updateAnimations();
-        mpModel->updateModel();
+        mpModel->getModel()->updateAnimations();
+
+        if (!mIsBig)
+        {
+            s32 index = mpModel->getModel()->searchBoneIndex("head");
+
+            rio::Matrix34f head_mtx;
+            rio::Vector3f head_scale;
+            mpModel->getModel()->getBoneLocalMatrix(index, &head_mtx, &head_scale);
+
+            rio::Matrix34f head_r_delta_mtx;
+            head_r_delta_mtx.makeR({ rio::Mathf::deg2rad(300 - 285), 0.0f, 0.0f });
+            head_mtx.setMul(head_mtx, head_r_delta_mtx);
+
+            mpModel->getModel()->setBoneLocalMatrix(index, head_mtx, head_scale);
+        }
+
+        mpModel->getModel()->updateModel();
     }
 }
 
