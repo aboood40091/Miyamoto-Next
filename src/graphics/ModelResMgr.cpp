@@ -1,6 +1,8 @@
 #include <graphics/ModelResMgr.h>
 #include <resource/ResMgr.h>
 
+#include <MainWindow.h>
+
 ModelResMgr* ModelResMgr::sInstance = nullptr;
 
 bool ModelResMgr::createSingleton()
@@ -47,7 +49,7 @@ ModelResource* ModelResMgr::loadResFile(const std::string& key, const std::strin
         return nullptr;
 
     ModelResource* mdl_resource = new ModelResource;
-    mdl_resource->load(archive, archive_name.c_str(), true);
+    mdl_resource->load(archive, archive_name.c_str(), MainWindow::forceSharcfb());
 
     Resource res;
     res.ref_counter = 1;
@@ -70,7 +72,7 @@ ModelResource* ModelResMgr::loadResFile(const std::string& key, const SharcArchi
     }
 
     ModelResource* mdl_resource = new ModelResource;
-    mdl_resource->load(archive, filename, true);
+    mdl_resource->load(archive, filename, MainWindow::forceSharcfb());
 
     Resource res;
     res.ref_counter = 1;

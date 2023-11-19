@@ -25,6 +25,7 @@ class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 {
 public:
     static const std::string& getContentPath();
+    static bool forceSharcfb() { return true; }
 
 public:
     MainWindow();
