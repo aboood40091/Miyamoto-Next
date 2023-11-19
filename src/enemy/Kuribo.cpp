@@ -66,6 +66,9 @@ Kuribo::~Kuribo()
 
 namespace {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winline"
+
 struct BaseRotMtx
 {
     BaseRotMtx(f32 x, f32 y, f32 z)
@@ -80,6 +83,8 @@ struct BaseRotMtx
 
     rio::Matrix34f mtx;
 };
+
+#pragma GCC diagnostic pop
 
 static BaseRotMtx sMtx(0.0f, rio::Mathf::deg2rad(315), 0.0f);
 
