@@ -8,13 +8,7 @@ class ActorBlockBigHatena : public ActorBlockBigBase
 
 public:
     ActorBlockBigHatena(MapActorData& map_actor_data)
-        : ActorBlockBigBase(map_actor_data, false)
+        : ActorBlockBigBase(map_actor_data, UnitID(114), false)
     {
-    }
-
-protected:
-    UnitID getUnitID_() const override
-    {
-        return UnitID(114);
     }
 };

@@ -8,26 +8,24 @@
 
 void ActorBlockBigBase::scheduleDraw()
 {
-    UnitID unit = getUnitID_();
-
     static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
         { f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y + 16), getZPos_() },
-        unit,
+        mUnitID,
         mMapActorData.layer
     );
     static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
         { f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y + 16), getZPos_() },
-        UnitID(s32(unit) + 1),
+        UnitID(s32(mUnitID) + 1),
         mMapActorData.layer
     );
     static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
         { f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y + 32), getZPos_() },
-        UnitID(s32(unit) + 16),
+        UnitID(s32(mUnitID) + 16),
         mMapActorData.layer
     );
     static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
         { f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y + 32), getZPos_() },
-        UnitID(s32(unit) + 16 + 1),
+        UnitID(s32(mUnitID) + 16 + 1),
         mMapActorData.layer
     );
 }

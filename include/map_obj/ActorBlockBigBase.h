@@ -6,8 +6,9 @@
 class ActorBlockBigBase : public MapActorItem
 {
 public:
-    ActorBlockBigBase(MapActorData& map_actor_data, bool set_coin)
+    ActorBlockBigBase(MapActorData& map_actor_data, UnitID unit, bool set_coin)
         : MapActorItem(map_actor_data)
+        , mUnitID(unit)
         , mSetCoin(set_coin)
     {
     }
@@ -19,9 +20,7 @@ public:
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
     void scheduleDraw() override;
 
-protected:
-    virtual UnitID getUnitID_() const = 0;
-
 private:
+    UnitID  mUnitID;
     bool    mSetCoin;
 };

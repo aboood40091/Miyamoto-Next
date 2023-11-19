@@ -8,13 +8,7 @@ class ActorBlockBigRenga : public ActorBlockBigBase
 
 public:
     ActorBlockBigRenga(MapActorData& map_actor_data)
-        : ActorBlockBigBase(map_actor_data, true)
+        : ActorBlockBigBase(map_actor_data, UnitID(112), true)
     {
-    }
-
-protected:
-    UnitID getUnitID_() const override
-    {
-        return UnitID(112);
     }
 };
