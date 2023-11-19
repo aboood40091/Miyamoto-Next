@@ -122,6 +122,27 @@ GoalPole::~GoalPole()
     }
 }
 
+namespace {
+
+struct BaseRotMtx
+{
+    BaseRotMtx(f32 x, f32 y, f32 z)
+    {
+        mtx.makeR({ x, y, z });
+    }
+
+    BaseRotMtx(const rio::Vector3f& rot)
+    {
+        mtx.makeR(rot);
+    }
+
+    rio::Matrix34f mtx;
+};
+
+static BaseRotMtx sMtx(0.0f, rio::Mathf::deg2rad(270), 0.0f);
+
+}
+
 void GoalPole::update()
 {
     if (mBase.p_model == nullptr)
@@ -140,11 +161,8 @@ void GoalPole::update()
         mTorideStd.p_model->updateModel();
     }
     {
-        rio::Matrix34f mtx;
-        mtx.makeRT(
-            { 0.0f, rio::Mathf::deg2rad(270), 0.0f },
-            { f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y) + 70, 2900.0f }
-        );
+        rio::Matrix34f& mtx = sMtx.mtx;
+        mtx.setTranslationWorld({ f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y) + 70, 2900.0f });
         mGoalFlag.p_model->getModel()->setMtxRT(mtx);
         mGoalFlag.p_model->updateAnimations();
         mGoalFlag.p_model->getModel()->updateAnimations();

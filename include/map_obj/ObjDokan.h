@@ -64,7 +64,7 @@ private:
                     mB;
     f32             mLength;
     rio::BaseVec3f  mScale;
-    rio::BaseVec3f  mRotate;
+    rio::BaseMtx34f mMtxRT;
     Type            mType;
     bool            mIsAVisible;
 };

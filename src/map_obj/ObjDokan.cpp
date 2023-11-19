@@ -50,9 +50,7 @@ ObjDokan::ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color c
     mScale.z = 1.0f;
 
     RIO_ASSERT(dir < DIRECTION_MAX);
-    mRotate.x = 0.0f;
-    mRotate.y = 0.0f;
-    mRotate.z = cAngle[dir];
+    static_cast<rio::Matrix34f&>(mMtxRT).makeR({ 0.0f, 0.0f, cAngle[dir] });
 
     RIO_ASSERT(type < TYPE_MAX);
     mType = type;
@@ -175,8 +173,8 @@ ObjDokan::~ObjDokan()
 
 void ObjDokan::update(const rio::BaseVec3f& position)
 {
-    rio::Matrix34f mtxRT;
-    mtxRT.makeRT(static_cast<const rio::Vector3f&>(mRotate), static_cast<const rio::Vector3f&>(position));
+    rio::Matrix34f& mtxRT = static_cast<rio::Matrix34f&>(mMtxRT);
+    mtxRT.setTranslationWorld(static_cast<const rio::Vector3f&>(position));
 
     rio::Matrix34f mtx = mtxRT;
     mtx.applyTranslationLocal({ 0.0f, mLength * 0.5f, 0.0f });

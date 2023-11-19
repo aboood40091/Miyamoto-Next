@@ -102,6 +102,34 @@ Nokonoko::~Nokonoko()
     }
 }
 
+namespace {
+
+struct BaseRotMtx
+{
+    BaseRotMtx(f32 x, f32 y, f32 z)
+    {
+        mtx.makeR({ x, y, z });
+    }
+
+    BaseRotMtx(const rio::Vector3f& rot)
+    {
+        mtx.makeR(rot);
+    }
+
+    rio::Matrix34f mtx;
+};
+
+static BaseRotMtx sMtx[2] {
+    BaseRotMtx(0.0f, rio::Mathf::deg2rad(285), 0.0f),
+    BaseRotMtx(0.0f, rio::Mathf::deg2rad(300), 0.0f)
+};
+
+static const BaseRotMtx sHeadDeltaRMtx(rio::Mathf::deg2rad(300 - 285), 0.0f, 0.0f);
+
+static const rio::Vector3f cScale2x { 2.0f, 2.0f, 2.0f };
+
+}
+
 void Nokonoko::update()
 {
     if (mpModel == nullptr)
@@ -109,34 +137,26 @@ void Nokonoko::update()
 
     const rio::Vector3f pos { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 16), getZPos_() };
 
-    static const rio::Vector3f cScale[2] {
-        { 1.0f, 1.0f, 1.0f },
-        { 2.0f, 2.0f, 2.0f }
-    };
-
-    const rio::Vector3f& scale = cScale[mIsBig];
-
-    static const rio::Vector3f cRot[2] {
-        { 0.0f, rio::Mathf::deg2rad(285), 0.0f },
-        { 0.0f, rio::Mathf::deg2rad(300), 0.0f }
-    };
-
-    const rio::Vector3f& rot = cRot[mIsBig];
-
-    rio::Matrix34f mtx;
-    mtx.makeRT(rot, pos);
+    rio::Matrix34f& mtx = sMtx[mIsBig].mtx;
+    mtx.setTranslationWorld(pos);
 
     if (mMapActorData.settings[0] >> 4 & 1)
     {
         mpShellModel->getModel()->setMtxRT(mtx);
-        mpShellModel->getModel()->setScale(scale);
+
+        if (mIsBig)
+            mpShellModel->getModel()->setScale(cScale2x);
+
         mpShellModel->updateAnimations();
         mpShellModel->updateModel();
     }
     else
     {
         mpModel->getModel()->setMtxRT(mtx);
-        mpModel->getModel()->setScale(scale);
+
+        if (mIsBig)
+            mpModel->getModel()->setScale(cScale2x);
+
         mpModel->updateAnimations();
         mpModel->getModel()->updateAnimations();
 
@@ -148,9 +168,7 @@ void Nokonoko::update()
             rio::Vector3f head_scale;
             mpModel->getModel()->getBoneLocalMatrix(index, &head_mtx, &head_scale);
 
-            rio::Matrix34f head_r_delta_mtx;
-            head_r_delta_mtx.makeR({ rio::Mathf::deg2rad(300 - 285), 0.0f, 0.0f });
-            head_mtx.setMul(head_mtx, head_r_delta_mtx);
+            head_mtx.setMul(head_mtx, sHeadDeltaRMtx.mtx);
 
             mpModel->getModel()->setBoneLocalMatrix(index, head_mtx, head_scale);
         }

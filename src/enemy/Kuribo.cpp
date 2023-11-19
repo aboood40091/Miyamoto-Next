@@ -64,16 +64,36 @@ Kuribo::~Kuribo()
     }
 }
 
+namespace {
+
+struct BaseRotMtx
+{
+    BaseRotMtx(f32 x, f32 y, f32 z)
+    {
+        mtx.makeR({ x, y, z });
+    }
+
+    BaseRotMtx(const rio::Vector3f& rot)
+    {
+        mtx.makeR(rot);
+    }
+
+    rio::Matrix34f mtx;
+};
+
+static BaseRotMtx sMtx(0.0f, rio::Mathf::deg2rad(315), 0.0f);
+
+}
+
 void Kuribo::update()
 {
     if (mpModel == nullptr)
         return;
 
     const rio::Vector3f pos { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 16), getZPos_() };
-    static const rio::Vector3f rot { 0.0f, rio::Mathf::deg2rad(315), 0.0f };
 
-    rio::Matrix34f mtx;
-    mtx.makeRT(rot, pos);
+    rio::Matrix34f& mtx = sMtx.mtx;
+    mtx.setTranslationWorld(pos);
 
     mpModel->getModel()->setMtxRT(mtx);
   //mpModel->getModel()->setScale({ 1.0f, 1.0f, 1.0f });
