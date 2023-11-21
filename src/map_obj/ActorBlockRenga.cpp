@@ -4,66 +4,101 @@
 #include <gfx/lyr/rio_Layer.h>
 #include <utility/aglDevTools.h>
 
-UnitID ActorBlockRenga::getUnitID_() const
+void ActorBlockRenga::updateType_()
 {
     if (mMapActorData.settings[1] >> 28 & 1)
-        return cUnitID_BrickBlockAcorn;
-
-    switch (mMapActorData.settings[1] & 0xF)
     {
-    default:
-        return cUnitID_BrickBlock;
-    case 1:
-        return cUnitID_BrickBlockCoin;
-    case 2:
-    case 3:
-        return cUnitID_BrickBlockFireFlower;
-    case 4:
-        return cUnitID_BrickBlockPropeller;
-    case 5:
-        return cUnitID_BrickBlockPenguin;
-    case 6:
-        return cUnitID_BrickBlockMiniMushroom;
-    case 7:
-        return cUnitID_BrickBlockStar;
-    case 9:
-        return cUnitID_BrickBlockYoshiEgg;
-    case 10:
-        return cUnitID_BrickBlockCoin10;
-    case 11:
-        return cUnitID_BrickBlock1UP;
-    case 12:
-        return cUnitID_BrickBlockVine;
-    case 15:
-        return cUnitID_BrickBlockIceFlower;
+        mUnitID = cUnitID_BrickBlockAcorn;
+        mItemType = BgTexMgr::ITEM_MAX;
     }
+    else
+    {
+        switch (mMapActorData.settings[1] & 0xF)
+        {
+        default:
+            mUnitID = cUnitID_BrickBlock;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 1:
+            mUnitID = cUnitID_BrickBlockCoin;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 2:
+        case 3:
+            mUnitID = cUnitID_BrickBlockFireFlower;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 4:
+            mUnitID = cUnitID_BrickBlockPropeller;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 5:
+            mUnitID = cUnitID_BrickBlockPenguin;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 6:
+            mUnitID = cUnitID_BrickBlockMiniMushroom;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 7:
+            mUnitID = cUnitID_BrickBlockStar;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 8:
+            mUnitID = cUnitID_BrickBlock;
+            mItemType = BgTexMgr::ITEM_COIN_STAR;
+            break;
+        case 9:
+            mUnitID = cUnitID_BrickBlockYoshiEgg;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 10:
+            mUnitID = cUnitID_BrickBlockCoin10;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 11:
+            mUnitID = cUnitID_BrickBlock1UP;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 12:
+            mUnitID = cUnitID_BrickBlockVine;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        case 13:
+            mUnitID = cUnitID_BrickBlock;
+            mItemType = BgTexMgr::ITEM_SPRING;
+            break;
+        case 14:
+            mUnitID = cUnitID_BrickBlock;
+            mItemType = BgTexMgr::ITEM_COIN_MUSHROOM;
+            break;
+        case 15:
+            mUnitID = cUnitID_BrickBlockIceFlower;
+            mItemType = BgTexMgr::ITEM_MAX;
+            break;
+        }
+    }
+}
+
+void ActorBlockRenga::onDataChange(DataChangeFlag flag)
+{
+    BlockCoinBase::onDataChange(flag);
+
+    if (flag & DATA_CHANGE_FLAG_SETTINGS_1)
+        updateType_();
 }
 
 void ActorBlockRenga::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
-    BgTexMgr::ItemType type;
-
-    switch (mMapActorData.settings[1] & 0xF)
-    {
-    default:
+    if (mItemType == BgTexMgr::ITEM_MAX)
         return;
-    case 8:
-        type = BgTexMgr::ITEM_COIN_STAR;
-        break;
-    case 13:
-        type = BgTexMgr::ITEM_SPRING;
-        break;
-    case 14:
-        type = BgTexMgr::ITEM_COIN_MUSHROOM;
-        break;
-    }
 
     agl::TextureSampler sampler(BgTexMgr::instance()->getItemsTexture());
 
     rio::Matrix34f model_mtx;
     model_mtx.makeST(
         { 16.0f, 16.0f, 1.0f },
-        { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getZPos_() }
+        { mPosition.x + 8, mPosition.y - 8, mPosition.z }
     );
 
     rio::Matrix34f view_mtx;
@@ -78,7 +113,7 @@ void ActorBlockRenga::drawXlu(const rio::lyr::DrawInfo& draw_info)
         sampler, mv_mtx, proj_mtx,
         { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
         0.0f,
-        { s32(type) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f },
+        { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f },
         agl::cShaderMode_Invalid
     );
 }

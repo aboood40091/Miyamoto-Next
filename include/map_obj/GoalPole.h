@@ -2,10 +2,9 @@
 
 #include <item/MapActorItem.h>
 
+#include <math/rio_MathTypes.h>
+
 class BasicModel;
-class ShaderParamAnimation;
-class TexturePatternAnimation;
-class VisibilityAnimation;
 
 class GoalPole : public MapActorItem
 {
@@ -15,32 +14,35 @@ public:
     GoalPole(MapActorData& map_actor_data);
     virtual ~GoalPole();
 
-    void update() override;
+    void onDataChange(DataChangeFlag flag) override;
+    void onSceneUpdate() override;
     void scheduleDraw() override;
 
 private:
     bool drawBox_() const override
     {
-        return mBase.p_model == nullptr;
+        return mpModelResource == nullptr;
     }
 
+    void updatePositionXY_()
+    {
+        mPosition.x =  f32(mMapActorData.offset.x);
+        mPosition.y = -f32(mMapActorData.offset.y + 16);
+    }
+
+    void setModelMtxRT_();
+
+    void updateFrame_();
+
 private:
-    const std::string* mpResName;
-    struct
-    {
-        BasicModel*                 p_model;
-        TexturePatternAnimation*    p_tex_anim;
-    } mBase;
-    struct
-    {
-        BasicModel*                 p_model;
-        TexturePatternAnimation*    p_tex_anim;
-        ShaderParamAnimation*       p_shu_anim;
-    } mGoalFlag;
-    struct
-    {
-        BasicModel*                 p_model;
-        TexturePatternAnimation*    p_tex_anim;
-        VisibilityAnimation*       p_vis_anim;
-    } mTorideStd;
+    const std::string*      mpResName;
+
+    const ModelResource*    mpModelResource;
+    BasicModel*             mpBaseModel;
+    BasicModel*             mpGoalFlagModel;
+    BasicModel*             mpTorideStdModel;
+
+    const bool              cIsKaiga;
+    s32                     mFrame;
+    rio::BaseVec2f          mPosition;
 };

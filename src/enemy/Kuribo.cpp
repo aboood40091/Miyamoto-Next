@@ -13,17 +13,17 @@ static const std::string cResName[2] = {
 
 Kuribo::Kuribo(MapActorData& map_actor_data)
     : MapActorItem(map_actor_data)
-    , mIsKakibo(map_actor_data.id == 595)
+    , cIsKakibo(map_actor_data.id == 595)
     , mpModel(nullptr)
-    , mpTexAnim(nullptr)
+    , mIsLayer2(false)
 {
     static const std::string cArchivePath[2] = {
         MainWindow::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
         MainWindow::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
     };
 
-    const std::string& res_name = cResName[mIsKakibo];
-    const std::string& archive_path = cArchivePath[mIsKakibo];
+    const std::string& res_name = cResName[cIsKakibo];
+    const std::string& archive_path = cArchivePath[cIsKakibo];
 
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(res_name, archive_path, true);
     if (archive_res == nullptr)
@@ -44,10 +44,14 @@ Kuribo::Kuribo(MapActorData& map_actor_data)
     mpModel->getSklAnim(0)->play(model_res, "walk");
     mpModel->getSklAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_Repeat, 1.0f, 0.0f);
 
-    mpTexAnim = mpModel->getTexAnim(0);
-    mpTexAnim->play(model_res, "walk");
+    mpModel->getTexAnim(0)->play(model_res, "walk");
 
-    update();
+    mIsLayer2 = mMapActorData.settings[0] >> 16 & 1;
+
+    updatePositionXY_();
+    updatePositionZ_();
+
+    setModelMtxRT_();
 }
 
 Kuribo::~Kuribo()
@@ -57,7 +61,7 @@ Kuribo::~Kuribo()
         delete mpModel->getModel();
         delete mpModel;
 
-        const std::string& res_name = cResName[mIsKakibo];
+        const std::string& res_name = cResName[cIsKakibo];
 
         ModelResMgr::instance()->destroyResFile(res_name);
         ResMgr::instance()->destroyArchiveRes(res_name);
@@ -90,18 +94,46 @@ static BaseRotMtx sMtx(0.0f, rio::Mathf::deg2rad(315), 0.0f);
 
 }
 
-void Kuribo::update()
+void Kuribo::setModelMtxRT_()
 {
     if (mpModel == nullptr)
         return;
 
-    const rio::Vector3f pos { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 16), getZPos_() };
-
     rio::Matrix34f& mtx = sMtx.mtx;
-    mtx.setTranslationWorld(pos);
+    mtx.setTranslationWorld(static_cast<const rio::Vector3f&>(mPosition));
 
     mpModel->getModel()->setMtxRT(mtx);
-  //mpModel->getModel()->setScale({ 1.0f, 1.0f, 1.0f });
+}
+
+void Kuribo::onDataChange(DataChangeFlag flag)
+{
+    bool position_changed = false;
+
+    if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
+    {
+        bool is_layer2 = mMapActorData.settings[0] >> 16 & 1;
+        if (mIsLayer2 != is_layer2)
+        {
+            mIsLayer2 = is_layer2;
+            updatePositionZ_();
+            position_changed = true;
+        }
+    }
+
+    if (flag & DATA_CHANGE_FLAG_OFFSET)
+    {
+        updatePositionXY_();
+        position_changed = true;
+    }
+
+    if (position_changed)
+        setModelMtxRT_();
+}
+
+void Kuribo::onSceneUpdate()
+{
+    if (mpModel == nullptr)
+        return;
 
     mpModel->updateAnimations();
     mpModel->updateModel();

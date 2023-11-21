@@ -37,20 +37,102 @@ static const f32 cAngle[ObjDokan::DIRECTION_MAX] = {
     rio::Mathf::pi()
 };
 
-ObjDokan::ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color color)
-    : mIsAVisible(a_visible)
-{
-    rio::MemUtil::set(&mA, 0, sizeof(mA));
-    rio::MemUtil::set(&mB, 0, sizeof(mB));
+static const f32 cBaseFrame[ObjDokan::DIRECTION_MAX] = {
+    0.0f,
+    8.0f,
+    0.0f,
+    4.0f
+};
 
-    RIO_ASSERT(length > 0);
-    mLength = length;
+ObjDokan::ObjDokan(Direction dir)
+    : mpModelResource(nullptr)
+    , mpModelA(nullptr)
+    , mpModelB(nullptr)
+    , mBaseFrame(0.0f)
+    , mType(TYPE_MAX)
+    , mLength(0.0f)
+    , mIsEnableDrawA(false)
+    , mColor(COLOR_INVALID)
+{
     mScale.x = 1.0f;
-    mScale.y = mLength / 16;
     mScale.z = 1.0f;
 
     RIO_ASSERT(dir < DIRECTION_MAX);
     static_cast<rio::Matrix34f&>(mMtxRT).makeR({ 0.0f, 0.0f, cAngle[dir] });
+    mBaseFrame = cBaseFrame[dir];
+}
+
+ObjDokan::~ObjDokan()
+{
+    destroy();
+}
+
+bool ObjDokan::update(f32 length, bool draw_a, Color color)
+{
+    if (!isCreated() || (mType != TYPE_KAIGA && mColor == COLOR_INVALID && color != COLOR_INVALID))
+        return false;
+
+    bool need_mtx_update =  false;
+
+    if (mLength != length)
+    {
+        setLength_(length);
+        need_mtx_update = true;
+    }
+
+    mIsEnableDrawA = draw_a;
+
+    if (mType != TYPE_CB && mColor != color)
+    {
+        mColor = color;
+
+        const char* const model_name_a = cModelNameA[mType];
+        const char* const model_name_b = cModelNameB[mType];
+
+        f32 frame =
+            (mColor != COLOR_INVALID)
+                ? mBaseFrame + s32(mColor)
+                : -1.0f;
+
+        if (frame != -1.0f)
+        {
+            mpModelA->getTexAnim(0)->play(mpModelResource, model_name_a);
+            mpModelA->getTexAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_NoRepeat, 0.0f, frame);
+
+            mpModelB->getTexAnim(0)->play(mpModelResource, model_name_b);
+            mpModelB->getTexAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
+            mpModelB->getTexAnim(0)->getFrameCtrl().setFrame(frame);
+        }
+
+        if (mType == TYPE_KAIGA)
+        {
+            mpModelA->getShuAnim(0)->playTexSrtAnim(mpModelResource, model_name_a);
+            mpModelA->getShuAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_NoRepeat, 0.0f, frame);
+
+            mpModelB->getShuAnim(0)->playTexSrtAnim(mpModelResource, model_name_b);
+            mpModelB->getShuAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_NoRepeat, 0.0f, frame);
+        }
+
+        need_mtx_update = true;
+    }
+
+    if (need_mtx_update)
+        setModelMtxSRT_();
+
+    return true;
+}
+
+bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
+{
+    if (isCreated() && mType == type && update(length, draw_a, color))
+        return false;
+
+    destroy();
+
+    mIsEnableDrawA = draw_a;
+    mColor = color;
+
+    setLength_(length);
 
     RIO_ASSERT(type < TYPE_MAX);
     mType = type;
@@ -68,150 +150,168 @@ ObjDokan::ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color c
 
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(res_name, archive_path, true);
     if (archive_res == nullptr)
-        return;
+        return false;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
-    RIO_ASSERT(model_res);
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
+    RIO_ASSERT(mpModelResource);
 
     const char* const model_name_a = cModelNameA[mType];
     const char* const model_name_b = cModelNameB[mType];
 
-    mA.p_model = BasicModel::create(
-        const_cast<ModelResource*>(model_res),
+    mpModelA = BasicModel::create(
+        const_cast<ModelResource*>(mpModelResource),
         model_name_a,
         0, 1, 2, 0, 0,
         Model::cBoundingMode_Disable
     );
 
-    mB.p_model = BasicModel::create(
-        const_cast<ModelResource*>(model_res),
+    mpModelB = BasicModel::create(
+        const_cast<ModelResource*>(mpModelResource),
         model_name_b,
         0, 1, 2, 0, 0,
         Model::cBoundingMode_Disable
     );
 
-    static const f32 cBaseFrame[DIRECTION_MAX] = {
-        0.0f,
-        8.0f,
-        0.0f,
-        4.0f
-    };
-    f32 frame =
-        (mType != TYPE_CB && color != COLOR_INVALID)
-            ? cBaseFrame[dir] + s32(color)
-            : -1.0f;
-
-    if (frame != -1.0f)
+    if (mType != TYPE_CB)
     {
-        mA.p_tex_pat_anim = mA.p_model->getTexAnim(0);
-        mA.p_tex_pat_anim->play(model_res, model_name_a);
-        mA.p_tex_pat_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
-        mA.p_tex_pat_anim->getFrameCtrl().setFrame(frame);
+        f32 frame =
+            (mColor != COLOR_INVALID)
+                ? mBaseFrame + s32(mColor)
+                : -1.0f;
 
-        mB.p_tex_pat_anim = mB.p_model->getTexAnim(0);
-        mB.p_tex_pat_anim->play(model_res, model_name_b);
-        mB.p_tex_pat_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
-        mB.p_tex_pat_anim->getFrameCtrl().setFrame(frame);
+        if (frame != -1.0f)
+        {
+            mpModelA->getTexAnim(0)->play(mpModelResource, model_name_a);
+            mpModelA->getTexAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
+            mpModelA->getTexAnim(0)->getFrameCtrl().setFrame(frame);
+
+            mpModelB->getTexAnim(0)->play(mpModelResource, model_name_b);
+            mpModelB->getTexAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
+            mpModelB->getTexAnim(0)->getFrameCtrl().setFrame(frame);
+        }
+
+        if (mType == TYPE_KAIGA)
+        {
+            mpModelA->getShuAnim(0)->playTexSrtAnim(mpModelResource, model_name_a);
+            mpModelA->getShuAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
+            mpModelA->getShuAnim(0)->getFrameCtrl().setFrame(frame);
+
+            mpModelB->getShuAnim(0)->playTexSrtAnim(mpModelResource, model_name_b);
+            mpModelB->getShuAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
+            mpModelB->getShuAnim(0)->getFrameCtrl().setFrame(frame);
+        }
+    }
+    else
+    {
+        mpModelA->getShuAnim(0)->playTexSrtAnim(mpModelResource, "obj_dokan_CB_wait");
+        mpModelA->getShuAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
+        mpModelA->getShuAnim(0)->getFrameCtrl().setFrame(0.0f);
+        mpModelA->getShuAnim(0)->getFrameCtrl().setRate(1.0f);
+
+        mpModelB->getShuAnim(0)->playTexSrtAnim(mpModelResource, "obj_dokan_CB_wait");
+        mpModelB->getShuAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
+        mpModelB->getShuAnim(0)->getFrameCtrl().setFrame(0.0f);
+        mpModelB->getShuAnim(0)->getFrameCtrl().setRate(1.0f);
+
+        mpModelA->getShuAnim(1)->playColorAnim(mpModelResource, "obj_dokan_CB_wait");
+        mpModelA->getShuAnim(1)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
+        mpModelA->getShuAnim(1)->getFrameCtrl().setFrame(0.0f);
+        mpModelA->getShuAnim(1)->getFrameCtrl().setRate(1.0f);
+
+        mpModelB->getShuAnim(1)->playColorAnim(mpModelResource, "obj_dokan_CB_wait");
+        mpModelB->getShuAnim(1)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
+        mpModelB->getShuAnim(1)->getFrameCtrl().setFrame(0.0f);
+        mpModelB->getShuAnim(1)->getFrameCtrl().setRate(1.0f);
     }
 
-    if (mType == TYPE_KAIGA)
-    {
-        mA.p_tex_srt_anim = mA.p_model->getShuAnim(0);
-        mA.p_tex_srt_anim->playTexSrtAnim(model_res, model_name_a);
-        mA.p_tex_srt_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
-        mA.p_tex_srt_anim->getFrameCtrl().setFrame(frame);
-
-        mB.p_tex_srt_anim = mB.p_model->getShuAnim(0);
-        mB.p_tex_srt_anim->playTexSrtAnim(model_res, model_name_b);
-        mB.p_tex_srt_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
-        mB.p_tex_srt_anim->getFrameCtrl().setFrame(frame);
-    }
-    else if (mType == TYPE_CB)
-    {
-        mA.p_tex_srt_anim = mA.p_model->getShuAnim(0);
-        mA.p_tex_srt_anim->playTexSrtAnim(model_res, "obj_dokan_CB_wait");
-        mA.p_tex_srt_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
-        mA.p_tex_srt_anim->getFrameCtrl().setFrame(0.0f);
-        mA.p_tex_srt_anim->getFrameCtrl().setRate(1.0f);
-
-        mB.p_tex_srt_anim = mB.p_model->getShuAnim(0);
-        mB.p_tex_srt_anim->playTexSrtAnim(model_res, "obj_dokan_CB_wait");
-        mB.p_tex_srt_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
-        mB.p_tex_srt_anim->getFrameCtrl().setFrame(0.0f);
-        mB.p_tex_srt_anim->getFrameCtrl().setRate(1.0f);
-
-        mA.p_color_anim = mA.p_model->getShuAnim(1);
-        mA.p_color_anim->playColorAnim(model_res, "obj_dokan_CB_wait");
-        mA.p_color_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
-        mA.p_color_anim->getFrameCtrl().setFrame(0.0f);
-        mA.p_color_anim->getFrameCtrl().setRate(1.0f);
-
-        mB.p_color_anim = mB.p_model->getShuAnim(1);
-        mB.p_color_anim->playColorAnim(model_res, "obj_dokan_CB_wait");
-        mB.p_color_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_Repeat);
-        mB.p_color_anim->getFrameCtrl().setFrame(0.0f);
-        mB.p_color_anim->getFrameCtrl().setRate(1.0f);
-    }
+    return true;
 }
 
-ObjDokan::~ObjDokan()
+void ObjDokan::destroy()
 {
-    if (isCreated())
-    {
-        delete mA.p_model->getModel();
-        delete mA.p_model;
+    if (!isCreated())
+        return;
 
-        delete mB.p_model->getModel();
-        delete mB.p_model;
+    delete mpModelA->getModel();
+    delete mpModelA;
+    mpModelA = nullptr;
 
-        const std::string& res_name = cResName[mType];
+    delete mpModelB->getModel();
+    delete mpModelB;
+    mpModelB = nullptr;
 
-        ModelResMgr::instance()->destroyResFile(res_name);
-        ResMgr::instance()->destroyArchiveRes(res_name);
-    }
+    const std::string& res_name = cResName[mType];
+
+    ModelResMgr::instance()->destroyResFile(res_name);
+    ResMgr::instance()->destroyArchiveRes(res_name);
+
+    mpModelResource = nullptr;
+
+    mType = TYPE_MAX;
+    mLength = 0.0f;
+    mIsEnableDrawA = false;
+    mColor = COLOR_INVALID;
 }
 
-void ObjDokan::update(const rio::BaseVec3f& position)
+void ObjDokan::move(const rio::BaseVec3f& position)
 {
     rio::Matrix34f& mtxRT = static_cast<rio::Matrix34f&>(mMtxRT);
     mtxRT.setTranslationWorld(static_cast<const rio::Vector3f&>(position));
 
-    rio::Matrix34f mtx = mtxRT;
+    setModelMtxSRT_();
+}
+
+void ObjDokan::setModelMtxSRT_()
+{
+    rio::Matrix34f mtx = static_cast<const rio::Matrix34f&>(mMtxRT);
     mtx.applyTranslationLocal({ 0.0f, mLength * 0.5f, 0.0f });
 
-    mB.p_model->getModel()->setMtxRT(mtx);
-    mB.p_model->getModel()->setScale(static_cast<const rio::Vector3f&>(mScale));
+    mpModelB->getModel()->setMtxRT(mtx);
+    mpModelB->getModel()->setScale(static_cast<const rio::Vector3f&>(mScale));
 
     if (mType == TYPE_CB)
-        mB.p_model->updateAnimations();
+        mpModelB->updateAnimations();
 
-    mB.p_model->updateModel();
+    mpModelB->updateModel();
 
     if (mType == TYPE_KAIGA)
     {
-        MaterialG3d* material = static_cast<MaterialG3d*>(mB.p_model->getModel()->getMaterial(0));
+        MaterialG3d* material = static_cast<MaterialG3d*>(mpModelB->getModel()->getMaterial(0));
         RIO_ASSERT(material);
         material->setTexSrtMtx(0, reinterpret_cast<const rio::Vector2f&>(mScale.x), 0, { 0.0f, (1 - mScale.y) * 0.5f });
     }
 
-    if (mIsAVisible)
+    if (mIsEnableDrawA)
     {
-        rio::Matrix34f mtx = mtxRT;
-        mtx.applyTranslationLocal({ 0.0f, mLength, 0.0f });
+        mtx.applyTranslationLocal({ 0.0f, mLength * 0.5f, 0.0f });
 
-        mA.p_model->getModel()->setMtxRT(mtx);
-      //mA.p_model->getModel()->setScale({ 1.0f, 1.0f, 1.0f });
+        mpModelA->getModel()->setMtxRT(mtx);
 
         if (mType == TYPE_CB)
-            mA.p_model->updateAnimations();
+            mpModelA->updateAnimations();
 
-        mA.p_model->updateModel();
+        mpModelA->updateModel();
+    }
+}
+
+void ObjDokan::onSceneUpdate() const
+{
+    if (mType == TYPE_CB)
+    {
+        mpModelB->updateAnimations();
+        mpModelB->updateModel();
+
+        if (mIsEnableDrawA)
+        {
+            mpModelA->updateAnimations();
+            mpModelA->updateModel();
+        }
     }
 }
 
 void ObjDokan::scheduleDraw() const
 {
-    Renderer::instance()->drawModel(*mB.p_model);
-    if (mIsAVisible)
-        Renderer::instance()->drawModel(*mA.p_model);
+    Renderer::instance()->drawModel(*mpModelB);
+    if (mIsEnableDrawA)
+        Renderer::instance()->drawModel(*mpModelA);
 }

@@ -3,8 +3,7 @@
 #include <math/rio_MathTypes.h>
 
 class BasicModel;
-class ShaderParamAnimation;
-class TexturePatternAnimation;
+class ModelResource;
 
 class ObjDokan
 {
@@ -36,7 +35,7 @@ public:
     };
 
 public:
-    ObjDokan(Direction dir, Type type, f32 length, bool a_visible, Color color = COLOR_INVALID);
+    ObjDokan(Direction dir);
     ~ObjDokan();
 
     ObjDokan(const ObjDokan&) = delete;
@@ -44,27 +43,41 @@ public:
     ObjDokan& operator=(const ObjDokan&) = delete;
     ObjDokan& operator=(ObjDokan&&) = delete;
 
+    bool initialize(Type type, f32 length = 16, bool draw_a = true, Color color = COLOR_INVALID);
+    bool update(f32 length, bool draw_a, Color color);
+    void destroy();
+
     bool isCreated() const
     {
-        return mA.p_model;
+        return mpModelResource;
     }
 
-    void update(const rio::BaseVec3f& position);
+    void move(const rio::BaseVec3f& position);
+    void onSceneUpdate() const;
 
     void scheduleDraw() const;
 
 private:
-    struct
+    void setLength_(f32 length)
     {
-        BasicModel*                 p_model;
-        TexturePatternAnimation*    p_tex_pat_anim;
-        ShaderParamAnimation*       p_tex_srt_anim;
-        ShaderParamAnimation*       p_color_anim;
-    }               mA,
-                    mB;
-    f32             mLength;
-    rio::BaseVec3f  mScale;
-    rio::BaseMtx34f mMtxRT;
-    Type            mType;
-    bool            mIsAVisible;
+        RIO_ASSERT(length > 0);
+        mLength = length;
+        mScale.y = mLength / 16;
+    }
+
+    void setModelMtxSRT_();
+
+private:
+    const ModelResource*    mpModelResource;
+    BasicModel*             mpModelA;
+    BasicModel*             mpModelB;
+
+    f32                     mBaseFrame;
+    rio::BaseMtx34f         mMtxRT;
+
+    Type                    mType;
+    f32                     mLength;
+    rio::BaseVec3f          mScale;
+    bool                    mIsEnableDrawA;
+    Color                   mColor;
 };

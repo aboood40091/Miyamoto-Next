@@ -8,16 +8,7 @@ class ObjDokanActorDown : public ObjDokanActorBase
 
 public:
     ObjDokanActorDown(MapActorData& map_actor_data)
-        : ObjDokanActorBase(map_actor_data, ObjDokan::DIRECTION_DOWN, false, map_actor_data.id == 578)
+        : ObjDokanActorBase(map_actor_data, ObjDokan::DIRECTION_DOWN, false, map_actor_data.id == 578, 16, 0)
     {
-        update();
-    }
-
-    void update() override
-    {
-        if (mObjDokan == nullptr)
-            return;
-
-        mObjDokan->update({ f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y), getZPos_() });
     }
 };

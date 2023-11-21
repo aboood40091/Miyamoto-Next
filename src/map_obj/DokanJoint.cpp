@@ -24,11 +24,13 @@ DokanJoint::DokanJoint(MapActorData& map_actor_data)
     mpModel = ModelG3d::createG3d(
         *model_res,
         "obj_dokan_joint",
-        1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
 
-    update();
+    updatePositionXY_();
+    updatePositionZ_();
+    setModelMtxRT_();
 }
 
 DokanJoint::~DokanJoint()
@@ -42,19 +44,33 @@ DokanJoint::~DokanJoint()
     }
 }
 
-void DokanJoint::update()
+void DokanJoint::setModelMtxRT_()
 {
-    if (mpModel == nullptr)
-        return;
-
     rio::Matrix34f mtx;
-    mtx.makeT({ f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y + 16), getZPos_() });
+    mtx.makeT(static_cast<const rio::Vector3f&>(mPosition));
 
     mpModel->setMtxRT(mtx);
-  //mpModel->setScale({ 1.0f, 1.0f, 1.0f });
-
-    mpModel->updateAnimations();
     mpModel->updateModel();
+}
+
+void DokanJoint::onDataChange(DataChangeFlag flag)
+{
+    bool position_changed = false;
+
+    if (flag & DATA_CHANGE_FLAG_LAYER)
+    {
+        updatePositionZ_();
+        position_changed = true;
+    }
+
+    if (flag & DATA_CHANGE_FLAG_OFFSET)
+    {
+        updatePositionXY_();
+        position_changed = true;
+    }
+
+    if (position_changed)
+        setModelMtxRT_();
 }
 
 void DokanJoint::scheduleDraw()

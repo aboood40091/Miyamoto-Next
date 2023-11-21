@@ -24,11 +24,12 @@ CollectionCoin::CollectionCoin(MapActorData& map_actor_data)
     mpModel = Model::createG3d(
         *model_res,
         "star_coinA",
-        1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
 
-    update();
+    updatePositionXY_();
+    updatePositionZ_();
 }
 
 CollectionCoin::~CollectionCoin()
@@ -41,7 +42,16 @@ CollectionCoin::~CollectionCoin()
     }
 }
 
-void CollectionCoin::update()
+void CollectionCoin::onDataChange(DataChangeFlag flag)
+{
+    if (flag & DATA_CHANGE_FLAG_OFFSET)
+        updatePositionXY_();
+
+    if ((flag & DATA_CHANGE_FLAG_LAYER) || (flag & DATA_CHANGE_FLAG_SETTINGS_0))
+        updatePositionZ_();
+}
+
+void CollectionCoin::onSceneUpdate()
 {
     if (mpModel == nullptr)
         return;
@@ -49,7 +59,7 @@ void CollectionCoin::update()
     rio::Matrix34f mtx;
     mtx.makeRT(
         { 0.0f, CoinOrigin::instance()->getCoinAngle(), 0.0f },
-        { f32(mMapActorData.offset.x + 16), -f32(mMapActorData.offset.y + 16), getZPos_() }
+        static_cast<const rio::Vector3f&>(mPosition)
     );
 
     mpModel->setMtxRT(mtx);

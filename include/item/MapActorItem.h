@@ -9,6 +9,25 @@
 class MapActorItem
 {
 public:
+    enum DataChangeFlag
+    {
+        DATA_CHANGE_FLAG_OFFSET         = 1 << 0,
+        DATA_CHANGE_FLAG_EVENT_ID       = 1 << 1,
+        DATA_CHANGE_FLAG_SETTINGS_0     = 1 << 2,
+        DATA_CHANGE_FLAG_SETTINGS_1     = 1 << 3,
+        DATA_CHANGE_FLAG_AREA           = 1 << 4,
+        DATA_CHANGE_FLAG_LAYER          = 1 << 5,
+        DATA_CHANGE_FLAG_MOVEMENT_ID    = 1 << 6,
+        DATA_CHANGE_FLAG_LINK_ID        = 1 << 7,
+        DATA_CHANGE_FLAG_INIT_STATE     = 1 << 8
+    };
+
+    static f32 getDefaultZPos(u8 layer)
+    {
+        return layer == LAYER_1 ? 2200.0f : -2500.0f; // Only layer 1 and 2
+    }
+
+public:
     MapActorItem(MapActorData& map_actor_data);
     virtual ~MapActorItem() {}
 
@@ -20,7 +39,11 @@ public:
     MapActorData& getMapActorData() { return mMapActorData; }
     const MapActorData& getMapActorData() const { return mMapActorData; }
 
-    virtual void update()
+    virtual void onDataChange(DataChangeFlag flag)
+    {
+    }
+
+    virtual void onSceneUpdate()
     {
     }
 
@@ -35,11 +58,6 @@ protected:
     virtual bool drawBox_() const
     {
         return true;
-    }
-
-    f32 getZPos_() const
-    {
-        return (mMapActorData.layer == LAYER_1) ? 2200.0f : -2500.0f; // Only layer 1 and 2
     }
 
 protected:

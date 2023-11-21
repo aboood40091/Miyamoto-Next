@@ -77,13 +77,13 @@ bool CoinOrigin::initialize()
     mpModelCoin = Model::createG3d(
         *model_res,
         "obj_coin",
-        1, 1, 1, 1, 0,
+        0, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
     mpModelBlueCoin = Model::createG3d(
         *model_res,
         "obj_coin_blue",
-        1, 1, 1, 1, 0,
+        0, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
 

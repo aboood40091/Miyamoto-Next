@@ -2,6 +2,8 @@
 
 #include <item/MapActorItem.h>
 
+#include <math/rio_MathTypes.h>
+
 class ModelG3d;
 
 class CollectionCoin : public MapActorItem
@@ -12,7 +14,8 @@ public:
     CollectionCoin(MapActorData& map_actor_data);
     virtual ~CollectionCoin();
 
-    void update() override;
+    void onDataChange(DataChangeFlag flag) override;
+    void onSceneUpdate() override;
     void scheduleDraw() override;
 
 private:
@@ -21,23 +24,32 @@ private:
         return mpModel == nullptr;
     }
 
-    f32 getZPos_() const
+    void updatePositionXY_()
     {
+        mPosition.x =  f32(mMapActorData.offset.x + 16);
+        mPosition.y = -f32(mMapActorData.offset.y + 16);
+    }
+
+    void updatePositionZ_()
+    {
+        mPosition.z = -3000;
         if (mMapActorData.layer == LAYER_1)
         {
             switch (mMapActorData.settings[0] >> 8 & 0xF)
             {
             default:
-                return 550;
+                mPosition.z = 550;
+                break;
             case 1:
                 break;
             case 2:
-                return -1000;
+                mPosition.z = -1000;
+                break;
             }
         }
-        return -3000;
     }
 
 private:
-    ModelG3d*   mpModel;
+    ModelG3d*       mpModel;
+    rio::BaseVec3f  mPosition;
 };

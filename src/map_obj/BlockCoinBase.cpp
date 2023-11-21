@@ -3,11 +3,18 @@
 #include <MainWindow.h>
 #include <rio.h>
 
+void BlockCoinBase::onDataChange(DataChangeFlag flag)
+{
+    if (flag & DATA_CHANGE_FLAG_OFFSET)
+        updatePositionXY_();
+
+    if (flag & DATA_CHANGE_FLAG_LAYER)
+        updatePositionZ_();
+}
+
 void BlockCoinBase::scheduleDraw()
 {
-    rio::Vector3f offs { f32(mMapActorData.offset.x), -f32(mMapActorData.offset.y), getZPos_() };
-
     static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
-        offs, getUnitID_(), mMapActorData.layer
+        mPosition, getUnitID_(), mMapActorData.layer
     );
 }

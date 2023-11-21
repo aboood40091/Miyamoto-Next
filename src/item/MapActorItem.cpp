@@ -21,7 +21,7 @@ void MapActorItem::drawOpa(const rio::lyr::DrawInfo& draw_info)
 
     rio::PrimitiveRenderer::instance()->begin();
     {
-        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getZPos_() + 10 };
+        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getDefaultZPos(mMapActorData.layer) + 10 };
         rio::Vector2f size { 16.0f, 16.0f };
 
         rio::PrimitiveRenderer::instance()->drawBox(
@@ -41,7 +41,7 @@ void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
 
     rio::PrimitiveRenderer::instance()->begin();
     {
-        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getZPos_() };
+        rio::Vector3f offs { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 8), getDefaultZPos(mMapActorData.layer) };
         rio::Vector2f size { 16.0f, 16.0f };
 
         rio::PrimitiveRenderer::instance()->drawQuad(

@@ -730,7 +730,7 @@ void MainWindow::calc_()
     CoinOrigin::instance()->update();
 
     for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
-        p_item->update();
+        p_item->onSceneUpdate();
 }
 
 rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const

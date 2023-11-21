@@ -1,6 +1,6 @@
 #pragma once
 
-#include <course/UnitID.h>
+#include <course/BgTexMgr.h>
 #include <item/MapActorItem.h>
 
 class ActorBlockBigBase : public MapActorItem
@@ -8,19 +8,41 @@ class ActorBlockBigBase : public MapActorItem
 public:
     ActorBlockBigBase(MapActorData& map_actor_data, UnitID unit, bool set_coin)
         : MapActorItem(map_actor_data)
-        , mUnitID(unit)
-        , mSetCoin(set_coin)
+        , cUnitID(unit)
+        , cSetCoin(set_coin)
     {
+        updatePositionXY_();
+        updatePositionZ_();
+        updateItemType_();
     }
+
+    void onDataChange(DataChangeFlag flag) override;
+    void scheduleDraw() override;
 
     void drawOpa(const rio::lyr::DrawInfo& draw_info) override
     {
     }
 
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
-    void scheduleDraw() override;
 
 private:
-    UnitID  mUnitID;
-    bool    mSetCoin;
+    void updatePositionXY_()
+    {
+        mPosition.x =  f32(mMapActorData.offset.x);
+        mPosition.y = -f32(mMapActorData.offset.y + 16);
+    }
+
+    void updatePositionZ_()
+    {
+        mPosition.z = getDefaultZPos(mMapActorData.layer);
+    }
+
+    void updateItemType_();
+
+private:
+    const UnitID        cUnitID;
+    const bool          cSetCoin;
+
+    BgTexMgr::ItemType  mItemType;
+    rio::BaseVec3f      mPosition;
 };

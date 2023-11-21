@@ -3,35 +3,60 @@
 #include <item/MapActorItem.h>
 #include <map_obj/ObjDokan.h>
 
-#include <memory>
-
 class ObjDokanActorBase : public MapActorItem
 {
 public:
-    ObjDokanActorBase(MapActorData& map_actor_data, ObjDokan::Direction dir, bool cb, bool group);
+    ObjDokanActorBase(MapActorData& map_actor_data, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y);
 
-    void update() override = 0;
-    void scheduleDraw() override;
+    void onDataChange(DataChangeFlag flag) override;
+
+    void onSceneUpdate() override
+    {
+        if (mObjDokan.isCreated())
+            mObjDokan.onSceneUpdate();
+    }
+
+    void scheduleDraw() override
+    {
+        if (mObjDokan.isCreated())
+            mObjDokan.scheduleDraw();
+    }
 
 protected:
     bool drawBox_() const override
     {
-        return mObjDokan == nullptr;
+        return !mObjDokan.isCreated();
     }
 
-    f32 getZPos_() const
+    void updatePositionXY_()
+    {
+        mPosition.x =  f32(mMapActorData.offset.x) + cPositionOffset.x;
+        mPosition.y = -f32(mMapActorData.offset.y) + cPositionOffset.y;
+    }
+
+    void updatePositionZ_()
     {
         switch (mMapActorData.layer)
         {
         case LAYER_0:
-            return 3520;
+            mPosition.z = 3520;
+            break;
         case LAYER_2:
-            return -3628;
+            mPosition.z = -3628;
+            break;
         default:
-            return -128;
+            mPosition.z = -128;
+            break;
         }
     }
 
+    bool updateParam_();
+
 protected:
-    std::unique_ptr<ObjDokan>   mObjDokan;
+    ObjDokan                mObjDokan;
+
+    const bool              cCB;
+    const bool              cGroup;
+    const rio::BaseVec2f    cPositionOffset;
+    rio::BaseVec3f          mPosition;
 };

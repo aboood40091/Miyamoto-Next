@@ -31,63 +31,73 @@ static inline void SetColor(TexturePatternAnimation* tex_anim, const ModelResour
 
 Nokonoko::Nokonoko(MapActorData& map_actor_data)
     : MapActorItem(map_actor_data)
-    , mIsBig(map_actor_data.id == 476)
+    , cIsBig(map_actor_data.id == 476)
+    , mpModelResource(nullptr)
     , mpModel(nullptr)
     , mpShellModel(nullptr)
+    , mIsAltColor(false)
 {
     static const std::string cArchivePath[2] = {
         MainWindow::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
         MainWindow::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
     };
 
-    const std::string& res_name = cResName[mIsBig];
-    const std::string& archive_path = cArchivePath[mIsBig];
+    const std::string& res_name = cResName[cIsBig];
+    const std::string& archive_path = cArchivePath[cIsBig];
 
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(res_name, archive_path, true);
     if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
-    RIO_ASSERT(model_res);
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
+    RIO_ASSERT(mpModelResource);
 
     const char* model_name = res_name.c_str();
 
     mpModel = BasicModel::create(
-        const_cast<ModelResource*>(model_res),
+        const_cast<ModelResource*>(mpModelResource),
         model_name,
-        1, 1, 0, 0, /* mIsBig ? 1 : */ 0,   // Enabling shape animation crashes on Windows atm
+        1, 1, 0, 0, /* cIsBig ? 1 : */ 0,   // Enabling shape animation crashes on Windows atm
         Model::cBoundingMode_Disable
     );
 
     mpShellModel = BasicModel::create(
-        const_cast<ModelResource*>(model_res),
-        cShellModelName[mIsBig],
-        1, 1, 0, 0, 0,
+        const_cast<ModelResource*>(mpModelResource),
+        cShellModelName[cIsBig],
+        0, 1, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
 
-    mpModel->getSklAnim(0)->play(model_res, "walkA");
+    if (cIsBig)
+    {
+        mpShellModel->getModel()->setScale({ 2.0f, 2.0f, 2.0f });
+        mpModel->getModel()->setScale({ 2.0f, 2.0f, 2.0f });
+    }
+
+    mpModel->getSklAnim(0)->play(mpModelResource, "walkA");
     mpModel->getSklAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_Repeat, 1.0f, 0.0f);
 
-    s32 color = mMapActorData.settings[0] & 1;
-    SetColor(mpModel->getTexAnim(0), model_res, model_name, color);
-    SetColor(mpShellModel->getTexAnim(0), model_res, cShellTexAnimName[mIsBig], color);
+    mIsAltColor = mMapActorData.settings[0] & 1;
+    updateColor_();
 
     /*
-    if (mIsBig)
+    if (cIsBig)
     {
         ShapeAnimation* sha_anim = mpModel->getShaAnim(0);
-        sha_anim->play(model_res, "nokonokoBig");
+        sha_anim->play(mpModelResource, "nokonokoBig");
         sha_anim->getFrameCtrl().set(FrameCtrl::cMode_Repeat, 1.0f, 0.0f);
     }
     */
 
-    update();
+    updatePositionXY_();
+    updatePositionZ_();
+
+    setModelMtxRT_();
 }
 
 Nokonoko::~Nokonoko()
 {
-    if (mpModel)
+    if (mpModelResource)
     {
         delete mpModel->getModel();
         delete mpModel;
@@ -95,7 +105,7 @@ Nokonoko::~Nokonoko()
         delete mpShellModel->getModel();
         delete mpShellModel;
 
-        const std::string& res_name = cResName[mIsBig];
+        const std::string& res_name = cResName[cIsBig];
 
         ModelResMgr::instance()->destroyResFile(res_name);
         ResMgr::instance()->destroyArchiveRes(res_name);
@@ -131,41 +141,74 @@ static BaseRotMtx sMtx[2] {
 
 static const BaseRotMtx sHeadDeltaRMtx(rio::Mathf::deg2rad(300 - 285), 0.0f, 0.0f);
 
-static const rio::Vector3f cScale2x { 2.0f, 2.0f, 2.0f };
-
 }
 
-void Nokonoko::update()
+void Nokonoko::setModelMtxRT_()
 {
-    if (mpModel == nullptr)
+    if (mpModelResource == nullptr)
         return;
 
-    const rio::Vector3f pos { f32(mMapActorData.offset.x + 8), -f32(mMapActorData.offset.y + 16), getZPos_() };
+    rio::Matrix34f& mtx = sMtx[cIsBig].mtx;
+    mtx.setTranslationWorld(static_cast<const rio::Vector3f&>(mPosition));
 
-    rio::Matrix34f& mtx = sMtx[mIsBig].mtx;
-    mtx.setTranslationWorld(pos);
+    mpModel->getModel()->setMtxRT(mtx);
 
-    if (mMapActorData.settings[0] >> 4 & 1)
+    mpShellModel->getModel()->setMtxRT(mtx);
+    mpShellModel->getModel()->updateModel();
+}
+
+void Nokonoko::updateColor_()
+{
+    if (mpModelResource == nullptr)
+        return;
+
+    SetColor(mpModel->getTexAnim(0), mpModelResource, cResName[cIsBig].c_str(), mIsAltColor);
+
+    SetColor(mpShellModel->getTexAnim(0), mpModelResource, cShellTexAnimName[cIsBig], mIsAltColor);
+    mpShellModel->updateAnimations();
+    mpShellModel->updateModel();
+}
+
+void Nokonoko::onDataChange(DataChangeFlag flag)
+{
+    bool position_changed = false;
+
+    if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
     {
-        mpShellModel->getModel()->setMtxRT(mtx);
-
-        if (mIsBig)
-            mpShellModel->getModel()->setScale(cScale2x);
-
-        mpShellModel->updateAnimations();
-        mpShellModel->updateModel();
+        bool is_alt_color = mMapActorData.settings[0] & 1;
+        if (mIsAltColor != is_alt_color)
+        {
+            mIsAltColor = is_alt_color;
+            updateColor_();
+        }
     }
-    else
+
+    if (flag & DATA_CHANGE_FLAG_LAYER)
     {
-        mpModel->getModel()->setMtxRT(mtx);
+        updatePositionZ_();
+        position_changed = true;
+    }
 
-        if (mIsBig)
-            mpModel->getModel()->setScale(cScale2x);
+    if (flag & DATA_CHANGE_FLAG_OFFSET && mpModelResource)
+    {
+        updatePositionXY_();
+        position_changed = true;
+    }
 
+    if (position_changed)
+        setModelMtxRT_();
+}
+
+void Nokonoko::onSceneUpdate()
+{
+    if (mpModelResource == nullptr)
+        return;
+
+    {
         mpModel->updateAnimations();
         mpModel->getModel()->updateAnimations();
 
-        if (!mIsBig)
+        if (!cIsBig)
         {
             s32 index = mpModel->getModel()->searchBoneIndex("head");
 
@@ -184,7 +227,7 @@ void Nokonoko::update()
 
 void Nokonoko::scheduleDraw()
 {
-    if (mpModel == nullptr)
+    if (mpModelResource == nullptr)
         return;
 
     if (mMapActorData.settings[0] >> 4 & 1)

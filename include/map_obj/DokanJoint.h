@@ -2,6 +2,8 @@
 
 #include <item/MapActorItem.h>
 
+#include <math/rio_MathTypes.h>
+
 class ModelG3d;
 
 class DokanJoint : public MapActorItem
@@ -12,7 +14,7 @@ public:
     DokanJoint(MapActorData& map_actor_data);
     virtual ~DokanJoint();
 
-    void update() override;
+    void onDataChange(DataChangeFlag flag) override;
     void scheduleDraw() override;
 
 private:
@@ -21,19 +23,31 @@ private:
         return mpModel == nullptr;
     }
 
-    f32 getZPos_() const
+    void updatePositionXY_()
+    {
+        mPosition.x =  f32(mMapActorData.offset.x + 16);
+        mPosition.y = -f32(mMapActorData.offset.y + 16);
+    }
+
+    void updatePositionZ_()
     {
         switch (mMapActorData.layer)
         {
         case LAYER_0:
-            return 3584.0f;
+            mPosition.z = 3584.0f;
+            break;
         case LAYER_2:
-            return -3564.0f;
+            mPosition.z = -3564.0f;
+            break;
         default:
-            return -64.0f;
+            mPosition.z = -64.0f;
+            break;
         }
     }
 
+    void setModelMtxRT_();
+
 private:
-    ModelG3d*   mpModel;
+    ModelG3d*       mpModel;
+    rio::BaseVec3f  mPosition;
 };
