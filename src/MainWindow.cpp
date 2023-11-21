@@ -3,7 +3,6 @@
 #include <controller/rio_ControllerMgr.h>
 #include <filedevice/rio_FileDevice.h>
 #include <gfx/rio_PrimitiveRenderer.h>
-#include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Renderer.h>
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>
@@ -741,7 +740,7 @@ rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
     const f32 screen_world_h = 224 * mBgZoom;
     const f32 screen_world_w = screen_world_h * 16 / 9;
 
-    return (pos_vec - camera_pos) * (rio::Vector2f{ /* s32(rio::Window::instance()->getWidth()) */ 1280.0f, /* s32(rio::Window::instance()->getHeight()) */ 720.0f } / rio::Vector2f{ screen_world_w, -screen_world_h });
+    return (pos_vec - camera_pos) * (rio::Vector2f{ f32(s32(rio::Window::instance()->getWidth())), f32(s32(rio::Window::instance()->getHeight())) } / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
 void MainWindow::calcDistantViewScissor_()
