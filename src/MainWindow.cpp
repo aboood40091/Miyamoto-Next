@@ -8,6 +8,8 @@
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>
 
+#include <rio.h>
+
 #if RIO_IS_WIN
 #include <graphics/win/ShaderUtil.h>
 #endif // RIO_IS_WIN
@@ -16,6 +18,7 @@
 #include <detail/aglGX2.h>
 #endif // RIO_IS_CAFE
 
+#include <common/aglTextureFormatInfo.h>
 #include <detail/aglShaderHolder.h>
 #include <resource/SZSDecompressor.h>
 #include <utility/aglPrimitiveShape.h>
@@ -47,11 +50,16 @@ MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
     , m3DDrawCallback(*this)
 {
+    rio::MemUtil::set(mLayer, 0, sizeof(mLayer));
+
     const rio::Window* const window = rio::Window::instance();
     RIO_ASSERT(window);
 
-    mSize.x = s32(window->getWidth());
-    mSize.y = s32(window->getHeight());
+    s32 width = window->getWidth();
+    s32 height = window->getHeight();
+
+    mSize.x = width;
+    mSize.y = height;
     mAspect = mSize.x / mSize.y;
 
     mProjection.set(
@@ -63,7 +71,152 @@ MainWindow::MainWindow()
          mSize.x     // Right
     );
 
-    rio::MemUtil::set(mLayer, 0, sizeof(mLayer));
+    mRenderBuffer.setRenderTargetColor(&mColorTarget);
+    mRenderBuffer.setRenderTargetDepth(&mDepthTarget);
+
+    const rio::NativeWindow& native_window = window->getNativeWindow();
+
+    createRenderBuffer_(
+        width, height
+#if RIO_IS_CAFE
+        , native_window.getColorBuffer().surface
+        , native_window.getDepthBufferTexture()->surface
+#elif RIO_IS_WIN
+        , native_window.getColorBufferTextureFormat(), native_window.getColorBufferTextureHandle()
+        , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
+#endif
+    );
+
+    window->makeContextCurrent();
+}
+
+void MainWindow::createRenderBuffer_(
+    s32 width, s32 height
+#if RIO_IS_CAFE
+    , const GX2Surface& color_surf
+    , const GX2Surface& depth_surf
+#elif RIO_IS_WIN
+    , rio::TextureFormat color_format, u32 color_handle
+    , rio::TextureFormat depth_format, u32 depth_handle
+#endif
+)
+{
+    mRenderBuffer.setSize(width, height);
+
+    agl::TextureData color_texture_data;
+    agl::TextureData depth_texture_data;
+
+#if RIO_IS_CAFE
+
+    color_texture_data.initializeFromSurface(color_surf);
+
+#elif RIO_IS_WIN
+
+    color_texture_data.initialize(
+        agl::TextureFormatInfo::convFormatGX2ToAGL(
+            static_cast<GX2SurfaceFormat>(color_format),
+            true,
+            false
+        ),
+        width,
+        height,
+        1
+    );
+
+    color_texture_data.setHandle(std::make_shared<agl::TextureHandle>(color_handle));
+
+#endif
+
+    mColorTarget.applyTextureData(color_texture_data);
+
+#if RIO_IS_CAFE
+
+    GX2Surface& depth_surface = const_cast<GX2Surface&>(depth_surf);
+    if (depth_surface.use & GX2_SURFACE_USE_DEPTH_BUFFER)
+    {
+        depth_texture_data.initializeFromSurface(depth_surface);
+    }
+    else
+    {
+        depth_surface.use = GX2SurfaceUse(depth_surface.use | GX2_SURFACE_USE_DEPTH_BUFFER);
+        depth_texture_data.initializeFromSurface(depth_surface);
+        depth_surface.use = GX2SurfaceUse(depth_surface.use & ~GX2_SURFACE_USE_DEPTH_BUFFER);
+    }
+
+#elif RIO_IS_WIN
+
+    depth_texture_data.initialize(
+        agl::TextureFormatInfo::convFormatGX2ToAGL(
+            static_cast<GX2SurfaceFormat>(depth_format),
+            false,
+            true
+        ),
+        width,
+        height,
+        1
+    );
+
+    depth_texture_data.setHandle(std::make_shared<agl::TextureHandle>(depth_handle));
+
+#endif
+
+    mDepthTarget.applyTextureData(depth_texture_data);
+
+#if RIO_IS_WIN
+    mRenderBuffer.bind();
+
+    // Check Frame Buffer completeness
+    GLenum framebuffer_status;
+    RIO_GL_CALL(framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE)
+    {
+        RIO_LOG("Frame Buffer incomplete! Status 0x%08X\n", framebuffer_status);
+        RIO_ASSERT(false);
+    }
+#endif // RIO_IS_WIN
+}
+
+void MainWindow::resize_(s32 width, s32 height)
+{
+    const rio::Vector2f center_pos {
+        mCamera.pos().x + mSize.x / (2 * mCamera.getZoomScale()),
+        mCamera.pos().y - mSize.y / (2 * mCamera.getZoomScale())
+    };
+
+    mSize.x = width;
+    mSize.y = height;
+    mAspect = mSize.x / mSize.y;
+
+    mProjection.setTBLR(
+         0.0f,      // Top
+        -mSize.y,   // Bottom
+         0.0f,      // Left
+         mSize.x     // Right
+    );
+
+    setZoom(mBgZoom);
+    mCamera.pos().x = center_pos.x - mSize.x / (2 * mCamera.getZoomScale());
+    mCamera.pos().y = center_pos.y + mSize.y / (2 * mCamera.getZoomScale());
+
+    const rio::NativeWindow& native_window = rio::Window::instance()->getNativeWindow();
+
+    createRenderBuffer_(
+        width, height
+#if RIO_IS_CAFE
+        , native_window.getColorBuffer().surface
+        , native_window.getDepthBufferTexture()->surface
+#elif RIO_IS_WIN
+        , native_window.getColorBufferTextureFormat(), native_window.getColorBufferTextureHandle()
+        , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
+#endif
+    );
+
+    DistantViewMgr::instance()->onResizeRenderBuffer();
+}
+
+void MainWindow::onResizeCallback_(s32 width, s32 height)
+{
+    static_cast<MainWindow*>(rio::sRootTask)->resize_(width, height);
 }
 
 rio::Vector2f MainWindow::viewToWorldPos(const rio::Vector2f& pos) const
@@ -153,6 +306,8 @@ void MainWindow::processInputs_()
 void MainWindow::prepare_()
 {
   //RIO_LOG("MainWindow::prepare_(): start\n");
+
+    rio::Window::instance()->setOnResizeCallback(&MainWindow::onResizeCallback_);
 
     mLayer[SCENE_LAYER_GATHER].it = rio::lyr::Renderer::instance()->addLayer("Gather", SCENE_LAYER_GATHER);
     mLayer[SCENE_LAYER_GATHER].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_GATHER].it);
@@ -303,7 +458,7 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Initialized Renderer\n");
 
-    DistantViewMgr::createSingleton();
+    DistantViewMgr::createSingleton(mRenderBuffer);
     DistantViewMgr::instance()->setFlickerEnable(false);
 
   //RIO_LOG("Created DistantViewMgr\n");
@@ -399,6 +554,8 @@ void MainWindow::exit_()
         rio::lyr::Renderer::instance()->removeLayer(mLayer[i].it);
         mLayer[i].ptr = nullptr;
     }
+
+    rio::Window::instance()->setOnResizeCallback(nullptr);
 }
 
 namespace {
@@ -844,7 +1001,11 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
 {
     if (mDrawDV)
+    {
+        rio::Window::instance()->updateDepthBufferTexture();
+
         DistantViewMgr::instance()->applyDepthOfField();
+    }
 }
 void MainWindow::drawCursor_()
 {

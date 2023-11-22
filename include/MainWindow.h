@@ -15,6 +15,8 @@
 
 #include <resource/SharcArchiveRes.h>
 
+#include <common/aglRenderBuffer.h>
+#include <common/aglRenderTarget.h>
 #include <gfx/rio_Projection.h>
 #include <gfx/lyr/rio_Layer.h>
 #include <task/rio_Task.h>
@@ -106,6 +108,19 @@ private:
     void calc_()    override;
     void exit_()    override;
 
+    void resize_(s32 width, s32 height);
+    void createRenderBuffer_(
+        s32 width, s32 height
+#if RIO_IS_CAFE
+        , const GX2Surface& color_surf
+        , const GX2Surface& depth_surf
+#elif RIO_IS_WIN
+        , rio::TextureFormat color_format, u32 color_handle
+        , rio::TextureFormat depth_format, u32 depth_handle
+#endif
+    );
+    static void onResizeCallback_(s32 width, s32 height);
+
     void processInputs_();
     void updateCursorPos_();
     void drawCursor_();
@@ -182,6 +197,10 @@ private:
     std::vector< std::unique_ptr<MapActorItem> > mMapActorItemPtr;
     std::vector<AreaItem>       mAreaItem;
     std::vector<LocationItem>   mLocationItem;
+
+    agl::RenderBuffer       mRenderBuffer;
+    agl::RenderTargetColor  mColorTarget;
+    agl::RenderTargetDepth  mDepthTarget;
 
     bool    mBlendEnable;
     bool    mRenderNormal;
