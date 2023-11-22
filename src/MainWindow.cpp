@@ -3,6 +3,7 @@
 #include <controller/rio_ControllerMgr.h>
 #include <filedevice/rio_FileDevice.h>
 #include <gfx/rio_PrimitiveRenderer.h>
+#include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Renderer.h>
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>
@@ -46,6 +47,22 @@ MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
     , m3DDrawCallback(*this)
 {
+    const rio::Window* const window = rio::Window::instance();
+    RIO_ASSERT(window);
+
+    mSize.x = s32(window->getWidth());
+    mSize.y = s32(window->getHeight());
+    mAspect = mSize.x / mSize.y;
+
+    mProjection.set(
+         1.0f,      // Near
+         20000.0f,  // Far
+         0.0f,      // Top
+        -mSize.y,   // Bottom
+         0.0f,      // Left
+         mSize.x     // Right
+    );
+
     rio::MemUtil::set(mLayer, 0, sizeof(mLayer));
 }
 
@@ -102,9 +119,9 @@ void MainWindow::updateCursorPos_()
     mCursorPos = rio::ControllerMgr::instance()->getMainPointer()->getPointer();
 
     const f32 min_x =  0.0f;
-    const f32 max_x =  s32(rio::Window::instance()->getWidth());
+    const f32 max_x =  mSize.x;
 
-    const f32 min_y = -s32(rio::Window::instance()->getHeight());
+    const f32 min_y = -mSize.y;
     const f32 max_y =  0.0f;
 
     mCursorPos.x = mCursorPos.x;
@@ -299,15 +316,6 @@ void MainWindow::prepare_()
 
   //setZoomTileSize(24);
   //RIO_LOG("Zoom: %f\n", mBgZoom);
-
-    mProjection.set(
-         1.0f,                                      // Near
-         20000.0f,                                  // Far
-         0.0f,                                      // Top
-        -s32(rio::Window::instance()->getHeight()), // Bottom
-         0.0f,                                      // Left
-         s32(rio::Window::instance()->getWidth())   // Right
-    );
 
     mBgRenderer.setCamera(&mCamera);
     mBgRenderer.setProjection(&mProjection);
@@ -602,14 +610,10 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     if (start_next_goto)
     {
-        const f32 window_w = s32(rio::Window::instance()->getWidth());
-        const f32 window_h = s32(rio::Window::instance()->getHeight());
+        const rio::Vector2f& window_size_half = mSize / (2 * mCamera.getZoomScale());
 
-        const f32 window_w_2 = window_w / (2 * mCamera.getZoomScale());
-        const f32 window_h_2 = window_h / (2 * mCamera.getZoomScale());
-
-        camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_w_2);
-        camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_h_2);
+        camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_size_half.x);
+        camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_size_half.y);
     }
     else
     {
@@ -623,7 +627,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
     const f32 screen_world_h = 224 * mBgZoom;
-    const f32 screen_world_w = screen_world_h * 16 / 9;
+    const f32 screen_world_w = screen_world_h * mAspect;
 
     rio::BaseVec2f bg_pos;
     f32 bg_offset_area_bottom_to_screen_bottom;
@@ -699,7 +703,7 @@ void MainWindow::calc_()
     const rio::BaseVec2f& camera_pos = mCamera.pos();
 
     const f32 screen_world_h = 224 * mBgZoom;
-    const f32 screen_world_w = screen_world_h * 16 / 9;
+    const f32 screen_world_w = screen_world_h * mAspect;
 
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
     if (/* mCurrentFile != -1 && */ mDVControlArea != -1)
@@ -738,9 +742,9 @@ rio::BaseVec2f MainWindow::worldToScreenPos(const rio::BaseVec2f& pos) const
     const rio::Vector2f& camera_pos = static_cast<const rio::Vector2f&>(mCamera.pos());
 
     const f32 screen_world_h = 224 * mBgZoom;
-    const f32 screen_world_w = screen_world_h * 16 / 9;
+    const f32 screen_world_w = screen_world_h * mAspect;
 
-    return (pos_vec - camera_pos) * (rio::Vector2f{ f32(s32(rio::Window::instance()->getWidth())), f32(s32(rio::Window::instance()->getHeight())) } / rio::Vector2f{ screen_world_w, -screen_world_h });
+    return (pos_vec - camera_pos) * (mSize / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
 void MainWindow::calcDistantViewScissor_()
@@ -766,7 +770,7 @@ void MainWindow::calcDistantViewScissor_()
         const rio::BaseVec2f& camera_pos = mCamera.pos();
 
         const f32 screen_world_h = 224 * mBgZoom;
-        const f32 screen_world_w = screen_world_h * 16 / 9;
+        const f32 screen_world_w = screen_world_h * mAspect;
 
         const rio::BaseVec2f screen_world_min {
             camera_pos.x,

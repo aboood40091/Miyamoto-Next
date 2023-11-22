@@ -16,7 +16,6 @@
 #include <resource/SharcArchiveRes.h>
 
 #include <gfx/rio_Projection.h>
-#include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Layer.h>
 #include <task/rio_Task.h>
 
@@ -35,13 +34,13 @@ public:
     void setZoom(f32 zoom)
     {
         mBgZoom = zoom;
-        mCamera.setZoomScale(s32(rio::Window::instance()->getHeight()) / (zoom * 224.0f));
+        mCamera.setZoomScale(mSize.y / (zoom * 224.0f));
     }
 
     template <typename T>
     inline void setZoomTileSize(T tile_size)
     {
-        setZoom(16.f / tile_size * (s32(rio::Window::instance()->getHeight()) / 224.0f));
+        setZoom(16.f / tile_size * (mSize.y / 224.0f));
     }
 
     rio::Vector2f viewToWorldPos(const rio::Vector2f& pos) const;
@@ -169,6 +168,8 @@ private:
 
     bool mDrawDV;
 
+    rio::Vector2f               mSize;
+    f32                         mAspect;
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
     rio::Vector2f               mCursorPos;
