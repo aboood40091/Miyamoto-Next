@@ -80,7 +80,7 @@ MainWindow::MainWindow()
         width, height
 #if RIO_IS_CAFE
         , native_window.getColorBuffer().surface
-        , native_window.getDepthBufferTexture()->surface
+        , native_window.getDepthBufferTexture().surface
 #elif RIO_IS_WIN
         , native_window.getColorBufferTextureFormat(), native_window.getColorBufferTextureHandle()
         , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
@@ -176,6 +176,8 @@ void MainWindow::createRenderBuffer_(
 #endif // RIO_IS_WIN
 }
 
+#if RIO_IS_WIN
+
 void MainWindow::resize_(s32 width, s32 height)
 {
     const rio::Vector2f center_pos {
@@ -204,7 +206,7 @@ void MainWindow::resize_(s32 width, s32 height)
         width, height
 #if RIO_IS_CAFE
         , native_window.getColorBuffer().surface
-        , native_window.getDepthBufferTexture()->surface
+        , native_window.getDepthBufferTexture().surface
 #elif RIO_IS_WIN
         , native_window.getColorBufferTextureFormat(), native_window.getColorBufferTextureHandle()
         , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
@@ -218,6 +220,8 @@ void MainWindow::onResizeCallback_(s32 width, s32 height)
 {
     static_cast<MainWindow*>(rio::sRootTask)->resize_(width, height);
 }
+
+#endif // RIO_IS_WIN
 
 rio::Vector2f MainWindow::viewToWorldPos(const rio::Vector2f& pos) const
 {
@@ -307,7 +311,9 @@ void MainWindow::prepare_()
 {
   //RIO_LOG("MainWindow::prepare_(): start\n");
 
+#if RIO_IS_WIN
     rio::Window::instance()->setOnResizeCallback(&MainWindow::onResizeCallback_);
+#endif // RIO_IS_WIN
 
     mLayer[SCENE_LAYER_GATHER].it = rio::lyr::Renderer::instance()->addLayer("Gather", SCENE_LAYER_GATHER);
     mLayer[SCENE_LAYER_GATHER].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_GATHER].it);
@@ -555,7 +561,9 @@ void MainWindow::exit_()
         mLayer[i].ptr = nullptr;
     }
 
+#if RIO_IS_WIN
     rio::Window::instance()->setOnResizeCallback(nullptr);
+#endif // RIO_IS_WIN
 }
 
 namespace {

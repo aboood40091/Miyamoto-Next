@@ -108,7 +108,6 @@ private:
     void calc_()    override;
     void exit_()    override;
 
-    void resize_(s32 width, s32 height);
     void createRenderBuffer_(
         s32 width, s32 height
 #if RIO_IS_CAFE
@@ -119,7 +118,11 @@ private:
         , rio::TextureFormat depth_format, u32 depth_handle
 #endif
     );
+
+#if RIO_IS_WIN
+    void resize_(s32 width, s32 height);
     static void onResizeCallback_(s32 width, s32 height);
+#endif // RIO_IS_WIN
 
     void processInputs_();
     void updateCursorPos_();
