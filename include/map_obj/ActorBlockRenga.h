@@ -11,6 +11,7 @@ public:
     ActorBlockRenga(MapActorData& map_actor_data)
         : BlockCoinBase(map_actor_data)
     {
+        updatePositionZ_();
         updateType_();
     }
 
@@ -22,6 +23,11 @@ private:
     UnitID getUnitID_() const override
     {
         return mUnitID;
+    }
+
+    void updatePositionZ_() override
+    {
+        mPosition.z = (mMapActorData.layer == LAYER_1 && !(mMapActorData.settings[0] >> 8 & 1)) ? 500.0f : -3000.0f;
     }
 
     void updateType_();

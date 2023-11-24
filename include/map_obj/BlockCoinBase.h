@@ -12,7 +12,6 @@ public:
         : MapActorItem(map_actor_data)
     {
         updatePositionXY_();
-        updatePositionZ_();
     }
 
     void onDataChange(DataChangeFlag flag) override;
@@ -29,17 +28,13 @@ public:
 protected:
     virtual UnitID getUnitID_() const = 0;
 
-private:
     void updatePositionXY_()
     {
         mPosition.x =  f32(mMapActorData.offset.x);
         mPosition.y = -f32(mMapActorData.offset.y);
     }
 
-    void updatePositionZ_()
-    {
-        mPosition.z = getDefaultZPos(mMapActorData.layer);
-    }
+    virtual void updatePositionZ_() = 0;
 
 protected:
     rio::BaseVec3f  mPosition;

@@ -34,7 +34,7 @@ private:
 
     void updatePositionZ_()
     {
-        mPosition.z = getDefaultZPos(mMapActorData.layer);
+        mPosition.z = mMapActorData.layer == LAYER_1 ? 500.0f : -3000.0f;
     }
 
     void updateItemType_();

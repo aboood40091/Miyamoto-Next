@@ -65,7 +65,6 @@ ActorCreateMgr::ActorCreateMgr()
 
     addActorFactory(147, &ActorBlockHatena::create);
     addActorFactory(148, &ActorBlockRenga::create);
-
     addActorFactory(149, &ActorCoin::create);
 
     addActorFactory(205, &ActorBlockHatena::create);
