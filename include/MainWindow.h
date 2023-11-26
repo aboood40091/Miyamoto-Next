@@ -124,9 +124,11 @@ private:
     static void onResizeCallback_(s32 width, s32 height);
 #endif // RIO_IS_WIN
 
-    void processInputs_();
+    void processMouseInput_();
+    void processKeyboardInput_();
     void updateCursorPos_();
     void drawCursor_();
+    void drawUI_();
 
     void calcDistantViewScissor_();
 

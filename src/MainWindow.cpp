@@ -33,10 +33,13 @@
 #include <graphics/Renderer.h>
 #include <graphics/ShaderHolder.h>
 #include <resource/ResMgr.h>
+#include <ui/ImGuiUtil.h>
 
 #if RIO_IS_CAFE
 #include <gx2/event.h>
 #endif // RIO_IS_CAFE
+
+#include <imgui.h>
 
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
@@ -86,8 +89,6 @@ MainWindow::MainWindow()
         , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
 #endif
     );
-
-    window->makeContextCurrent();
 }
 
 void MainWindow::createRenderBuffer_(
@@ -161,19 +162,6 @@ void MainWindow::createRenderBuffer_(
 #endif
 
     mDepthTarget.applyTextureData(depth_texture_data);
-
-#if RIO_IS_WIN
-    mRenderBuffer.bind();
-
-    // Check Frame Buffer completeness
-    GLenum framebuffer_status;
-    RIO_GL_CALL(framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER));
-    if (framebuffer_status != GL_FRAMEBUFFER_COMPLETE)
-    {
-        RIO_LOG("Frame Buffer incomplete! Status 0x%08X\n", framebuffer_status);
-        RIO_ASSERT(false);
-    }
-#endif // RIO_IS_WIN
 }
 
 #if RIO_IS_WIN
@@ -212,6 +200,8 @@ void MainWindow::resize_(s32 width, s32 height)
         , native_window.getDepthBufferTextureFormat(), native_window.getDepthBufferTextureHandle()
 #endif
     );
+
+    ImGuiUtil::setDisplaySize(width, height);
 
     DistantViewMgr::instance()->onResizeRenderBuffer();
 }
@@ -298,15 +288,6 @@ void MainWindow::updateCursorPos_()
         mLastCursorPos = mCursorPos;
 }
 
-void MainWindow::processInputs_()
-{
-    if (rio::ControllerMgr::instance()->getMainPointer()->isHold(1 << rio::Controller::PAD_IDX_TOUCH))
-    {
-        static_cast<rio::Vector2f&>(mCamera.pos()) +=
-            viewToWorldPos(mLastCursorPos) - viewToWorldPos(mCursorPos);
-    }
-}
-
 void MainWindow::prepare_()
 {
   //RIO_LOG("MainWindow::prepare_(): start\n");
@@ -314,6 +295,8 @@ void MainWindow::prepare_()
 #if RIO_IS_WIN
     rio::Window::instance()->setOnResizeCallback(&MainWindow::onResizeCallback_);
 #endif // RIO_IS_WIN
+
+    ImGuiUtil::initialize(mSize.x, mSize.y);
 
     mLayer[SCENE_LAYER_GATHER].it = rio::lyr::Renderer::instance()->addLayer("Gather", SCENE_LAYER_GATHER);
     mLayer[SCENE_LAYER_GATHER].ptr = rio::lyr::Layer::peelIterator(mLayer[SCENE_LAYER_GATHER].it);
@@ -560,6 +543,8 @@ void MainWindow::exit_()
         rio::lyr::Renderer::instance()->removeLayer(mLayer[i].it);
         mLayer[i].ptr = nullptr;
     }
+
+    ImGuiUtil::shutdown();
 
 #if RIO_IS_WIN
     rio::Window::instance()->setOnResizeCallback(nullptr);
@@ -831,10 +816,24 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
   //RIO_LOG("Initialized DistantViewMgr\n");
 }
 
-void MainWindow::calc_()
+void MainWindow::processMouseInput_()
 {
-    updateCursorPos_();
-    processInputs_();
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureMouse)
+        return;
+
+    if (rio::ControllerMgr::instance()->getMainPointer()->isHold(1 << rio::Controller::PAD_IDX_TOUCH))
+    {
+        static_cast<rio::Vector2f&>(mCamera.pos()) +=
+            viewToWorldPos(mLastCursorPos) - viewToWorldPos(mCursorPos);
+    }
+}
+
+void MainWindow::processKeyboardInput_()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+        return;
 
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* LAYER_0, */ rio::Controller::PAD_IDX_X))
         mLayerShown[LAYER_0] = !mLayerShown[LAYER_0];
@@ -864,6 +863,13 @@ void MainWindow::calc_()
 
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << /* 5, */ rio::Controller::PAD_IDX_SELECT))
         mRenderNormal = !mRenderNormal;
+}
+
+void MainWindow::calc_()
+{
+    updateCursorPos_();
+    processMouseInput_();
+    processKeyboardInput_();
 
     const rio::BaseVec2f& camera_pos = mCamera.pos();
 
@@ -982,6 +988,8 @@ void MainWindow::calcDistantViewScissor_()
 
 void MainWindow::gather_(const rio::lyr::DrawInfo&)
 {
+    ImGuiUtil::newFrame();
+
     if (mDrawDV)
         DistantViewMgr::instance()->draw(getDistantViewLayer());
 
@@ -1004,6 +1012,8 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
     mDVRenderMgr.clear();
     mBgPrepareRenderMgr.clear();
     m3DRenderMgr.clear();
+
+    ImGuiUtil::render();
 }
 
 void MainWindow::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
@@ -1029,6 +1039,15 @@ void MainWindow::drawCursor_()
         );
     }
     rio::PrimitiveRenderer::instance()->end();
+}
+
+void MainWindow::drawUI_()
+{
+    ImGui::Begin("Metrics");
+    {
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    }
+    ImGui::End();
 }
 
 void MainWindow::DrawCallback::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -1115,4 +1134,6 @@ void MainWindow::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawI
 
     for (AreaItem& item : mWindow.mAreaItem)
         item.drawXlu();
+
+    mWindow.drawUI_();
 }
