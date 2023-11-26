@@ -1,10 +1,10 @@
+#include <course/BgRenderer.h>
 #include <course/BgTexMgr.h>
 #include <map_obj/ActorBlockBigBase.h>
 
 #include <utility/aglDevTools.h>
 
 #include <MainWindow.h>
-#include <rio.h>
 
 void ActorBlockBigBase::updateItemType_()
 {
@@ -81,22 +81,22 @@ void ActorBlockBigBase::onDataChange(DataChangeFlag flag)
 
 void ActorBlockBigBase::scheduleDraw()
 {
-    static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
+    BgRenderer::instance()->drawUnit(
         mPosition,
         cUnitID,
         mMapActorData.layer
     );
-    static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
+    BgRenderer::instance()->drawUnit(
         { mPosition.x + 16, mPosition.y, mPosition.z },
         UnitID(s32(cUnitID) + 1),
         mMapActorData.layer
     );
-    static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
+    BgRenderer::instance()->drawUnit(
         { mPosition.x, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16),
         mMapActorData.layer
     );
-    static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
+    BgRenderer::instance()->drawUnit(
         { mPosition.x + 16, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16 + 1),
         mMapActorData.layer

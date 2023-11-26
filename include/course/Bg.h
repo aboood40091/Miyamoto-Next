@@ -22,9 +22,20 @@ public:
     using BlockUntArray = u16[CD_FILE_LAYER_MAX_NUM][BG_MAX_UNIT_Y][BG_MAX_UNIT_X];
 
 public:
+    static bool createSingleton();
+    static void destroySingleton();
+    static Bg* instance() { return sInstance; }
+
+private:
+    static Bg* sInstance;
+
     Bg();
     ~Bg();
 
+    Bg(const Bg&);
+    Bg& operator=(const Bg&);
+
+public:
     bool loadUnit(const SharcArchiveRes& pack_arc, const std::string& name);
     void clear();
 

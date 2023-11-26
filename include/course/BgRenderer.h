@@ -18,9 +18,20 @@ class CourseDataFile;
 class BgRenderer
 {
 public:
+    static bool createSingleton();
+    static void destroySingleton();
+    static BgRenderer* instance() { return sInstance; }
+
+private:
+    static BgRenderer* sInstance;
+
     BgRenderer();
     ~BgRenderer();
 
+    BgRenderer(const BgRenderer&);
+    BgRenderer& operator=(const BgRenderer&);
+
+public:
     void setCamera(rio::Camera* p_camera)
     {
         RIO_ASSERT(p_camera != nullptr);
@@ -33,18 +44,18 @@ public:
         mpProjection = p_projection;
     }
 
-    void createVertexBuffer(u8 layer, const Bg& bg);
+    void createVertexBuffer(u8 layer);
 
-    void createVertexBuffer(const Bg& bg)
+    void createVertexBuffer()
     {
-        createVertexBuffer(LAYER_0, bg);
-        createVertexBuffer(LAYER_1, bg);
-        createVertexBuffer(LAYER_2, bg);
+        createVertexBuffer(LAYER_0);
+        createVertexBuffer(LAYER_1);
+        createVertexBuffer(LAYER_2);
     }
 
     void drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
 
-    void render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_static, bool render_dynamic = true, bool render_normal = false);
+    void render(u8 layer, const CourseDataFile& cd_file, bool render_static, bool render_dynamic = true, bool render_normal = false);
 
 private:
     void initialize_();

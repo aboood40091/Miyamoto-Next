@@ -1,7 +1,5 @@
+#include <course/BgRenderer.h>
 #include <map_obj/BlockCoinBase.h>
-
-#include <MainWindow.h>
-#include <rio.h>
 
 void BlockCoinBase::onDataChange(DataChangeFlag flag)
 {
@@ -14,7 +12,7 @@ void BlockCoinBase::onDataChange(DataChangeFlag flag)
 
 void BlockCoinBase::scheduleDraw()
 {
-    static_cast<MainWindow*>(rio::sRootTask)->getBgRenderer().drawUnit(
+    BgRenderer::instance()->drawUnit(
         mPosition, getUnitID_(), mMapActorData.layer
     );
 }

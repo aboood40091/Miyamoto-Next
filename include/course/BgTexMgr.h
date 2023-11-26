@@ -59,7 +59,7 @@ public:
     static_assert(ITEM_MAX == 15);
 
 public:
-    void initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer);
+    void initialize(const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer);
     void destroy(RenderObjLayer* p_bg_prepare_layer);
 
     void update();

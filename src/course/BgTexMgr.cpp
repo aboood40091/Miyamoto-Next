@@ -81,14 +81,14 @@ BgTexMgr::~BgTexMgr()
         delete mOverrides[i];
 }
 
-void BgTexMgr::initialize(const Bg& bg, const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer)
+void BgTexMgr::initialize(const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer)
 {
     rio::MemUtil::set(mDelayTimer, 0, sizeof(mDelayTimer));
     rio::MemUtil::set(mFrame, 0, sizeof(mFrame));
 
     mOverridesDrawn = false;
 
-    const BgUnitFile* bg_unit_file = bg.getUnitFile(cd_file.getEnvironment(0));
+    const BgUnitFile* bg_unit_file = Bg::instance()->getUnitFile(cd_file.getEnvironment(0));
     RIO_ASSERT(bg_unit_file != nullptr);
 
     mpBgUnitFile = bg_unit_file;

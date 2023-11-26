@@ -1,9 +1,10 @@
 #pragma once
 
-#include <course/Bg.h>
 #include <course/CourseDataFile.h>
 
 #include <span>
+#include <string>
+#include <unordered_map>
 
 class CourseData
 {
@@ -47,22 +48,11 @@ public:
         return nullptr;
     }
 
-    Bg& getBg()
-    {
-        return mBg;
-    }
-
-    const Bg& getBg() const
-    {
-        return mBg;
-    }
-
 private:
     void clearResData_();
 
 private:
     std::array<CourseDataFile, CD_FILE_MAX_NUM> mFile;
-    Bg                                          mBg;
 
     // Unused res data to be included at saving
     std::unordered_map< std::string, std::span<u8> > mResData;

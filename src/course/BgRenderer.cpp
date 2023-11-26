@@ -8,6 +8,26 @@
 #include <math/rio_Matrix.h>
 #include <misc/rio_MemUtil.h>
 
+BgRenderer* BgRenderer::sInstance = nullptr;
+
+bool BgRenderer::createSingleton()
+{
+    if (sInstance)
+        return false;
+
+    sInstance = new BgRenderer();
+    return true;
+}
+
+void BgRenderer::destroySingleton()
+{
+    if (!sInstance)
+        return;
+
+    delete sInstance;
+    sInstance = nullptr;
+}
+
 BgRenderer::BgRenderer()
     : mShader()
     , mVertexBuffer()
@@ -137,7 +157,7 @@ void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl
     vtx_tl.tex.y = row * cTileSizePadYNorm + cPadYNorm;
 }
 
-void BgRenderer::createVertexBuffer(u8 layer, const Bg& bg)
+void BgRenderer::createVertexBuffer(u8 layer)
 {
     f32 z;
     switch (layer)
@@ -154,7 +174,7 @@ void BgRenderer::createVertexBuffer(u8 layer, const Bg& bg)
         break;
     }
 
-    const Bg::BlockUntArray& block_unit_number_array = bg.getUnitNumberArray();
+    const Bg::BlockUntArray& block_unit_number_array = Bg::instance()->getUnitNumberArray();
 
     Vertex* const base_vtx_data = mVtxData.data();
 
@@ -226,7 +246,7 @@ void BgRenderer::drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer)
     mVertexBuffer.setSubDataInvalidate(base_vtx_data + vtx_start, sizeof(Vertex) * vtx_start, sizeof(Vertex) * vtx_count);
 }
 
-void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, bool render_static, bool render_dynamic, bool render_normal)
+void BgRenderer::render(u8 layer, const CourseDataFile& cd_file, bool render_static, bool render_dynamic, bool render_normal)
 {
     if (!render_static && !render_dynamic)
     {
@@ -252,10 +272,10 @@ void BgRenderer::render(u8 layer, const Bg& bg, const CourseDataFile& cd_file, b
     mShader.setUniformArray(4, &view_proj.v[0], mMVPLocation, u32(-1));
 
     const BgUnitFile* bg_unit_file[CD_FILE_ENV_MAX_NUM] = {
-        bg.getUnitFile(cd_file.getEnvironment(0)),
-        bg.getUnitFile(cd_file.getEnvironment(1)),
-        bg.getUnitFile(cd_file.getEnvironment(2)),
-        bg.getUnitFile(cd_file.getEnvironment(3))
+        Bg::instance()->getUnitFile(cd_file.getEnvironment(0)),
+        Bg::instance()->getUnitFile(cd_file.getEnvironment(1)),
+        Bg::instance()->getUnitFile(cd_file.getEnvironment(2)),
+        Bg::instance()->getUnitFile(cd_file.getEnvironment(3))
     };
 
     const u32* const base_idx_data = mIdxData.data();

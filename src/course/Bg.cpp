@@ -46,6 +46,26 @@ static inline u16 mapUnitNo(u8 env, u8 number, u8 flag)
 
 }
 
+Bg* Bg::sInstance = nullptr;
+
+bool Bg::createSingleton()
+{
+    if (sInstance)
+        return false;
+
+    sInstance = new Bg();
+    return true;
+}
+
+void Bg::destroySingleton()
+{
+    if (!sInstance)
+        return;
+
+    delete sInstance;
+    sInstance = nullptr;
+}
+
 Bg::Bg()
 {
 }

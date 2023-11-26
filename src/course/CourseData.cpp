@@ -1,3 +1,4 @@
+#include <course/Bg.h>
 #include <course/BgUnitFile.h>
 #include <course/CourseData.h>
 #include <resource/ResMgr.h>
@@ -53,11 +54,14 @@ void CourseData::destroySingleton()
 
 CourseData::CourseData()
 {
+    Bg::createSingleton();
 }
 
 CourseData::~CourseData()
 {
     clearResData_();
+
+    Bg::destroySingleton();
 }
 
 bool CourseData::loadFromPack(const std::string& path)
@@ -141,7 +145,7 @@ bool CourseData::loadFromPack(const std::string& path)
         }
     }
 
-    mBg.clear();
+    Bg::instance()->clear();
 
     for (s32 i = 0; i < CD_FILE_MAX_NUM; i++)
     {
@@ -170,7 +174,7 @@ bool CourseData::loadFromPack(const std::string& path)
             std::string env_name = cd_file.getEnvironment(j);
             if (!env_name.empty())
             {
-                [[maybe_unused]] bool success = mBg.loadUnit(pack_arc, env_name);
+                [[maybe_unused]] bool success = Bg::instance()->loadUnit(pack_arc, env_name);
                 RIO_ASSERT(success);
 
                 read_files.emplace(env_name);
@@ -233,7 +237,7 @@ std::span<u8> CourseData::save(const std::string& level_name) const
         pack_writer.addFile(file.first, file.second);
 
     pack_writer.addFile("levelname", { (u8*)level_name.c_str(), level_name.length() });
-    for (const auto& file : mBg.getUnitFileMap())
+    for (const auto& file : Bg::instance()->getUnitFileMap())
     {
         [[maybe_unused]] bool success = file.second->save();
         RIO_ASSERT(success);

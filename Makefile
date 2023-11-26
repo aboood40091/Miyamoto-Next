@@ -44,6 +44,9 @@ SOURCES		:=	../rio/src \
 				src/item \
 				src/map_obj \
 				src/resource \
+				src/ui \
+				../imgui-wiiu \
+				../imgui-wiiu/backends/wiiu \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/codec \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/container \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/resource \
@@ -63,6 +66,8 @@ SOURCES		:=	../rio/src \
 DATA		:=	data
 INCLUDES	:=	../rio/include \
 				include \
+				../imgui-wiiu \
+				../imgui-wiiu/backends/wiiu \
 				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/include \
 				../NSMBU_Projects/ModelStuff-Win-Port/include \
 				../NSMBU_Projects/CafeSDKWrappers/cafe_wut \
