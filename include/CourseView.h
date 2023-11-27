@@ -123,7 +123,8 @@ public:
         initialize(nullptr);
     }
 
-    void processMouseInput(const rio::BaseVec2f& window_pos);
+    void updateCursorPos(const rio::BaseVec2f& window_pos);
+    void processMouseInput();
     void processKeyboardInput();
 
     void update();
@@ -136,7 +137,6 @@ private:
     void bindRenderBuffer_();
     void unbindRenderBuffer_();
 
-    void updateCursorPos_(const rio::BaseVec2f& window_pos);
     void drawCursor_();
 
     void calcDistantViewScissor_();

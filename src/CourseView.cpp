@@ -80,7 +80,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
 
-    updateCursorPos_(window_pos);
+    updateCursorPos(window_pos);
     mLastCursorPos = mCursorPos;
 
     ActorCreateMgr::createSingleton();
@@ -124,6 +124,12 @@ CourseView::~CourseView()
 
 void CourseView::resize(s32 width, s32 height, bool preserve_tile_size)
 {
+#if RIO_IS_CAFE
+    GX2DrawDone();
+#elif RIO_IS_WIN
+    RIO_GL_CALL(glFinish());
+#endif
+
     const rio::Vector2f center_pos {
         mCamera.pos().x + mSize.x / (2 * mCamera.getZoomScale()),
         mCamera.pos().y - mSize.y / (2 * mCamera.getZoomScale())
@@ -194,6 +200,7 @@ void CourseView::bindRenderBuffer_()
 void CourseView::unbindRenderBuffer_()
 {
     mRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
+    mpColorTexture->setCompMap(0x00010205);
 
     rio::Window::instance()->makeContextCurrent();
 
@@ -226,7 +233,7 @@ rio::BaseVec2f CourseView::worldToViewPos(const rio::BaseVec2f& pos) const
     return (pos_world - camera_pos) * (mSize / rio::Vector2f{ screen_world_w, -screen_world_h });
 }
 
-void CourseView::updateCursorPos_(const rio::BaseVec2f& window_pos)
+void CourseView::updateCursorPos(const rio::BaseVec2f& window_pos)
 {
     mLastCursorPos = mCursorPos;
 
@@ -507,10 +514,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file)
   //RIO_LOG("Initialized DistantViewMgr\n");
 }
 
-void CourseView::processMouseInput(const rio::BaseVec2f& window_pos)
+void CourseView::processMouseInput()
 {
-    updateCursorPos_(window_pos);
-
     if (rio::ControllerMgr::instance()->getMainPointer()->isHold(1 << rio::Controller::PAD_IDX_TOUCH))
     {
         const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(mLastCursorPos);
@@ -679,6 +684,7 @@ void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::Draw
 {
     mCourseView.calcDistantViewScissor_();
 
+    mCourseView.mpColorTexture->setCompMap(0x00010203);
     mCourseView.mRenderBuffer.bindColorClear(
         119 / 255.f,
         136 / 255.f,
@@ -704,6 +710,7 @@ void CourseView::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    mCourseView.mpColorTexture->setCompMap(0x00010203);
     mCourseView.bindRenderBuffer_();
 }
 

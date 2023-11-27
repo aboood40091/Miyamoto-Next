@@ -8,6 +8,10 @@
 
 #include <string>
 
+#if RIO_IS_CAFE
+#include <imgui_impl_gx2.h>
+#endif // RIO_IS_CAFE
+
 class CourseView;
 
 class MainWindow : public rio::ITask, public rio::lyr::IDrawable
@@ -39,6 +43,7 @@ private:
 
     void processMouseInput_();
     void processKeyboardInput_();
+
     void drawUI_();
 
     void gather_ (const rio::lyr::DrawInfo&);
@@ -67,7 +72,17 @@ private:
         SharcArchiveRes archive_res;
     } mAglRes, mJyotyuActorPack, mCobPack;
 
-    CourseView* mpCourseView;
-    RenderMgr   mRenderMgrBgPrepare;
-    s32         mCurrentFile;
+    CourseView*     mpCourseView;
+    rio::BaseVec2f  mCourseViewPos;
+    rio::BaseVec2i  mCourseViewSize;
+    bool            mCourseViewResized;
+    bool            mCourseViewHovered;
+    bool            mCourseViewFocused;
+    RenderMgr       mRenderMgrBgPrepare;
+    s32             mCurrentFile;
+
+#if RIO_IS_CAFE
+    ImGui_ImplGX2_Texture   mImGuiGX2Texture;
+    GX2Sampler              mGX2Sampler;
+#endif // RIO_IS_CAFE
 };

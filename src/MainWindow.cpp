@@ -13,10 +13,8 @@
 
 #include <controller/rio_ControllerMgr.h>
 #include <filedevice/rio_FileDeviceMgr.h>
-#include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Renderer.h>
-#include <gpu/rio_RenderState.h>
 
 #include <detail/aglShaderHolder.h>
 #include <utility/aglPrimitiveShape.h>
@@ -46,6 +44,9 @@ const std::string& MainWindow::getContentPath()
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
     , mpCourseView(nullptr)
+    , mCourseViewResized(false)
+    , mCourseViewHovered(false)
+    , mCourseViewFocused(false)
 {
 }
 
@@ -53,7 +54,6 @@ MainWindow::MainWindow()
 
 void MainWindow::resize_(s32 width, s32 height)
 {
-    mpCourseView->resize(width, height);
     ImGuiUtil::setDisplaySize(width, height);
 }
 
@@ -76,6 +76,11 @@ void MainWindow::prepare_()
     s32 height = rio::Window::instance()->getHeight();
 
     ImGuiUtil::initialize(width, height);
+
+#if RIO_IS_CAFE
+    GX2InitSampler(&mGX2Sampler, GX2_TEX_CLAMP_MODE_CLAMP, GX2_TEX_XY_FILTER_MODE_POINT);
+    mImGuiGX2Texture.Sampler = &mGX2Sampler;
+#endif // RIO_IS_CAFE
 
     mLayerGather.it = rio::lyr::Renderer::instance()->addLayer("Gather", LAYER_ID_GATHER);
     mLayerGather.ptr = rio::lyr::Layer::peelIterator(mLayerGather.it);
@@ -213,7 +218,13 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Initialized Renderer\n");
 
-    mpCourseView = new CourseView(width, height, { 0.0f, 0.0f });
+    mCourseViewSize.x = width;
+    mCourseViewSize.y = height;
+
+    mCourseViewPos.x = 0.0f;
+    mCourseViewPos.y = 0.0f;
+
+    mpCourseView = new CourseView(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos);
 
   //RIO_LOG("Created CourseView\n");
 
@@ -325,17 +336,41 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
 void MainWindow::processMouseInput_()
 {
+#if RIO_IS_WIN
+    if (glfwGetWindowAttrib(rio::Window::instance()->getNativeWindow().getGLFWwindow(), GLFW_ICONIFIED))
+        return;
+#endif // RIO_IS_WIN
+
+    // Checking this is kinda useless
+    /*
     ImGuiIO& io = ImGui::GetIO();
-    if (io.WantCaptureMouse)
+    if (!io.WantCaptureMouse)
+        return;
+    */
+
+    mpCourseView->updateCursorPos(mCourseViewPos);
+
+    if (!mCourseViewFocused)
         return;
 
-    mpCourseView->processMouseInput({ 0.0f, 0.0f });
+    mpCourseView->processMouseInput();
 }
 
 void MainWindow::processKeyboardInput_()
 {
+#if RIO_IS_WIN
+    if (glfwGetWindowAttrib(rio::Window::instance()->getNativeWindow().getGLFWwindow(), GLFW_ICONIFIED))
+        return;
+#endif // RIO_IS_WIN
+
+    // Checking this is kinda useless
+    /*
     ImGuiIO& io = ImGui::GetIO();
-    if (io.WantCaptureKeyboard)
+    if (!io.WantCaptureKeyboard)
+        return;
+    */
+
+    if (!mCourseViewFocused)
         return;
 
     mpCourseView->processKeyboardInput();
@@ -360,8 +395,11 @@ void MainWindow::calc_()
     BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
 
-    processMouseInput_();
-    processKeyboardInput_();
+    if (mCourseViewResized)
+    {
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y);
+        mCourseViewResized = false;
+    }
 
     mpCourseView->update();
 }
@@ -380,25 +418,6 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 
     mpCourseView->dispose();
 
-    rio::RenderState render_state;
-    render_state.setBlendEnable(false);
-    render_state.apply();
-    {
-        rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
-        rio::PrimitiveRenderer::instance()->setViewMtx(rio::Matrix34f::ident);
-        rio::PrimitiveRenderer::instance()->setProjMtx(rio::Matrix44f::ident);
-
-        rio::PrimitiveRenderer::instance()->begin();
-        {
-            rio::PrimitiveRenderer::instance()->drawQuad(
-                *mpCourseView->getColorTexture(),
-                rio::PrimitiveRenderer::QuadArg()
-                    .setSize({ 2.0f, 2.0f })
-            );
-        }
-        rio::PrimitiveRenderer::instance()->end();
-    }
-
     ImGuiUtil::newFrame();
     {
         drawUI_();
@@ -408,9 +427,70 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 
 void MainWindow::drawUI_()
 {
-    ImGui::Begin("Metrics");
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+    // Metrics
     {
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Begin("Metrics");
+        {
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        }
+        ImGui::End();
     }
-    ImGui::End();
+    // Viewport
+    {
+        ImGui::Begin("CourseView", NULL, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        {
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            const ImVec2& size = ImGui::GetContentRegionAvail();
+
+#if RIO_IS_WIN
+            s32 window_xpos;
+            s32 window_ypos;
+
+            glfwGetWindowPos(
+                rio::Window::instance()->getNativeWindow().getGLFWwindow(),
+                &window_xpos, &window_ypos
+            );
+
+            pos.x -= window_xpos;
+            pos.y -= window_ypos;
+#endif // RIO_IS_WIN
+
+            s32 width = std::max<s32>(1, size.x);
+            s32 height = std::max<s32>(1, size.y);
+            if (mCourseViewSize.x != width || mCourseViewSize.y != height)
+            {
+                mCourseViewSize.x = width;
+                mCourseViewSize.y = height;
+                mCourseViewResized = true;
+            }
+
+            ImTextureID texture_id = nullptr;
+
+#if RIO_IS_CAFE
+            mImGuiGX2Texture.Texture = const_cast<GX2Texture*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
+            texture_id = &mImGuiGX2Texture;
+#elif RIO_IS_WIN
+            texture_id = (void*)(mpCourseView->getColorTexture()->getNativeTextureHandle());
+#endif
+
+            ImGui::Image(texture_id, size);
+
+            bool moved = false;
+            if (mCourseViewPos.x != pos.x || mCourseViewPos.y != pos.y)
+            {
+                mCourseViewPos.x = pos.x;
+                mCourseViewPos.y = pos.y;
+                moved = true;
+            }
+
+            mCourseViewHovered = ImGui::IsWindowHovered();
+            mCourseViewFocused = ImGui::IsWindowFocused() && !(moved || mCourseViewResized);
+        }
+        ImGui::End();
+
+        processMouseInput_();
+        processKeyboardInput_();
+    }
 }
