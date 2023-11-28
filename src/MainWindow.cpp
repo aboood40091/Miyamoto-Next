@@ -47,7 +47,9 @@ MainWindow::MainWindow()
     , mCourseViewResized(false)
     , mCourseViewHovered(false)
     , mCourseViewFocused(false)
+#if RIO_IS_WIN
     , mMetricsLocation(0)
+#endif // RIO_IS_WIN
 {
 }
 
@@ -426,6 +428,8 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
     ImGuiUtil::render();
 }
 
+#if RIO_IS_WIN
+
 void MainWindow::drawMetricsUI_()
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
@@ -468,6 +472,8 @@ void MainWindow::drawMetricsUI_()
     }
     ImGui::End();
 }
+
+#endif // RIO_IS_WIN
 
 void MainWindow::drawCourseViewUI_()
 {
@@ -528,7 +534,9 @@ void MainWindow::drawCourseViewUI_()
         mCourseViewHovered = ImGui::IsWindowHovered();
         mCourseViewFocused = ImGui::IsWindowFocused() && !(moved || mCourseViewResized);
 
+#if RIO_IS_WIN
         drawMetricsUI_();
+#endif // RIO_IS_WIN
     }
     ImGui::End();
 
