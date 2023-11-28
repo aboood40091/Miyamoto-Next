@@ -334,7 +334,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     BgTexMgr::instance()->initialize(*p_cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(p_cd_file);
+    mpCourseView->initialize(p_cd_file, useRealZoom());
 }
 
 void MainWindow::processMouseInput_()
@@ -404,7 +404,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y);
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, preserveTileSize() || !useRealZoom());
         mCourseViewResized = false;
     }
 

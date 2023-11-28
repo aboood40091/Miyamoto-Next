@@ -20,6 +20,8 @@ public:
     static const std::string& getContentPath();
     static bool forceSharcfb() { return true; }
     static f32 getBigItemScale() { return 16; }
+    static bool useRealZoom() { return true; }
+    static bool preserveTileSize() { return false; }
 
 public:
     MainWindow();

@@ -326,7 +326,7 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 }
 
-void CourseView::initialize(CourseDataFile* p_cd_file)
+void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 {
 #if RIO_IS_CAFE
     GX2DrawDone();
@@ -354,6 +354,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file)
         const std::string& dv_path = MainWindow::getContentPath() + "/Common/distant_view";
         RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
         DistantViewMgr::instance()->initialize(dv_name, dv_path, MainWindow::forceSharcfb());
+
+        setZoomTileSize(24);
 
         return;
     }
@@ -477,8 +479,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file)
     const f32 screen_world_h = 224 * mBgZoom;
     const f32 screen_world_w = screen_world_h * mAspect;
 
-    rio::BaseVec2f bg_pos;
-    f32 bg_offset_area_bottom_to_screen_bottom;
+    rio::BaseVec2f bg_pos { 0.0f, 0.0f };
+    f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
     if (mpDVControlArea != nullptr)
     {
         const AreaData& area_data = *mpDVControlArea;
@@ -493,13 +495,10 @@ void CourseView::initialize(CourseDataFile* p_cd_file)
 
         const f32 screen_world_bottom = camera_pos.y - screen_world_h;
 
-        bg_offset_area_bottom_to_screen_bottom = screen_world_bottom - (y - h);
-    }
-    else
-    {
-        bg_pos.x = 0.0f;
-        bg_pos.y = 0.0f;
-        bg_offset_area_bottom_to_screen_bottom = 0;
+        bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
+            screen_world_bottom - (y - h),
+            0.0f, h
+        );
     }
 
     DistantViewMgr::instance()->initialize(
@@ -512,6 +511,9 @@ void CourseView::initialize(CourseDataFile* p_cd_file)
     );
 
   //RIO_LOG("Initialized DistantViewMgr\n");
+
+    if (!real_zoom)
+        setZoomTileSize(24);
 }
 
 void CourseView::processMouseInput()
@@ -556,7 +558,10 @@ void CourseView::update()
 
         const f32 screen_world_bottom = camera_pos.y - screen_world_h;
 
-        bg_offset_area_bottom_to_screen_bottom = screen_world_bottom - (y - h);
+        bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
+            screen_world_bottom - (y - h),
+            0.0f, h
+        );
     }
 
     DistantViewMgr::instance()->update(

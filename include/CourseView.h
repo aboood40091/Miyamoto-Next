@@ -117,10 +117,10 @@ public:
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;
 
-    void initialize(CourseDataFile* p_cd_file);
+    void initialize(CourseDataFile* p_cd_file, bool real_zoom);
     void reset()
     {
-        initialize(nullptr);
+        initialize(nullptr, false);
     }
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);
