@@ -158,6 +158,7 @@ private:
     CourseDataFile*             mpCourseDataFile;
     const AreaData*             mpDVControlArea;
     f32                         mBgZoom;
+    f32                         mRealBgZoom;
     rio::Vector2f               mCursorPos;
     rio::Vector2f               mLastCursorPos;
     std::vector<NextGotoItem>   mNextGotoItem;
