@@ -711,7 +711,8 @@ void CourseView::drawCursor_()
 
 void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.calcDistantViewScissor_();
+    if (MainWindow::applyDistantViewScissor())
+        mCourseView.calcDistantViewScissor_();
 
     mCourseView.mpColorTexture->setCompMap(0x00010203);
     mCourseView.mRenderBuffer.bindColorClear(
@@ -732,7 +733,8 @@ void CourseView::DrawCallbackDV::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.mRenderBuffer.resetScissor();
+    if (MainWindow::applyDistantViewScissor())
+        mCourseView.mRenderBuffer.resetScissor();
 
     mCourseView.unbindRenderBuffer_();
 }
