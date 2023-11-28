@@ -81,6 +81,7 @@ private:
     bool            mCourseViewFocused;
     RenderMgr       mRenderMgrBgPrepare;
     s32             mCurrentFile;
+    s32             mMetricsLocation;
 
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
