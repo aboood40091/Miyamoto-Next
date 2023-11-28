@@ -485,7 +485,9 @@ void MainWindow::drawCourseViewUI_()
     ImGui::SetNextWindowClass(&centralAlways);
     ImGui::SetNextWindowDockID(node->ID, ImGuiCond_Always);
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
     ImGui::Begin("CourseView", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGui::PopStyleVar();
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const ImVec2& size = ImGui::GetContentRegionAvail();
