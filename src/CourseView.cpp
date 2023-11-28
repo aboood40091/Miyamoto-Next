@@ -460,10 +460,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     if (start_next_goto)
     {
-        const rio::Vector2f& window_size_half = mSize / (2 * mCamera.getZoomScale());
-
-        camera_pos.x =  (f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) - window_size_half.x);
-        camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y) - window_size_half.y);
+        camera_pos.x =   f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) ;
+        camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y));
     }
     else
     {
@@ -478,6 +476,13 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     const f32 screen_world_h = 224 * mBgZoom;
     const f32 screen_world_w = screen_world_h * mAspect;
+
+  //const rio::Vector2f& window_size_half = mSize / (2 * mCamera.getZoomScale());
+  //RIO_ASSERT(window_size_half.x == screen_world_w * 0.5f && window_size_half.y == screen_world_h * 0.5f);
+
+    const rio::BaseVec2f screen_center = camera_pos;
+    camera_pos.x -= screen_world_w * 0.5f;
+    camera_pos.y += screen_world_h * 0.5f;
 
     rio::BaseVec2f bg_pos { 0.0f, 0.0f };
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
@@ -505,7 +510,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
         dv_name, dv_path,
         MainWindow::forceSharcfb(),
         bg_pos,
-        static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
+        screen_center,
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
     );
@@ -513,7 +518,13 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
   //RIO_LOG("Initialized DistantViewMgr\n");
 
     if (!real_zoom)
+    {
         setZoomTileSize(24);
+
+        const rio::Vector2f& window_size_half = mSize / (2 * mCamera.getZoomScale());
+        camera_pos.x = screen_center.x - window_size_half.x;
+        camera_pos.y = screen_center.y + window_size_half.y;
+    }
 }
 
 void CourseView::processMouseInput()
@@ -548,6 +559,11 @@ void CourseView::update()
     const f32 screen_world_h = 224 * mBgZoom;
     const f32 screen_world_w = screen_world_h * mAspect;
 
+    const rio::BaseVec2f screen_center {
+        camera_pos.x + screen_world_w * 0.5f,
+        camera_pos.y - screen_world_h * 0.5f
+    };
+
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
     if (mpDVControlArea != nullptr)
     {
@@ -566,7 +582,7 @@ void CourseView::update()
 
     DistantViewMgr::instance()->update(
         getDistantViewLayer(),
-        static_cast<const rio::Vector2f&>(camera_pos) + rio::Vector2f{ screen_world_w * 0.5f, -screen_world_h * 0.5f },
+        screen_center,
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
     );
