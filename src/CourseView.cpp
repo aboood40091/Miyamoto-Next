@@ -491,6 +491,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     camera_pos.x = center_pos.x - screen_world_w_half;
     camera_pos.y = center_pos.y + screen_world_h_half;
 
+    rio::BaseVec2f bg_screen_center = center_pos;
+
     rio::BaseVec2f bg_pos { 0.0f, 0.0f };
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
     if (mpDVControlArea != nullptr)
@@ -505,7 +507,9 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
         bg_pos.x = x + w * 0.5f;
         bg_pos.y = (y - h) + 0.5f * mRealBgZoom * 224.0f;
 
-        const f32 screen_world_bottom = center_pos.y - screen_world_h_half;
+        bg_screen_center.x = std::clamp<f32>(center_pos.x, x, x + w);
+        bg_screen_center.y = std::clamp<f32>(center_pos.y, y - h, y);
+        const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - screen_world_h_half, y - h, y);
 
         bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
             screen_world_bottom - (y - h),
@@ -517,7 +521,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
         dv_name, dv_path,
         MainWindow::forceSharcfb(),
         bg_pos,
-        center_pos,
+        bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
     );
@@ -562,15 +566,21 @@ void CourseView::update()
         camera_pos.y - screen_world_h_half
     };
 
+    rio::BaseVec2f bg_screen_center = center_pos;
+
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
     if (mpDVControlArea != nullptr)
     {
         const AreaData& area_data = *mpDVControlArea;
 
+        const f32 x =  s32(area_data.offset.x);
         const f32 y = -s32(area_data.offset.y);
+        const f32 w =  s32(area_data.  size.x);
         const f32 h =  s32(area_data.  size.y);
 
-        const f32 screen_world_bottom = center_pos.y - screen_world_h_half;
+        bg_screen_center.x = std::clamp<f32>(center_pos.x, x, x + w);
+        bg_screen_center.y = std::clamp<f32>(center_pos.y, y - h, y);
+        const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - screen_world_h_half, y - h, y);
 
         bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
             screen_world_bottom - (y - h),
@@ -580,7 +590,7 @@ void CourseView::update()
 
     DistantViewMgr::instance()->update(
         getDistantViewLayer(),
-        center_pos,
+        bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
         mBgZoom
     );
