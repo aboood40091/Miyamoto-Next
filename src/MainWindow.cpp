@@ -392,8 +392,13 @@ void MainWindow::processKeyboardInput_()
 
 void MainWindow::calc_()
 {
+    ImGuiUtil::newFrame();
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
     BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
+
+    drawCourseViewUI_();
 
     if (mCourseViewResized)
     {
@@ -418,79 +423,72 @@ void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 
     mpCourseView->dispose();
 
-    ImGuiUtil::newFrame();
-    {
-        drawUI_();
-    }
+    drawMetricsUI_();
     ImGuiUtil::render();
 }
 
-void MainWindow::drawUI_()
+void MainWindow::drawMetricsUI_()
 {
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-
-    // Metrics
+    ImGui::Begin("Metrics");
     {
-        ImGui::Begin("Metrics");
-        {
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        }
-        ImGui::End();
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     }
-    // Viewport
+    ImGui::End();
+}
+
+void MainWindow::drawCourseViewUI_()
+{
+    ImGui::Begin("CourseView", NULL, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
     {
-        ImGui::Begin("CourseView", NULL, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        {
-            ImVec2 pos = ImGui::GetCursorScreenPos();
-            const ImVec2& size = ImGui::GetContentRegionAvail();
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        const ImVec2& size = ImGui::GetContentRegionAvail();
 
 #if RIO_IS_WIN
-            s32 window_xpos;
-            s32 window_ypos;
+        s32 window_xpos;
+        s32 window_ypos;
 
-            glfwGetWindowPos(
-                rio::Window::instance()->getNativeWindow().getGLFWwindow(),
-                &window_xpos, &window_ypos
-            );
+        glfwGetWindowPos(
+            rio::Window::instance()->getNativeWindow().getGLFWwindow(),
+            &window_xpos, &window_ypos
+        );
 
-            pos.x -= window_xpos;
-            pos.y -= window_ypos;
+        pos.x -= window_xpos;
+        pos.y -= window_ypos;
 #endif // RIO_IS_WIN
 
-            s32 width = std::max<s32>(1, size.x);
-            s32 height = std::max<s32>(1, size.y);
-            if (mCourseViewSize.x != width || mCourseViewSize.y != height)
-            {
-                mCourseViewSize.x = width;
-                mCourseViewSize.y = height;
-                mCourseViewResized = true;
-            }
+        s32 width = std::max<s32>(1, size.x);
+        s32 height = std::max<s32>(1, size.y);
+        if (mCourseViewSize.x != width || mCourseViewSize.y != height)
+        {
+            mCourseViewSize.x = width;
+            mCourseViewSize.y = height;
+            mCourseViewResized = true;
+        }
 
-            ImTextureID texture_id = nullptr;
+        ImTextureID texture_id = nullptr;
 
 #if RIO_IS_CAFE
-            mImGuiGX2Texture.Texture = const_cast<GX2Texture*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
-            texture_id = &mImGuiGX2Texture;
+        mImGuiGX2Texture.Texture = const_cast<GX2Texture*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
+        texture_id = &mImGuiGX2Texture;
 #elif RIO_IS_WIN
-            texture_id = (void*)(mpCourseView->getColorTexture()->getNativeTextureHandle());
+        texture_id = (void*)(mpCourseView->getColorTexture()->getNativeTextureHandle());
 #endif
 
-            ImGui::Image(texture_id, size);
+        ImGui::Image(texture_id, size);
 
-            bool moved = false;
-            if (mCourseViewPos.x != pos.x || mCourseViewPos.y != pos.y)
-            {
-                mCourseViewPos.x = pos.x;
-                mCourseViewPos.y = pos.y;
-                moved = true;
-            }
-
-            mCourseViewHovered = ImGui::IsWindowHovered();
-            mCourseViewFocused = ImGui::IsWindowFocused() && !(moved || mCourseViewResized);
+        bool moved = false;
+        if (mCourseViewPos.x != pos.x || mCourseViewPos.y != pos.y)
+        {
+            mCourseViewPos.x = pos.x;
+            mCourseViewPos.y = pos.y;
+            moved = true;
         }
-        ImGui::End();
 
-        processMouseInput_();
-        processKeyboardInput_();
+        mCourseViewHovered = ImGui::IsWindowHovered();
+        mCourseViewFocused = ImGui::IsWindowFocused() && !(moved || mCourseViewResized);
     }
+    ImGui::End();
+
+    processMouseInput_();
+    processKeyboardInput_();
 }

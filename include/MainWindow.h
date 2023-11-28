@@ -44,7 +44,8 @@ private:
     void processMouseInput_();
     void processKeyboardInput_();
 
-    void drawUI_();
+    void drawCourseViewUI_();
+    void drawMetricsUI_();
 
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
