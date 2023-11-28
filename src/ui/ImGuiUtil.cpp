@@ -31,6 +31,7 @@ void ImGuiUtil::initialize()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
