@@ -84,6 +84,7 @@ private:
     bool            mCourseViewResized;
     bool            mCourseViewHovered;
     bool            mCourseViewFocused;
+    bool            mCourseViewCameraMoved;
     RenderMgr       mRenderMgrBgPrepare;
     s32             mCurrentFile;
 

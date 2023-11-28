@@ -124,7 +124,7 @@ public:
     }
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);
-    void processMouseInput();
+    bool processMouseInput();
     void processKeyboardInput();
 
     void update();

@@ -47,6 +47,7 @@ MainWindow::MainWindow()
     , mCourseViewResized(false)
     , mCourseViewHovered(false)
     , mCourseViewFocused(false)
+    , mCourseViewCameraMoved(false)
 #if RIO_IS_WIN
     , mMetricsLocation(0)
 #endif // RIO_IS_WIN
@@ -356,7 +357,7 @@ void MainWindow::processMouseInput_()
     if (!mCourseViewFocused)
         return;
 
-    mpCourseView->processMouseInput();
+    mCourseViewCameraMoved = mpCourseView->processMouseInput();
 }
 
 void MainWindow::processKeyboardInput_()
@@ -373,7 +374,7 @@ void MainWindow::processKeyboardInput_()
         return;
     */
 
-    if (!mCourseViewFocused)
+    if (!mCourseViewFocused || mCourseViewCameraMoved)
         return;
 
     mpCourseView->processKeyboardInput();

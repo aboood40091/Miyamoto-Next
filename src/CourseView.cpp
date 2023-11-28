@@ -526,7 +526,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
   //RIO_LOG("Initialized DistantViewMgr\n");
 }
 
-void CourseView::processMouseInput()
+bool CourseView::processMouseInput()
 {
     static const rio::BaseVec2f zero { 0.0f, 0.0f };
 
@@ -552,7 +552,11 @@ void CourseView::processMouseInput()
                 static_cast<const rio::Vector2f&>(last_cursor_pos_world)
                 - static_cast<const rio::Vector2f&>(cursor_pos_world);
         }
+
+        return true;
     }
+
+    return false;
 }
 
 void CourseView::processKeyboardInput()
