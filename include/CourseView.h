@@ -160,7 +160,6 @@ private:
     f32                         mBgZoom;
     f32                         mRealBgZoom;
     rio::Vector2f               mCursorPos;
-    rio::Vector2f               mLastCursorPos;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
                                 mMapActorItemPtr;

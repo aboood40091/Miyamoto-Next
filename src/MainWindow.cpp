@@ -492,19 +492,6 @@ void MainWindow::drawCourseViewUI_()
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const ImVec2& size = ImGui::GetContentRegionAvail();
 
-#if RIO_IS_WIN
-        s32 window_xpos;
-        s32 window_ypos;
-
-        glfwGetWindowPos(
-            rio::Window::instance()->getNativeWindow().getGLFWwindow(),
-            &window_xpos, &window_ypos
-        );
-
-        pos.x -= window_xpos;
-        pos.y -= window_ypos;
-#endif // RIO_IS_WIN
-
         s32 width = std::max<s32>(1, size.x);
         s32 height = std::max<s32>(1, size.y);
         if (mCourseViewSize.x != width || mCourseViewSize.y != height)

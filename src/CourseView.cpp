@@ -22,6 +22,8 @@
 #include <gx2/event.h>
 #endif // RIO_IS_CAFE
 
+#include <imgui.h>
+
 CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     : mDrawCallback3D(*this)
     , mDrawCallbackDV(*this)
@@ -82,7 +84,6 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     mLayerShown[LAYER_2] = true;
 
     updateCursorPos(window_pos);
-    mLastCursorPos = mCursorPos;
 
     ActorCreateMgr::createSingleton();
 }
@@ -242,13 +243,12 @@ rio::BaseVec2f CourseView::worldToViewPos(const rio::BaseVec2f& pos) const
 
 void CourseView::updateCursorPos(const rio::BaseVec2f& window_pos)
 {
-    mLastCursorPos = mCursorPos;
-
-    if (!rio::ControllerMgr::instance()->getMainPointer()->isPointerOn())
+    const ImVec2& cursor_pos = ImGui::GetMousePos();
+    if (!ImGui::IsMousePosValid(&cursor_pos))
         return;
 
-    mCursorPos = rio::ControllerMgr::instance()->getMainPointer()->getPointer();
-    mCursorPos -= static_cast<const rio::Vector2f&>(window_pos);
+    mCursorPos = reinterpret_cast<const rio::Vector2f&>(cursor_pos.x)
+                - static_cast<const rio::Vector2f&>(window_pos);
 
     const f32 min_x = 0.0f;
     const f32 max_x = mSize.x;
@@ -265,9 +265,6 @@ void CourseView::updateCursorPos(const rio::BaseVec2f& window_pos)
         mCursorPos.y = min_y;
     else if (mCursorPos.y > max_y)
         mCursorPos.y = max_y;
-
-    if (rio::ControllerMgr::instance()->getMainPointer()->isPointerOnNow())
-        mLastCursorPos = mCursorPos;
 }
 
 namespace {
@@ -531,14 +528,30 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
 void CourseView::processMouseInput()
 {
-    if (rio::ControllerMgr::instance()->getMainPointer()->isHold(1 << rio::Controller::PAD_IDX_TOUCH))
-    {
-        const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(mLastCursorPos);
-        const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(mCursorPos);
+    static const rio::BaseVec2f zero { 0.0f, 0.0f };
 
-        static_cast<rio::Vector2f&>(mCamera.pos()) +=
-            static_cast<const rio::Vector2f&>(last_cursor_pos_world)
-            - static_cast<const rio::Vector2f&>(cursor_pos_world);
+    if (
+#if RIO_IS_CAFE
+        rio::ControllerMgr::instance()->getMainController()->isHold(
+            (1 << rio::Controller::PAD_IDX_ZL) |
+            (1 << rio::Controller::PAD_IDX_ZR)
+        ) &&
+        ImGui::IsMouseDown(ImGuiMouseButton_Left)
+#else
+        ImGui::IsMouseDown(ImGuiMouseButton_Middle)
+#endif // RIO_IS_CAFE
+    )
+    {
+        const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
+        if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
+        {
+            const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(zero);
+            const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(mouse_delta);
+
+            static_cast<rio::Vector2f&>(mCamera.pos()) +=
+                static_cast<const rio::Vector2f&>(last_cursor_pos_world)
+                - static_cast<const rio::Vector2f&>(cursor_pos_world);
+        }
     }
 }
 
