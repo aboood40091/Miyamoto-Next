@@ -31,7 +31,7 @@
 
 #include <rio.h>
 
-#include <imgui.h>
+#include <imgui_internal.h>
 
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
@@ -393,7 +393,6 @@ void MainWindow::processKeyboardInput_()
 void MainWindow::calc_()
 {
     ImGuiUtil::newFrame();
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
@@ -438,7 +437,15 @@ void MainWindow::drawMetricsUI_()
 
 void MainWindow::drawCourseViewUI_()
 {
-    ImGui::Begin("CourseView", NULL, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    ImGuiID id = ImGui::DockSpaceOverViewport(nullptr, ImGuiDockNodeFlags_NoDockingInCentralNode | ImGuiDockNodeFlags_PassthruCentralNode, nullptr);
+    ImGuiDockNode* node = ImGui::DockBuilderGetCentralNode(id);
+
+    ImGuiWindowClass centralAlways = {};
+    centralAlways.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoDockingOverMe;
+    ImGui::SetNextWindowClass(&centralAlways);
+    ImGui::SetNextWindowDockID(node->ID, ImGuiCond_Always);
+
+    ImGui::Begin("CourseView", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const ImVec2& size = ImGui::GetContentRegionAvail();
