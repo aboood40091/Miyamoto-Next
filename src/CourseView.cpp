@@ -196,8 +196,7 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     mDepthTarget.linkTexture2D(*mpDepthTexture);
     mDepthTargetDV.applyTextureData(depth_texture_data);
 
-    mRenderBuffer.bindDepthClear(1.0f);
-    unbindRenderBuffer_();
+    mRenderBuffer.clear(rio::RenderBuffer::CLEAR_FLAG_DEPTH);
 }
 
 void CourseView::bindRenderBuffer_()
@@ -732,12 +731,16 @@ void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::Draw
         mCourseView.calcDistantViewScissor_();
 
     mCourseView.mpColorTexture->setCompMap(0x00010203);
-    mCourseView.mRenderBuffer.bindColorClear(
-        119 / 255.f,
-        136 / 255.f,
-        153 / 255.f
+    mCourseView.mRenderBuffer.clear(
+        rio::RenderBuffer::CLEAR_FLAG_COLOR_DEPTH,
+        {
+            119 / 255.f,
+            136 / 255.f,
+            153 / 255.f,
+            1.0f
+        }
     );
-    mCourseView.mRenderBuffer.bindDepthClear(1.0f);
+    mCourseView.bindRenderBuffer_();
 }
 
 void CourseView::DrawCallbackDV::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
