@@ -12,6 +12,7 @@
 
 //#include <array>
 #include <span>
+#include <vector>
 
 class Bg;
 class CourseDataFile;
@@ -56,6 +57,8 @@ public:
 
     void drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
 
+    void calcSelectionVertexBuffer(const std::vector<ItemID>& selected_items);
+
     void render(u8 layer, const CourseDataFile& cd_file, bool render_static, bool render_dynamic = true, bool render_normal = false);
 
 private:
@@ -95,13 +98,16 @@ private:
 
 private:
     std::span<Vertex>       mVtxData;
+    std::span<   s32>       mSelData;
     std::span<   u32>       mIdxData;
 
     rio::Shader             mShader;
     rio::VertexBuffer       mVertexBuffer;
+    rio::VertexBuffer       mSelectionVertexBuffer;
     rio::VertexStream       mPosStream;
     rio::VertexStream       mTexStream;
     rio::VertexStream       mItemIDStream;
+    rio::VertexStream       mIsSelectedStream;
     rio::VertexArray        mVertexArray;
 
     rio::Camera*            mpCamera;

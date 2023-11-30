@@ -31,6 +31,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
+    , mIsCursorPress(false)
     , mpItemIDReadBuffer(nullptr)
 #if RIO_IS_WIN
     , mpItemIDClearBuffer(nullptr)
@@ -96,6 +97,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 
 CourseView::~CourseView()
 {
+    mSelectedItems.clear();
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -416,6 +418,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 #endif
 
     // Clear items
+    mSelectedItems.clear();
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -607,6 +610,8 @@ bool CourseView::processMouseInput()
 {
     static const rio::BaseVec2f zero { 0.0f, 0.0f };
 
+    mIsCursorPress = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+
     if (
 #if RIO_IS_CAFE
         rio::ControllerMgr::instance()->getMainController()->isHold(
@@ -619,6 +624,10 @@ bool CourseView::processMouseInput()
 #endif // RIO_IS_CAFE
     )
     {
+#if RIO_IS_CAFE
+        mIsCursorPress = false;
+#endif // RIO_IS_CAFE
+
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
         {
@@ -674,6 +683,9 @@ void CourseView::update()
         under_mouse = __builtin_bswap32(under_mouse);
 #endif // RIO_IS_CAFE
 
+        if (mIsCursorPress)
+            mSelectedItems.clear();
+
         ItemID id_under_mouse = under_mouse;
         if (id_under_mouse.isValid())
         {
@@ -691,6 +703,9 @@ void CourseView::update()
             {
                 RIO_LOG("Object under mouse[%d, %d]: Unknown\n", x, y);
             }
+
+            if (mIsCursorPress)
+                mSelectedItems.push_back(id_under_mouse);
         }
         else
         {
@@ -926,6 +941,8 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         const bool* layer_shown = mCourseView.mLayerShown;
         rio::RenderBuffer& render_buffer = mCourseView.mRenderBuffer;
         rio::RenderTargetColor* p_item_id_target = &mCourseView.mItemIDTarget;
+
+        bg_renderer.calcSelectionVertexBuffer(mCourseView.mSelectedItems);
 
         render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
         render_buffer.bind();

@@ -4,6 +4,7 @@
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
+#include <item/ItemID.h>
 
 #include <common/aglRenderBuffer.h>
 #include <common/aglRenderTarget.h>
@@ -159,6 +160,8 @@ private:
     f32                         mBgZoom,
                                 mRealBgZoom;
     rio::Vector2f               mCursorPos;
+    bool                        mIsCursorPress;
+    std::vector<ItemID>         mSelectedItems;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
                                 mMapActorItemPtr;

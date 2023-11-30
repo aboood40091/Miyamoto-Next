@@ -31,6 +31,16 @@ public:
         return mValue;
     }
 
+    friend bool operator==(const ItemID& lhs, const ItemID& rhs)
+    {
+        return lhs.mValue == rhs.mValue;
+    }
+
+    friend bool operator!=(const ItemID& lhs, const ItemID& rhs)
+    {
+        return lhs.mValue != rhs.mValue;
+    }
+
     ItemType getType() const
     {
         RIO_ASSERT(isValid());

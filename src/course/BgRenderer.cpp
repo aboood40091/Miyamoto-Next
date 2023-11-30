@@ -30,10 +30,12 @@ void BgRenderer::destroySingleton()
 
 BgRenderer::BgRenderer()
     : mShader()
-    , mVertexBuffer()
+    , mVertexBuffer(0)
+    , mSelectionVertexBuffer(1)
     , mPosStream()
     , mTexStream()
     , mItemIDStream()
+    , mIsSelectedStream()
     , mVertexArray()
     , mpCamera(nullptr)
     , mpProjection(nullptr)
@@ -61,18 +63,23 @@ void BgRenderer::initialize_()
                                 + cDynamicMaxNum * CD_FILE_ENV_MAX_NUM * CD_FILE_LAYER_MAX_NUM;
 
     constexpr size_t vtx_data_size = sizeof(Vertex) * cVtxPerBlock * block_max_num;
+    constexpr size_t sel_data_size = sizeof(   s32) * cVtxPerBlock * block_max_num;
     constexpr size_t idx_data_size = sizeof(   u32) * cIdxPerBlock * block_max_num;
 
     Vertex* vtx_data = static_cast<Vertex*>(rio::MemUtil::alloc(vtx_data_size, rio::Drawer::cVtxAlignment));
+    s32*    sel_data = static_cast<   s32*>(rio::MemUtil::alloc(sel_data_size, rio::Drawer::cVtxAlignment));
     u32*    idx_data = static_cast<   u32*>(rio::MemUtil::alloc(idx_data_size, rio::Drawer::cIdxAlignment));
 
     RIO_ASSERT(vtx_data != nullptr);
+    RIO_ASSERT(sel_data != nullptr);
     RIO_ASSERT(idx_data != nullptr);
 
     mVtxData = std::span{ vtx_data, vtx_data_size };
+    mSelData = std::span{ sel_data, sel_data_size };
     mIdxData = std::span{ idx_data, idx_data_size };
 
     rio::MemUtil::set(vtx_data, 0, vtx_data_size);
+    rio::MemUtil::set(sel_data, 0, sel_data_size);
 
     for (u32 i = 0; i < block_max_num; i++)
     {
@@ -93,6 +100,9 @@ void BgRenderer::initialize_()
     mVertexBuffer.setStride(sizeof(Vertex));
     mVertexBuffer.setData(vtx_data, vtx_data_size);
 
+    mSelectionVertexBuffer.setStride(sizeof(s32));
+    mSelectionVertexBuffer.setDataInvalidate(sel_data, sel_data_size);
+
     mPosStream   .setLayout(0, rio::VertexStream::FORMAT_32_32_32_FLOAT, offsetof(Vertex, pos));
     mTexStream   .setLayout(1, rio::VertexStream::FORMAT_32_32_FLOAT,    offsetof(Vertex, tex));
     mItemIDStream.setLayout(2, rio::VertexStream::FORMAT_32_UINT,        offsetof(Vertex, item_id));
@@ -100,6 +110,9 @@ void BgRenderer::initialize_()
     mVertexArray.addAttribute(mPosStream,       mVertexBuffer);
     mVertexArray.addAttribute(mTexStream,       mVertexBuffer);
     mVertexArray.addAttribute(mItemIDStream,    mVertexBuffer);
+
+    mIsSelectedStream.setLayout(3, rio::VertexStream::FORMAT_32_SINT, 0);
+    mVertexArray.addAttribute(mIsSelectedStream, mSelectionVertexBuffer);
 
     mVertexArray.process();
 }
@@ -112,13 +125,16 @@ void BgRenderer::destroy_()
     mShader.unload();
 
     RIO_ASSERT(mVtxData.data() != nullptr);
+    RIO_ASSERT(mSelData.data() != nullptr);
     RIO_ASSERT(mIdxData.data() != nullptr);
 
     rio::MemUtil::free(mVtxData.data());
+    rio::MemUtil::free(mSelData.data());
     rio::MemUtil::free(mIdxData.data());
 
     mVtxData = std::span<Vertex>();
-    mIdxData = std::span<u32>();
+    mSelData = std::span<   s32>();
+    mIdxData = std::span<   u32>();
 }
 
 void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile, ItemID item_id)
@@ -254,6 +270,72 @@ void BgRenderer::drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer)
     u32 vtx_count = cVtxPerBlock;
 
     mVertexBuffer.setSubDataInvalidate(base_vtx_data + vtx_start, sizeof(Vertex) * vtx_start, sizeof(Vertex) * vtx_count);
+}
+
+void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_items)
+{
+    if (selected_items.empty())
+    {
+        rio::MemUtil::set(mSelData.data(), 0, mSelData.size());
+        mSelectionVertexBuffer.setSubDataInvalidate(mSelData.data(), 0, mSelData.size());
+        return;
+    }
+
+    const Vertex* const base_vtx_data = mVtxData.data();
+    s32* const base_sel_data = mSelData.data();
+
+    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
+    {
+        u32 index = BG_MAX_UNIT_X * BG_MAX_UNIT_Y * u32(layer);
+        u32 start = index;
+
+        for (s32 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
+        {
+            u32 draw_num = mDrawNum[layer][env];
+            if (draw_num == 0)
+                continue;
+
+            for (u32 j = 0; j < draw_num; j++)
+            {
+                const Vertex* const vtx_data = base_vtx_data + cVtxPerBlock * index;
+                s32* const sel_data = base_sel_data + cVtxPerBlock * index;
+
+                const ItemID& item_id = vtx_data->item_id;
+                RIO_ASSERT(item_id.isValid());
+
+                bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
+
+                if (is_selected)
+                {
+                  //RIO_LOG("Found selected tile\n");
+                    if (item_id.getType() == ITEM_TYPE_BG_UNIT_OBJ)
+                    {
+                        u32 obj_index = item_id.getIndex();
+                        u8 layer_2 = obj_index >> 22;
+                        RIO_ASSERT(layer_2 == layer);
+                        obj_index &= 0x3fffff;
+                      //RIO_LOG("Object %u Layer %u\n", obj_index, layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
+                    }
+                }
+
+                sel_data[0] = is_selected;
+                sel_data[1] = is_selected;
+                sel_data[2] = is_selected;
+                sel_data[3] = is_selected;
+
+                index++;
+            }
+        }
+
+        u32 num = index - start;
+        if (num == 0)
+            continue;
+
+        u32 vtx_start = cVtxPerBlock * start;
+        u32 vtx_count = cVtxPerBlock * num;
+
+        mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
+    }
 }
 
 void BgRenderer::render(u8 layer, const CourseDataFile& cd_file, bool render_static, bool render_dynamic, bool render_normal)

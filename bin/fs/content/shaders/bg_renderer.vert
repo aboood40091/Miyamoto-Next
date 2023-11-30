@@ -3,11 +3,13 @@
 layout (location = 0) in vec3 Vertex;
 layout (location = 1) in vec2 TexCoord0;
 layout (location = 2) in uint ItemID;
+layout (location = 3) in int  IsSelected;
 
 uniform vec4 mvp[4];
 
-out vec2 vTexCoord0;
+out vec2      vTexCoord0;
 flat out uint vItemID;
+flat out int  vIsSelected;
 
 void main()
 {
@@ -22,4 +24,5 @@ void main()
 
     vTexCoord0 = TexCoord0;
     vItemID = ItemID;
+    vIsSelected = IsSelected;
 }
