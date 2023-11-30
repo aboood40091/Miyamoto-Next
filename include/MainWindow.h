@@ -48,6 +48,7 @@ private:
     void processKeyboardInput_();
 
     void drawCourseViewUI_();
+    void drawPaletteUI_();
 #if RIO_IS_WIN
     void drawMetricsUI_();
 #endif // RIO_IS_WIN
