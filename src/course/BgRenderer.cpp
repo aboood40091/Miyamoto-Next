@@ -40,6 +40,7 @@ BgRenderer::BgRenderer()
     , mpCamera(nullptr)
     , mpProjection(nullptr)
     , mTextureSampler()
+    , mSelectionClear(true)
 {
     mTextureSampler.setMinFilter(rio::TEX_XY_FILTER_MODE_LINEAR);
     mTextureSampler.setMipFilter(rio::TEX_MIP_FILTER_MODE_NONE);
@@ -102,6 +103,7 @@ void BgRenderer::initialize_()
 
     mSelectionVertexBuffer.setStride(sizeof(s32));
     mSelectionVertexBuffer.setDataInvalidate(sel_data, sel_data_size);
+    mSelectionClear = true;
 
     mPosStream   .setLayout(0, rio::VertexStream::FORMAT_32_32_32_FLOAT, offsetof(Vertex, pos));
     mTexStream   .setLayout(1, rio::VertexStream::FORMAT_32_32_FLOAT,    offsetof(Vertex, tex));
@@ -276,8 +278,12 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
 {
     if (selected_items.empty())
     {
-        rio::MemUtil::set(mSelData.data(), 0, mSelData.size());
-        mSelectionVertexBuffer.setSubDataInvalidate(mSelData.data(), 0, mSelData.size());
+        if (!mSelectionClear)
+        {
+            rio::MemUtil::set(mSelData.data(), 0, mSelData.size());
+            mSelectionVertexBuffer.setSubDataInvalidate(mSelData.data(), 0, mSelData.size());
+            mSelectionClear = true;
+        }
         return;
     }
 
@@ -305,19 +311,6 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
 
                 bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
 
-                if (is_selected)
-                {
-                  //RIO_LOG("Found selected tile\n");
-                    if (item_id.getType() == ITEM_TYPE_BG_UNIT_OBJ)
-                    {
-                        u32 obj_index = item_id.getIndex();
-                        u8 layer_2 = obj_index >> 22;
-                        RIO_ASSERT(layer_2 == layer);
-                        obj_index &= 0x3fffff;
-                      //RIO_LOG("Object %u Layer %u\n", obj_index, layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
-                    }
-                }
-
                 sel_data[0] = is_selected;
                 sel_data[1] = is_selected;
                 sel_data[2] = is_selected;
@@ -335,6 +328,7 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
         u32 vtx_count = cVtxPerBlock * num;
 
         mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
+        mSelectionClear = false;
     }
 }
 
