@@ -457,7 +457,7 @@ void MainWindow::drawMetricsUI_()
         window_flags |= ImGuiWindowFlags_NoMove;
     }
     ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-    ImGui::Begin("Metrics", nullptr, window_flags);
+    if (ImGui::Begin("Metrics", nullptr, window_flags))
     {
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)\n"
                     "(right-click to change position)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -488,8 +488,9 @@ void MainWindow::drawCourseViewUI_()
     ImGui::SetNextWindowDockID(node->ID, ImGuiCond_Always);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
-    ImGui::Begin("CourseView", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+    bool ret = ImGui::Begin("CourseView", nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
     ImGui::PopStyleVar();
+    if (ret)
     {
         ImVec2 pos = ImGui::GetCursorScreenPos();
         const ImVec2& size = ImGui::GetContentRegionAvail();
