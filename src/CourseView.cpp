@@ -32,6 +32,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
     , mIsCursorPress(false)
+    , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
 #if RIO_IS_WIN
     , mpItemIDClearBuffer(nullptr)
@@ -97,7 +98,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 
 CourseView::~CourseView()
 {
-    mSelectedItems.clear();
+    mSelectedItems.clear(); mSelectionChange = true;
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -418,7 +419,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 #endif
 
     // Clear items
-    mSelectedItems.clear();
+    mSelectedItems.clear(); mSelectionChange = true;
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -674,7 +675,7 @@ void CourseView::update()
 
     if (mIsCursorPress)
     {
-        mSelectedItems.clear();
+        mSelectedItems.clear(); mSelectionChange = true;
 
         s32 width = mpItemIDTexture->getWidth();
         s32 height = mpItemIDTexture->getHeight();
@@ -919,8 +920,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         const bool* layer_shown = mCourseView.mLayerShown;
         rio::RenderBuffer& render_buffer = mCourseView.mRenderBuffer;
         rio::RenderTargetColor* p_item_id_target = &mCourseView.mItemIDTarget;
+        bool& selection_change = mCourseView.mSelectionChange;
 
-        bg_renderer.calcSelectionVertexBuffer(mCourseView.mSelectedItems);
+        if (selection_change)
+        {
+            bg_renderer.calcSelectionVertexBuffer(mCourseView.mSelectedItems);
+            selection_change = false;
+        }
 
         render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
         render_buffer.bind();

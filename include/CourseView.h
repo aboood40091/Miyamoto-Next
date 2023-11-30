@@ -161,6 +161,7 @@ private:
                                 mRealBgZoom;
     rio::Vector2f               mCursorPos;
     bool                        mIsCursorPress;
+    bool                        mSelectionChange;
     std::vector<ItemID>         mSelectedItems;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
