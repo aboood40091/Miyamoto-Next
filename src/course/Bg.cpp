@@ -103,12 +103,12 @@ void Bg::clear()
     mpBgUnitFile.clear();
 }
 
-void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData& obj)
+void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData& obj, u32 obj_index)
 {
     if (row.size() == 0)
         return;
 
-    u16* dest = &mBlockUnitNumber[layer][obj.offset.y + y][obj.offset.x];
+    UnitNumber* dest = &mBlockUnitNumber[layer][obj.offset.y + y][obj.offset.x];
 
     bool repeat_found = false;
     std::vector<const BgUnit::Tile*> repeat_before;
@@ -145,7 +145,8 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
     }
     else if (obj.size.x <= bc + ac)
@@ -157,7 +158,8 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
 
         for (u32 x = bc; x < obj.size.x; x++)
@@ -167,7 +169,8 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
     }
     else
@@ -181,7 +184,8 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
 
         for (u32 x = bc; x < after_threshold; x++)
@@ -191,7 +195,8 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
 
         for (u32 x = after_threshold; x < obj.size.x; x++)
@@ -201,12 +206,13 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData
             if (value == 0)
                 continue;
 
-            dest[x] = value;
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
     }
 }
 
-void Bg::processBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u8 layer)
+void Bg::processBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u32 obj_index, u8 layer)
 {
     const std::vector<BgUnit::Row>& rows = bg_unit.getRows();
     if (rows.size() == 0)
@@ -214,7 +220,7 @@ void Bg::processBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u8 layer
 
     if (rows[0][0].first & 0x80)
     {
-        processDiagonalBgUnit_(bg_unit, obj, layer);
+        processDiagonalBgUnit_(bg_unit, obj, obj_index, layer);
         return;
     }
 
@@ -247,32 +253,32 @@ void Bg::processBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u8 layer
     if (ic == 0)
     {
         for (u32 y = 0; y < obj.size.y; y++)
-            processRow_(layer, y, *(repeat_before[y % bc]), obj);
+            processRow_(layer, y, *(repeat_before[y % bc]), obj, obj_index);
     }
     else if (obj.size.y <= bc + ac)
     {
         for (u32 y = 0; y < bc; y++)
-            processRow_(layer, y, *(repeat_before[y]), obj);
+            processRow_(layer, y, *(repeat_before[y]), obj, obj_index);
 
         for (u32 y = bc; y < obj.size.y; y++)
-            processRow_(layer, y, *(repeat_after[y - bc]), obj);
+            processRow_(layer, y, *(repeat_after[y - bc]), obj, obj_index);
     }
     else
     {
         u32 after_threshold = u32(obj.size.y) - ac;
 
         for (u32 y = 0; y < bc; y++)
-            processRow_(layer, y, *(repeat_before[y]), obj);
+            processRow_(layer, y, *(repeat_before[y]), obj, obj_index);
 
         for (u32 y = bc; y < after_threshold; y++)
-            processRow_(layer, y, *(repeat_in[(y - bc) % ic]), obj);
+            processRow_(layer, y, *(repeat_in[(y - bc) % ic]), obj, obj_index);
 
         for (u32 y = after_threshold; y < obj.size.y; y++)
-            processRow_(layer, y, *(repeat_after[y - after_threshold]), obj);
+            processRow_(layer, y, *(repeat_after[y - after_threshold]), obj, obj_index);
     }
 }
 
-void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row>& rows, const BgCourseData& obj)
+void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row>& rows, const BgCourseData& obj, u32 obj_index)
 {
     xS = std::max(0, xS);
     yS = std::max(0, yS);
@@ -280,7 +286,7 @@ void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row
     s32 yE = yS + std::min(size_t(obj.size.y), rows.size());
     for (s32 y = yS; y < yE; y++)
     {
-        u16* drow = &mBlockUnitNumber[layer][obj.offset.y + y][obj.offset.x];
+        UnitNumber* drow = &mBlockUnitNumber[layer][obj.offset.y + y][obj.offset.x];
         const BgUnit::Row& srow = rows[y - yS];
 
         s32 xE = xS + std::min(size_t(obj.size.x), srow.size());
@@ -291,12 +297,13 @@ void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row
             if (value == 0)
                 continue;
 
-            drow[x] = value;
+            drow[x].value = value;
+            drow[x].obj_index = obj_index;
         }
     }
 }
 
-void Bg::processDiagonalBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u8 layer)
+void Bg::processDiagonalBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u32 obj_index, u8 layer)
 {
     std::vector<BgUnit::Row> main_block, sub_block;
     bg_unit.getSlopeSections(main_block, sub_block);
@@ -355,7 +362,7 @@ void Bg::processDiagonalBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, 
 
     for (s32 i = 0; i < draw_num; i++)
     {
-        putObjectArray_(layer, x, y, main_block, obj);
+        putObjectArray_(layer, x, y, main_block, obj, obj_index);
         if (sub_block_height > 0)
         {
             s32 xb;
@@ -366,9 +373,9 @@ void Bg::processDiagonalBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, 
                 xb = x;
 
             if (down)
-                putObjectArray_(layer, xb, y - sub_block_height, sub_block, obj);
+                putObjectArray_(layer, xb, y - sub_block_height, sub_block, obj, obj_index);
             else
-                putObjectArray_(layer, xb, y + main_block_height, sub_block, obj);
+                putObjectArray_(layer, xb, y + main_block_height, sub_block, obj, obj_index);
         }
         x += xi;
         y += yi;
@@ -388,8 +395,11 @@ void Bg::processBgCourseData(const CourseDataFile& cd_file)
 
     for (u8 layer = 0; layer < 3; layer++)
     {
-        for (const BgCourseData& obj : cd_file.getBgData(layer))
+        const auto& bg_data = cd_file.getBgData(layer);
+
+        for (u32 i = 0; i < bg_data.size(); i++)
         {
+            const BgCourseData& obj = bg_data[i];
             if (obj.type == 0x7fff)
                 continue;
 
@@ -402,7 +412,7 @@ void Bg::processBgCourseData(const CourseDataFile& cd_file)
             RIO_ASSERT(file);
 
             const BgUnit& bg_unit = file->getBgUnit(idx);
-            processBgUnit_(bg_unit, obj, layer);
+            processBgUnit_(bg_unit, obj, i, layer);
         }
     }
 }

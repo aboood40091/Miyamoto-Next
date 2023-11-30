@@ -3,8 +3,10 @@
 uniform sampler2D texture0;
 
 in vec2 vTexCoord0;
+flat in uint vItemID;
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 2) out uint ItemID;
 
 void main()
 {
@@ -13,4 +15,5 @@ void main()
         discard;
 
     FragColor = color;
+    ItemID = vItemID;
 }

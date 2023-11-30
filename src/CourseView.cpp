@@ -17,6 +17,7 @@
 #include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Renderer.h>
 #include <gpu/rio_RenderState.h>
+#include <gpu/rio_RenderStateMRT.h>
 
 #if RIO_IS_CAFE
 #include <gx2/event.h>
@@ -30,7 +31,12 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
+    , mpItemIDReadBuffer(nullptr)
+#if RIO_IS_WIN
+    , mpItemIDClearBuffer(nullptr)
+#endif // RIO_IS_WIN
     , mpColorTexture(nullptr)
+    , mpItemIDTexture(nullptr)
     , mpDepthTexture(nullptr)
 {
     mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW);
@@ -64,7 +70,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     setZoomTileSize(24);
     mRealBgZoom = mBgZoom;
 
-    mRenderBuffer.setRenderTargetColor(&mColorTarget);
+    mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
     mRenderBufferDV.setRenderTargetColor(&mColorTargetDV);
     mRenderBuffer.setRenderTargetDepth(&mDepthTarget);
     mRenderBufferDV.setRenderTargetDepth(&mDepthTargetDV);
@@ -104,6 +110,26 @@ CourseView::~CourseView()
         delete mpColorTexture;
         mpColorTexture = nullptr;
     }
+
+    if (mpItemIDTexture)
+    {
+        delete mpItemIDTexture;
+        mpItemIDTexture = nullptr;
+    }
+
+    if (mpItemIDReadBuffer)
+    {
+        delete[] mpItemIDReadBuffer;
+        mpItemIDReadBuffer = nullptr;
+    }
+
+#if RIO_IS_WIN
+    if (mpItemIDClearBuffer)
+    {
+        delete[] mpItemIDClearBuffer;
+        mpItemIDClearBuffer = nullptr;
+    }
+#endif // RIO_IS_WIN
 
     if (mpDepthTexture)
     {
@@ -175,6 +201,26 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
         mpColorTexture = nullptr;
     }
 
+    if (mpItemIDTexture)
+    {
+        delete mpItemIDTexture;
+        mpItemIDTexture = nullptr;
+    }
+
+    if (mpItemIDReadBuffer)
+    {
+        delete[] mpItemIDReadBuffer;
+        mpItemIDReadBuffer = nullptr;
+    }
+
+#if RIO_IS_WIN
+    if (mpItemIDClearBuffer)
+    {
+        delete[] mpItemIDClearBuffer;
+        mpItemIDClearBuffer = nullptr;
+    }
+#endif // RIO_IS_WIN
+
     if (mpDepthTexture)
     {
         delete mpDepthTexture;
@@ -182,7 +228,18 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     }
 
     mpColorTexture = new rio::Texture2D(rio::TEXTURE_FORMAT_R8_G8_B8_A8_UNORM, width, height, 1);
+    mpItemIDTexture = new rio::Texture2D(rio::TEXTURE_FORMAT_R32_UINT, width, height, 1);
     mpDepthTexture = new rio::Texture2D(rio::DEPTH_TEXTURE_FORMAT_R32_FLOAT, width, height, 1);
+
+    {
+        u32 size = width * height * 4;
+        mpItemIDReadBuffer = new u8[size];
+#if RIO_IS_WIN
+        RIO_ASSERT(size == mpItemIDTexture->getNativeTexture().surface.imageSize);
+        mpItemIDClearBuffer = new u8[size];
+        rio::MemUtil::set(mpItemIDClearBuffer, 0xFF, size);
+#endif // RIO_IS_WIN
+    }
 
     agl::TextureData color_texture_data(*mpColorTexture, true, false);
     agl::TextureData depth_texture_data(*mpDepthTexture, false, true);
@@ -195,6 +252,8 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
 
     mDepthTarget.linkTexture2D(*mpDepthTexture);
     mDepthTargetDV.applyTextureData(depth_texture_data);
+
+    mItemIDTarget.linkTexture2D(*mpItemIDTexture);
 
     mRenderBuffer.clear(rio::RenderBuffer::CLEAR_FLAG_DEPTH);
 }
@@ -216,6 +275,25 @@ void CourseView::unbindRenderBuffer_()
 
     rio::Graphics::setViewport(0, 0, width, height);
     rio::Graphics::setScissor(0, 0, width, height);
+}
+
+void CourseView::clearItemIDTexture_()
+{
+#if RIO_IS_CAFE
+    const GX2Surface& surface = mpItemIDTexture->getNativeTexture().surface;
+    rio::MemUtil::set(surface.image, 0xFF, surface.imageSize);
+    GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, surface.image, surface.imageSize);
+#elif RIO_IS_WIN
+    rio::Texture2DUtil::uploadTexture(
+        mpItemIDTexture->getNativeTextureHandle(),
+        mpItemIDTexture->getNativeTexture().surface.format,
+        mpItemIDTexture->getNativeTexture().surface.nativeFormat,
+        mpItemIDTexture->getNativeTexture().surface.width,
+        mpItemIDTexture->getNativeTexture().surface.height,
+        mpItemIDTexture->getNativeTexture().surface.imageSize,
+        mpItemIDClearBuffer
+    );
+#endif // RIO_IS_WIN
 }
 
 rio::BaseVec2f CourseView::viewToWorldPos(const rio::BaseVec2f& pos) const
@@ -572,6 +650,54 @@ void CourseView::processKeyboardInput()
 
 void CourseView::update()
 {
+    mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
+    {
+        mRenderBuffer.read(
+            TARGET_TYPE_ITEM_ID, mpItemIDReadBuffer
+#if RIO_IS_WIN
+            , mpItemIDTexture->getNativeTexture().surface.width
+            , mpItemIDTexture->getNativeTexture().surface.height
+            , mpItemIDTexture->getNativeTexture().surface.nativeFormat
+#endif // RIO_IS_WIN
+        );
+    }
+    mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+
+    {
+        s32 width = mpItemIDTexture->getWidth();
+        s32 height = mpItemIDTexture->getHeight();
+        s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
+        s32 y = std::clamp<s32>(mCursorPos.y, 0, height - 1);
+
+        u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
+#if RIO_IS_CAFE
+        under_mouse = __builtin_bswap32(under_mouse);
+#endif // RIO_IS_CAFE
+
+        ItemID id_under_mouse = under_mouse;
+        if (id_under_mouse.isValid())
+        {
+            if (id_under_mouse.getType() == ITEM_TYPE_BG_UNIT_OBJ)
+            {
+                u32 obj_index = id_under_mouse.getIndex();
+                u8 layer = obj_index >> 22;
+                obj_index &= 0x3fffff;
+                const BgCourseData& obj = mpCourseDataFile->getBgData(layer)[obj_index];
+                u16 type = obj.type & 0x0fff;
+                u8 tileset = obj.type >> 12;
+                RIO_LOG("Object under mouse[%d, %d]: Tileset %u Object %u Layer %u\n", x, y, tileset, type, layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
+            }
+            else
+            {
+                RIO_LOG("Object under mouse[%d, %d]: Unknown\n", x, y);
+            }
+        }
+        else
+        {
+            RIO_LOG("Object under mouse[%d, %d]: None\n", x, y);
+        }
+    }
+
     const rio::BaseVec2f& camera_pos = mCamera.pos();
 
     const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
@@ -709,22 +835,6 @@ void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
         DistantViewMgr::instance()->applyDepthOfField();
 }
 
-void CourseView::drawCursor_()
-{
-    const rio::BaseVec2f& cursor_pos = getCursorWorldPos();
-
-    rio::PrimitiveRenderer::instance()->begin();
-    {
-        rio::PrimitiveRenderer::instance()->drawQuad(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f::cRed, rio::Color4f::cBlue)
-                .setCenter({ cursor_pos.x, cursor_pos.y, -mProjection.getNear() + 10000.0f })
-                .setSize({ 16.0f, 16.0f })
-        );
-    }
-    rio::PrimitiveRenderer::instance()->end();
-}
-
 void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
     if (MainWindow::applyDistantViewScissor())
@@ -740,6 +850,7 @@ void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::Draw
             1.0f
         }
     );
+    mCourseView.clearItemIDTexture_();
     mCourseView.bindRenderBuffer_();
 }
 
@@ -798,8 +909,6 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawOpa();
     }
-
-    mCourseView.drawCursor_();
 }
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -809,13 +918,22 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
     {
         const CourseDataFile& cd_file = *p_cd_file;
 
-        rio::RenderState render_state;
+        rio::RenderStateMRT render_state;
+        render_state.setBlendEnable(TARGET_TYPE_ITEM_ID, false);
         render_state.apply();
 
         BgRenderer& bg_renderer = *(BgRenderer::instance());
         const bool* layer_shown = mCourseView.mLayerShown;
+        rio::RenderBuffer& render_buffer = mCourseView.mRenderBuffer;
+        rio::RenderTargetColor* p_item_id_target = &mCourseView.mItemIDTarget;
 
-        bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
+        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
+        {
+            bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
+        }
+        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
 
         rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
         rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
@@ -825,7 +943,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
             if (p_item->getMapActorData().layer != LAYER_1)
                 p_item->drawXlu(draw_info);
 
-        bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
+        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
+        {
+            bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
+        }
+        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer == LAYER_1)
@@ -837,7 +961,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         for (LocationItem& item : mCourseView.mLocationItem)
             item.drawXlu();
 
-        bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
+        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
+        {
+            bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
+        }
+        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+        render_buffer.bind();
 
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawXlu();

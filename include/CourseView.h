@@ -136,8 +136,7 @@ private:
     void createRenderBuffer_(s32 width, s32 height);
     void bindRenderBuffer_();
     void unbindRenderBuffer_();
-
-    void drawCursor_();
+    void clearItemIDTexture_();
 
     void calcDistantViewScissor_();
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
@@ -157,22 +156,35 @@ private:
                                *mpLayerDV;
     CourseDataFile*             mpCourseDataFile;
     const AreaData*             mpDVControlArea;
-    f32                         mBgZoom;
-    f32                         mRealBgZoom;
+    f32                         mBgZoom,
+                                mRealBgZoom;
     rio::Vector2f               mCursorPos;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
                                 mMapActorItemPtr;
     std::vector<AreaItem>       mAreaItem;
     std::vector<LocationItem>   mLocationItem;
+    u8*                         mpItemIDReadBuffer;
+#if RIO_IS_WIN
+    u8*                         mpItemIDClearBuffer;
+#endif // RIO_IS_WIN
     rio::Texture2D             *mpColorTexture,
+                               *mpItemIDTexture,
                                *mpDepthTexture;
     rio::RenderTargetColor      mColorTarget;
     agl::RenderTargetColor      mColorTargetDV;
     rio::RenderTargetDepth      mDepthTarget;
     agl::RenderTargetDepth      mDepthTargetDV;
+    rio::RenderTargetColor      mItemIDTarget;
     rio::RenderBuffer           mRenderBuffer;
     agl::RenderBuffer           mRenderBufferDV;
     bool                        mDrawDV;
     bool                        mLayerShown[CD_FILE_LAYER_MAX_NUM];
+
+    enum RenderTargetColorType
+    {
+        TARGET_TYPE_COLOR   = 0,
+        TARGET_TYPE_NORMAL  = 1,    // Currently not used by Miyamoto Next
+        TARGET_TYPE_ITEM_ID = 2
+    };
 };

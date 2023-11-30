@@ -2,6 +2,7 @@
 
 #include <course/Constants.h>
 #include <course/UnitID.h>
+#include <item/ItemID.h>
 
 #include <gfx/rio_Camera.h>
 #include <gfx/rio_Projection.h>
@@ -65,9 +66,10 @@ private:
     {
         rio::BaseVec3f  pos;
         rio::BaseVec2f  tex;
+        ItemID          item_id;
     };
 
-    void setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile);
+    void setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile, ItemID item_id);
 
     static constexpr s32 cVtxPerBlock = 4;
     static constexpr s32 cIdxPerBlock = 6;
@@ -99,6 +101,7 @@ private:
     rio::VertexBuffer       mVertexBuffer;
     rio::VertexStream       mPosStream;
     rio::VertexStream       mTexStream;
+    rio::VertexStream       mItemIDStream;
     rio::VertexArray        mVertexArray;
 
     rio::Camera*            mpCamera;

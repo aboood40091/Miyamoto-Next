@@ -33,6 +33,7 @@ BgRenderer::BgRenderer()
     , mVertexBuffer()
     , mPosStream()
     , mTexStream()
+    , mItemIDStream()
     , mVertexArray()
     , mpCamera(nullptr)
     , mpProjection(nullptr)
@@ -92,11 +93,13 @@ void BgRenderer::initialize_()
     mVertexBuffer.setStride(sizeof(Vertex));
     mVertexBuffer.setData(vtx_data, vtx_data_size);
 
-    mPosStream.setLayout(0, rio::VertexStream::FORMAT_32_32_32_FLOAT, offsetof(Vertex, pos));
-    mTexStream.setLayout(1, rio::VertexStream::FORMAT_32_32_FLOAT,    offsetof(Vertex, tex));
+    mPosStream   .setLayout(0, rio::VertexStream::FORMAT_32_32_32_FLOAT, offsetof(Vertex, pos));
+    mTexStream   .setLayout(1, rio::VertexStream::FORMAT_32_32_FLOAT,    offsetof(Vertex, tex));
+    mItemIDStream.setLayout(2, rio::VertexStream::FORMAT_32_UINT,        offsetof(Vertex, item_id));
 
-    mVertexArray.addAttribute(mPosStream, mVertexBuffer);
-    mVertexArray.addAttribute(mTexStream, mVertexBuffer);
+    mVertexArray.addAttribute(mPosStream,       mVertexBuffer);
+    mVertexArray.addAttribute(mTexStream,       mVertexBuffer);
+    mVertexArray.addAttribute(mItemIDStream,    mVertexBuffer);
 
     mVertexArray.process();
 }
@@ -118,7 +121,7 @@ void BgRenderer::destroy_()
     mIdxData = std::span<u32>();
 }
 
-void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile)
+void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile, ItemID item_id)
 {
     Vertex& vtx_tl = vtx_data[0];
     Vertex& vtx_bl = vtx_data[1];
@@ -155,6 +158,11 @@ void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl
 
     vtx_tl.tex.x = col * cTileSizePadXNorm + cPadXNorm;
     vtx_tl.tex.y = row * cTileSizePadYNorm + cPadYNorm;
+
+    vtx_tr.item_id = item_id;
+    vtx_br.item_id = item_id;
+    vtx_bl.item_id = item_id;
+    vtx_tl.item_id = item_id;
 }
 
 void BgRenderer::createVertexBuffer(u8 layer)
@@ -188,7 +196,8 @@ void BgRenderer::createVertexBuffer(u8 layer)
         {
             for (s32 x = 0; x < BG_MAX_UNIT_X; x++)
             {
-                u16 tile = block_unit_number_array[layer][y][x];
+                const Bg::UnitNumber& unit = block_unit_number_array[layer][y][x];
+                u16 tile = unit.value;
                 if (!tile || env != tile >> 8)
                     continue;
 
@@ -199,7 +208,8 @@ void BgRenderer::createVertexBuffer(u8 layer)
                 setUnitVertexBuffer_(
                     base_vtx_data + cVtxPerBlock * block_count,
                     rio::BaseVec3f { f32(x * 16), f32(-y * 16), z },
-                    tile
+                    tile,
+                    ItemID(ITEM_TYPE_BG_UNIT_OBJ, u32(layer) << 22 | unit.obj_index)
                 );
 
                 block_count++;
@@ -236,7 +246,7 @@ void BgRenderer::drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer)
 
     u32 index = block_start + mDynamicDrawNum[layer][env];
 
-    setUnitVertexBuffer_(base_vtx_data + cVtxPerBlock * index, tl_pos, tile);
+    setUnitVertexBuffer_(base_vtx_data + cVtxPerBlock * index, tl_pos, tile, ItemID::cInvalidItemID);
 
     mDynamicDrawNum[layer][env]++;
 
