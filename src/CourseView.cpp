@@ -672,7 +672,10 @@ void CourseView::update()
     }
     mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
 
+    if (mIsCursorPress)
     {
+        mSelectedItems.clear();
+
         s32 width = mpItemIDTexture->getWidth();
         s32 height = mpItemIDTexture->getHeight();
         s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
@@ -683,34 +686,9 @@ void CourseView::update()
         under_mouse = __builtin_bswap32(under_mouse);
 #endif // RIO_IS_CAFE
 
-        if (mIsCursorPress)
-            mSelectedItems.clear();
-
         ItemID id_under_mouse = under_mouse;
         if (id_under_mouse.isValid())
-        {
-            if (id_under_mouse.getType() == ITEM_TYPE_BG_UNIT_OBJ)
-            {
-                u32 obj_index = id_under_mouse.getIndex();
-                u8 layer = obj_index >> 22;
-                obj_index &= 0x3fffff;
-                const BgCourseData& obj = mpCourseDataFile->getBgData(layer)[obj_index];
-                u16 type = obj.type & 0x0fff;
-                u8 tileset = obj.type >> 12;
-                RIO_LOG("Object under mouse[%d, %d]: Tileset %u Object %u Layer %u\n", x, y, tileset, type, layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
-            }
-            else
-            {
-                RIO_LOG("Object under mouse[%d, %d]: Unknown\n", x, y);
-            }
-
-            if (mIsCursorPress)
-                mSelectedItems.push_back(id_under_mouse);
-        }
-        else
-        {
-            RIO_LOG("Object under mouse[%d, %d]: None\n", x, y);
-        }
+            mSelectedItems.push_back(id_under_mouse);
     }
 
     const rio::BaseVec2f& camera_pos = mCamera.pos();
