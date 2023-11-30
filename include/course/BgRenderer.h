@@ -117,8 +117,6 @@ private:
     rio::TextureSampler2D   mTextureSampler;
     u32                     mTexLocation;
 
-    bool                    mSelectionClear;
-
     u32                     mDrawNum[CD_FILE_LAYER_MAX_NUM][CD_FILE_ENV_MAX_NUM];
     u32                     mDynamicDrawNum[CD_FILE_LAYER_MAX_NUM][CD_FILE_ENV_MAX_NUM];
 };

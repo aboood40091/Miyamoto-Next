@@ -40,7 +40,6 @@ BgRenderer::BgRenderer()
     , mpCamera(nullptr)
     , mpProjection(nullptr)
     , mTextureSampler()
-    , mSelectionClear(true)
 {
     mTextureSampler.setMinFilter(rio::TEX_XY_FILTER_MODE_LINEAR);
     mTextureSampler.setMipFilter(rio::TEX_MIP_FILTER_MODE_NONE);
@@ -103,7 +102,6 @@ void BgRenderer::initialize_()
 
     mSelectionVertexBuffer.setStride(sizeof(s32));
     mSelectionVertexBuffer.setDataInvalidate(sel_data, sel_data_size);
-    mSelectionClear = true;
 
     mPosStream   .setLayout(0, rio::VertexStream::FORMAT_32_32_32_FLOAT, offsetof(Vertex, pos));
     mTexStream   .setLayout(1, rio::VertexStream::FORMAT_32_32_FLOAT,    offsetof(Vertex, tex));
@@ -278,12 +276,8 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
 {
     if (selected_items.empty())
     {
-        if (!mSelectionClear)
-        {
-            rio::MemUtil::set(mSelData.data(), 0, mSelData.size());
-            mSelectionVertexBuffer.setSubDataInvalidate(mSelData.data(), 0, mSelData.size());
-            mSelectionClear = true;
-        }
+        rio::MemUtil::set(mSelData.data(), 0, mSelData.size());
+        mSelectionVertexBuffer.setSubDataInvalidate(mSelData.data(), 0, mSelData.size());
         return;
     }
 
@@ -328,7 +322,6 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
         u32 vtx_count = cVtxPerBlock * num;
 
         mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
-        mSelectionClear = false;
     }
 }
 
