@@ -49,9 +49,7 @@ private:
 
     void drawCourseViewUI_();
     void drawPaletteUI_();
-#if RIO_IS_WIN
     void drawMetricsUI_();
-#endif // RIO_IS_WIN
 
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
@@ -89,10 +87,9 @@ private:
     RenderMgr       mRenderMgrBgPrepare;
     s32             mCurrentFile;
 
-#if RIO_IS_WIN
     s32                     mMetricsLocation;
-#elif RIO_IS_CAFE
+#if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;
-#endif
+#endif // RIO_IS_CAFE
 };
