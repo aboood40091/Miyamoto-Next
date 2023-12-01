@@ -237,7 +237,7 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     mpDepthTexture = new rio::Texture2D(rio::DEPTH_TEXTURE_FORMAT_R32_FLOAT, width, height, 1);
 
     {
-        u32 size = width * height * 4;
+        u32 size = width * height * sizeof(u32);
         mpItemIDReadBuffer = new u8[size];
 #if RIO_IS_WIN
         RIO_ASSERT(size == mpItemIDTexture->getNativeTexture().surface.imageSize);
@@ -638,6 +638,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 #if RIO_IS_CAFE
         mIsCursorPress = false;
 #endif // RIO_IS_CAFE
+        mSelectionBox = false;
 
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
@@ -687,6 +688,7 @@ void CourseView::update()
     {
         s32 width = mpItemIDTexture->getWidth();
         s32 height = mpItemIDTexture->getHeight();
+
         s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
         s32 y = std::clamp<s32>(mCursorPos.y, 0, height - 1);
 
