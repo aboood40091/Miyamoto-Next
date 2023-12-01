@@ -7,8 +7,8 @@ class ObjDokanActorRight : public ObjDokanActorBase
     MAP_ACTOR_ITEM_CREATE(ObjDokanActorRight)
 
 public:
-    ObjDokanActorRight(MapActorData& map_actor_data)
-        : ObjDokanActorBase(map_actor_data, ObjDokan::DIRECTION_RIGHT, false, map_actor_data.id == 576, 0, -16)
+    ObjDokanActorRight(MapActorData& map_actor_data, u32 index)
+        : ObjDokanActorBase(map_actor_data, index, ObjDokan::DIRECTION_RIGHT, false, map_actor_data.id == 576, 0, -16)
     {
     }
 };

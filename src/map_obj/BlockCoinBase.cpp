@@ -13,6 +13,6 @@ void BlockCoinBase::onDataChange(DataChangeFlag flag)
 void BlockCoinBase::scheduleDraw()
 {
     BgRenderer::instance()->drawUnit(
-        mPosition, getUnitID_(), mMapActorData.layer
+        mItemID, mPosition, getUnitID_(), mMapActorData.layer
     );
 }

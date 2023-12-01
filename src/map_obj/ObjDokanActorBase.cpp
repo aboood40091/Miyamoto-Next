@@ -1,7 +1,7 @@
 #include <map_obj/ObjDokanActorBase.h>
 
-ObjDokanActorBase::ObjDokanActorBase(MapActorData& map_actor_data, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y)
-    : MapActorItem(map_actor_data)
+ObjDokanActorBase::ObjDokanActorBase(MapActorData& map_actor_data, u32 index, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y)
+    : MapActorItem(map_actor_data, index)
     , mObjDokan(dir)
     , cCB(cb)
     , cGroup(group)

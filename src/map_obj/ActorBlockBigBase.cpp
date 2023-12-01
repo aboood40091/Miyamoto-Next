@@ -82,21 +82,25 @@ void ActorBlockBigBase::onDataChange(DataChangeFlag flag)
 void ActorBlockBigBase::scheduleDraw()
 {
     BgRenderer::instance()->drawUnit(
+        mItemID,
         mPosition,
         cUnitID,
         mMapActorData.layer
     );
     BgRenderer::instance()->drawUnit(
+        mItemID,
         { mPosition.x + 16, mPosition.y, mPosition.z },
         UnitID(s32(cUnitID) + 1),
         mMapActorData.layer
     );
     BgRenderer::instance()->drawUnit(
+        mItemID,
         { mPosition.x, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16),
         mMapActorData.layer
     );
     BgRenderer::instance()->drawUnit(
+        mItemID,
         { mPosition.x + 16, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16 + 1),
         mMapActorData.layer

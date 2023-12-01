@@ -11,8 +11,8 @@ static const std::string cResName[2] = {
     "kakibo"
 };
 
-Kuribo::Kuribo(MapActorData& map_actor_data)
-    : MapActorItem(map_actor_data)
+Kuribo::Kuribo(MapActorData& map_actor_data, u32 index)
+    : MapActorItem(map_actor_data, index)
     , cIsKakibo(map_actor_data.id == 595)
     , mpModel(nullptr)
     , mIsLayer2(false)

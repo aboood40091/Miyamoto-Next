@@ -8,8 +8,8 @@ class ActorBlockRenga : public BlockCoinBase
     MAP_ACTOR_ITEM_CREATE(ActorBlockRenga)
 
 public:
-    ActorBlockRenga(MapActorData& map_actor_data)
-        : BlockCoinBase(map_actor_data)
+    ActorBlockRenga(MapActorData& map_actor_data, u32 index)
+        : BlockCoinBase(map_actor_data, index)
     {
         updatePositionZ_();
         updateType_();

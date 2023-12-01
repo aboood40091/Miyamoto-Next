@@ -1,6 +1,7 @@
 #pragma once
 
 #include <course/CourseDataFile.h>
+#include <item/ItemID.h>
 
 #include <gfx/lyr/rio_Drawable.h>
 
@@ -28,7 +29,7 @@ public:
     }
 
 public:
-    MapActorItem(MapActorData& map_actor_data);
+    MapActorItem(MapActorData& map_actor_data, u32 index);
     virtual ~MapActorItem() {}
 
     MapActorItem(const MapActorItem&) = delete;
@@ -61,12 +62,13 @@ protected:
     }
 
 protected:
-    MapActorData& mMapActorData;
+    MapActorData&   mMapActorData;
+    ItemID          mItemID;
 };
 
-#define MAP_ACTOR_ITEM_CREATE(CLASS)                                                \
-    public:                                                                         \
-        static std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data)   \
-        {                                                                           \
-            return std::make_unique<CLASS>(map_actor_data);                         \
+#define MAP_ACTOR_ITEM_CREATE(CLASS)                                                            \
+    public:                                                                                     \
+        static std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data, u32 index)    \
+        {                                                                                       \
+            return std::make_unique<CLASS>(map_actor_data, index);                              \
         }

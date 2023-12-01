@@ -11,7 +11,7 @@ class CollectionCoin : public MapActorItem
     MAP_ACTOR_ITEM_CREATE(CollectionCoin)
 
 public:
-    CollectionCoin(MapActorData& map_actor_data);
+    CollectionCoin(MapActorData& map_actor_data, u32 index);
     virtual ~CollectionCoin();
 
     void onDataChange(DataChangeFlag flag) override;

@@ -8,8 +8,8 @@ class ActorBlockHatena : public BlockCoinBase
     MAP_ACTOR_ITEM_CREATE(ActorBlockHatena)
 
 public:
-    ActorBlockHatena(MapActorData& map_actor_data)
-        : BlockCoinBase(map_actor_data)
+    ActorBlockHatena(MapActorData& map_actor_data, u32 index)
+        : BlockCoinBase(map_actor_data, index)
     {
         updatePositionZ_();
         updateType_();

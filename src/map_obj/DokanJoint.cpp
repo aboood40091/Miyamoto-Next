@@ -8,8 +8,8 @@
 
 static const std::string cResName = "obj_dokan_joint";
 
-DokanJoint::DokanJoint(MapActorData& map_actor_data)
-    : MapActorItem(map_actor_data)
+DokanJoint::DokanJoint(MapActorData& map_actor_data, u32 index)
+    : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {
     static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".szs";

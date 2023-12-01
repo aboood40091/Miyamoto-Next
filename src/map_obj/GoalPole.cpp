@@ -23,8 +23,8 @@ static inline void SetFrame(VisibilityAnimation* vis_anim, const ModelResource* 
     vis_anim->getFrameCtrl().set(FrameCtrl::cMode_NoRepeat, 0.0f, frame);
 }
 
-GoalPole::GoalPole(MapActorData& map_actor_data)
-    : MapActorItem(map_actor_data)
+GoalPole::GoalPole(MapActorData& map_actor_data, u32 index)
+    : MapActorItem(map_actor_data, index)
     , mpResName(nullptr)
     , mpModelResource(nullptr)
     , mpBaseModel(nullptr)

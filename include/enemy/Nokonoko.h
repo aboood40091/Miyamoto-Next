@@ -12,7 +12,7 @@ class Nokonoko : public MapActorItem
     MAP_ACTOR_ITEM_CREATE(Nokonoko)
 
 public:
-    Nokonoko(MapActorData& map_actor_data);
+    Nokonoko(MapActorData& map_actor_data, u32 index);
     virtual ~Nokonoko();
 
     void onDataChange(DataChangeFlag flag) override;

@@ -454,8 +454,12 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     Bg::instance()->processBgCourseData(*mpCourseDataFile);
     BgRenderer::instance()->createVertexBuffer();
 
-    for (MapActorData& map_actor_data : mpCourseDataFile->getMapActorData())
-        mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(map_actor_data));
+    {
+        std::vector<MapActorData>& map_actors = mpCourseDataFile->getMapActorData();
+        size_t map_actor_num = map_actors.size();
+        for (u32 i = 0; i < map_actor_num; i++)
+            mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(map_actors[i], i));
+    }
 
     for (NextGoto& next_goto : mpCourseDataFile->getNextGoto())
         mNextGotoItem.emplace_back(next_goto);

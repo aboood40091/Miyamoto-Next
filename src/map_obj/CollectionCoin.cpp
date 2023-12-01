@@ -9,8 +9,8 @@
 
 static const std::string cResName = "star_coin";
 
-CollectionCoin::CollectionCoin(MapActorData& map_actor_data)
-    : MapActorItem(map_actor_data)
+CollectionCoin::CollectionCoin(MapActorData& map_actor_data, u32 index)
+    : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {
     static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".szs";

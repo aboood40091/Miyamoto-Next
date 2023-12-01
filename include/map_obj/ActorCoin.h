@@ -7,8 +7,8 @@ class ActorCoin : public BlockCoinBase
     MAP_ACTOR_ITEM_CREATE(ActorCoin)
 
 public:
-    ActorCoin(MapActorData& map_actor_data)
-        : BlockCoinBase(map_actor_data)
+    ActorCoin(MapActorData& map_actor_data, u32 index)
+        : BlockCoinBase(map_actor_data, index)
     {
         updatePositionZ_();
     }

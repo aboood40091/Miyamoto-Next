@@ -7,8 +7,8 @@ class ActorBlockBigRenga : public ActorBlockBigBase
     MAP_ACTOR_ITEM_CREATE(ActorBlockBigRenga)
 
 public:
-    ActorBlockBigRenga(MapActorData& map_actor_data)
-        : ActorBlockBigBase(map_actor_data, UnitID(112), true)
+    ActorBlockBigRenga(MapActorData& map_actor_data, u32 index)
+        : ActorBlockBigBase(map_actor_data, index, UnitID(112), true)
     {
     }
 };

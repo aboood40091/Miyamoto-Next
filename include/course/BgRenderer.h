@@ -55,7 +55,7 @@ public:
         createVertexBuffer(LAYER_2);
     }
 
-    void drawUnit(const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
+    void drawUnit(ItemID item_id, const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer);
 
     void calcSelectionVertexBuffer(const std::vector<ItemID>& selected_items);
 
