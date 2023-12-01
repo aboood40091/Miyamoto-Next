@@ -239,6 +239,7 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     {
         u32 size = width * height * sizeof(u32);
         mpItemIDReadBuffer = new u8[size];
+        rio::MemUtil::set(mpItemIDReadBuffer, 0xFF, size);
 #if RIO_IS_WIN
         RIO_ASSERT(size == mpItemIDTexture->getNativeTexture().surface.imageSize);
         mpItemIDClearBuffer = new u8[size];
