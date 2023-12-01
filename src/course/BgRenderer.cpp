@@ -292,25 +292,55 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
         for (s32 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
         {
             u32 draw_num = mDrawNum[layer][env];
-            if (draw_num == 0)
-                continue;
-
-            for (u32 j = 0; j < draw_num; j++)
+            if (draw_num)
             {
-                const Vertex* const vtx_data = base_vtx_data + cVtxPerBlock * index;
-                s32* const sel_data = base_sel_data + cVtxPerBlock * index;
+                for (u32 j = 0; j < draw_num; j++)
+                {
+                    const Vertex* const vtx_data = base_vtx_data + cVtxPerBlock * index;
+                    s32* const sel_data = base_sel_data + cVtxPerBlock * index;
 
-                const ItemID& item_id = vtx_data->item_id;
-                RIO_ASSERT(item_id.isValid());
+                    const ItemID& item_id = vtx_data->item_id;
+                    RIO_ASSERT(item_id.isValid());
 
-                bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
+                    bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
 
-                sel_data[0] = is_selected;
-                sel_data[1] = is_selected;
-                sel_data[2] = is_selected;
-                sel_data[3] = is_selected;
+                    sel_data[0] = is_selected;
+                    sel_data[1] = is_selected;
+                    sel_data[2] = is_selected;
+                    sel_data[3] = is_selected;
 
-                index++;
+                    index++;
+                }
+            }
+
+            u32 dynamic_start = BG_MAX_UNIT_X * BG_MAX_UNIT_Y * CD_FILE_LAYER_MAX_NUM
+                              + cDynamicMaxNum * env * layer;
+
+            u32 dynamic_draw_num = mDynamicDrawNum[layer][env];
+            if (dynamic_draw_num)
+            {
+                for (u32 j = 0; j < dynamic_draw_num; j++)
+                {
+                    u32 dynamic_index = dynamic_start + j;
+
+                    const Vertex* const vtx_data = base_vtx_data + cVtxPerBlock * dynamic_index;
+                    s32* const sel_data = base_sel_data + cVtxPerBlock * dynamic_index;
+
+                    const ItemID& item_id = vtx_data->item_id;
+                    RIO_ASSERT(item_id.isValid());
+
+                    bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
+
+                    sel_data[0] = is_selected;
+                    sel_data[1] = is_selected;
+                    sel_data[2] = is_selected;
+                    sel_data[3] = is_selected;
+                }
+
+                u32 vtx_start = cVtxPerBlock * dynamic_start;
+                u32 vtx_count = cVtxPerBlock * dynamic_draw_num;
+
+                mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
             }
         }
 
@@ -322,42 +352,6 @@ void BgRenderer::calcSelectionVertexBuffer(const std::vector<ItemID>& selected_i
         u32 vtx_count = cVtxPerBlock * num;
 
         mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
-    }
-
-    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
-    {
-        for (s32 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
-        {
-            u32 start = BG_MAX_UNIT_X * BG_MAX_UNIT_Y * CD_FILE_LAYER_MAX_NUM
-                        + cDynamicMaxNum * env * layer;
-
-            u32 draw_num = mDynamicDrawNum[layer][env];
-            if (draw_num == 0)
-                continue;
-
-            for (u32 j = 0; j < draw_num; j++)
-            {
-                u32 index = start + j;
-
-                const Vertex* const vtx_data = base_vtx_data + cVtxPerBlock * index;
-                s32* const sel_data = base_sel_data + cVtxPerBlock * index;
-
-                const ItemID& item_id = vtx_data->item_id;
-                RIO_ASSERT(item_id.isValid());
-
-                bool is_selected = std::find(selected_items.begin(), selected_items.end(), item_id) != selected_items.end();
-
-                sel_data[0] = is_selected;
-                sel_data[1] = is_selected;
-                sel_data[2] = is_selected;
-                sel_data[3] = is_selected;
-            }
-
-            u32 vtx_start = cVtxPerBlock * start;
-            u32 vtx_count = cVtxPerBlock * draw_num;
-
-            mSelectionVertexBuffer.setSubDataInvalidate(base_sel_data + vtx_start, sizeof(s32) * vtx_start, sizeof(s32) * vtx_count);
-        }
     }
 }
 
