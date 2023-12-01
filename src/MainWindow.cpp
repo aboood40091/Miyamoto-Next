@@ -534,6 +534,147 @@ void MainWindow::drawCourseViewUI_()
 
 void MainWindow::drawPaletteUI_()
 {
+    if (ImGui::Begin("Comments"))
+    {
+        ImGui::Text("Placeholder...");
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Stamps"))
+    {
+        ImGui::Text("Placeholder...");
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Events"))
+    {
+        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
+        {
+            static bool events[64] = { false };
+
+            for (int n = 0; n < IM_ARRAYSIZE(events); n++)
+            {
+                char buf[32];
+                sprintf(buf, "Event %d", n + 1);
+                ImGui::Checkbox(buf, &events[n]);
+            }
+            ImGui::EndListBox();
+        }
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Nabbit Path"))
+    {
+        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
+        {
+            static const char* items[] = { "Nabbit Path, Node 0", "Nabbit Path, Node 1", "Nabbit Path, Node 2" };
+            static int selected = -1;
+
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                if (ImGui::Selectable(items[n], selected == n))
+                    selected = n;
+            }
+            ImGui::EndListBox();
+        }
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Paths"))
+    {
+        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
+        {
+            static const char* items[] = { "Path 1, Node 0", "Path 1, Node 1", "Path 1, Node 2" };
+            static int selected = -1;
+
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                if (ImGui::Selectable(items[n], selected == n))
+                    selected = n;
+            }
+            ImGui::EndListBox();
+        }
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Locations"))
+    {
+        if (ImGui::BeginListBox("##LocationList", ImVec2(-1, -1)))
+        {
+            static const char* items[] = { "0: Location 0 (at 234, 2384)", "1: Location 9 (at 84, 865)" };
+            static int selected = -1;
+
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                if (ImGui::Selectable(items[n], selected == n))
+                    selected = n;
+            }
+            ImGui::EndListBox();
+        }
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Entrances"))
+    {
+        if (ImGui::BeginListBox("##EntranceList", ImVec2(-1, -1)))
+        {
+            static const char* items[] = { "0: (0) Normal (enterable)", "1: (1) Pipe Facing Up (enterable)", "2: (2) Pipe Facing Up (cannot be entered)", "3: (3) Checkpoint", "4: (4) Normal (enterable)", "5: (5) Falling (Fast) (enterable)" };
+            static int selected = -1;
+
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                if (ImGui::Selectable(items[n], selected == n))
+                    selected = n;
+            }
+            ImGui::EndListBox();
+        }
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("Actors"))
+    {
+        if (ImGui::BeginTabBar("ActorTabBar"))
+        {
+            if (ImGui::BeginTabItem("Add"))
+            {
+                static ImGuiTextFilter filter;
+                filter.Draw("##ActorSearch", -1);
+
+                if (ImGui::BeginListBox("##ActorSearchList", ImVec2(-1, -1)))
+                {
+                    static const char* items[] = { "0: Goomba", "1: Koopa", "2: Flag Pole", "3: Checkpoint", "4: Koopa Paratroopa", "5: Bowser" };
+                    static int selected = -1;
+
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        if (filter.PassFilter(items[n]) && ImGui::Selectable(items[n], selected == n))
+                            selected = n;
+                    }
+                    ImGui::EndListBox();
+                }
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Current"))
+            {
+                if (ImGui::BeginListBox("##ActorList", ImVec2(-1, -1)))
+                {
+                    static const char* items[] = { "0: Goomba (at 3654, 365)", "1: Koopa Troopa (at 247,234)" };
+                    static int selected = -1;
+
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        if (ImGui::Selectable(items[n], selected == n))
+                            selected = n;
+                    }
+                    ImGui::EndListBox();
+                }
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+    }
+    ImGui::End();
+
     if (ImGui::Begin("Objects"))
     {
         if (ImGui::BeginTabBar("ObjectsTabBar"))
@@ -620,147 +761,6 @@ void MainWindow::drawPaletteUI_()
             }
             ImGui::EndTabBar();
         }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Actors"))
-    {
-        if (ImGui::BeginTabBar("ActorTabBar"))
-        {
-            if (ImGui::BeginTabItem("Add"))
-            {
-                static ImGuiTextFilter filter;
-                filter.Draw("##ActorSearch", -1);
-
-                if (ImGui::BeginListBox("##ActorSearchList", ImVec2(-1, -1)))
-                {
-                    static const char* items[] = { "0: Goomba", "1: Koopa", "2: Flag Pole", "3: Checkpoint", "4: Koopa Paratroopa", "5: Bowser" };
-                    static int selected = -1;
-
-                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-                    {
-                        if (filter.PassFilter(items[n]) && ImGui::Selectable(items[n], selected == n))
-                            selected = n;
-                    }
-                    ImGui::EndListBox();
-                }
-                ImGui::EndTabItem();
-            }
-            if (ImGui::BeginTabItem("Current"))
-            {
-                if (ImGui::BeginListBox("##ActorList", ImVec2(-1, -1)))
-                {
-                    static const char* items[] = { "0: Goomba (at 3654, 365)", "1: Koopa Troopa (at 247,234)" };
-                    static int selected = -1;
-
-                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-                    {
-                        if (ImGui::Selectable(items[n], selected == n))
-                            selected = n;
-                    }
-                    ImGui::EndListBox();
-                }
-                ImGui::EndTabItem();
-            }
-            ImGui::EndTabBar();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Entrances"))
-    {
-        if (ImGui::BeginListBox("##EntranceList", ImVec2(-1, -1)))
-        {
-            static const char* items[] = { "0: (0) Normal (enterable)", "1: (1) Pipe Facing Up (enterable)", "2: (2) Pipe Facing Up (cannot be entered)", "3: (3) Checkpoint", "4: (4) Normal (enterable)", "5: (5) Falling (Fast) (enterable)" };
-            static int selected = -1;
-
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
-            }
-            ImGui::EndListBox();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Locations"))
-    {
-        if (ImGui::BeginListBox("##LocationList", ImVec2(-1, -1)))
-        {
-            static const char* items[] = { "0: Location 0 (at 234, 2384)", "1: Location 9 (at 84, 865)" };
-            static int selected = -1;
-
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
-            }
-            ImGui::EndListBox();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Paths"))
-    {
-        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
-        {
-            static const char* items[] = { "Path 1, Node 0", "Path 1, Node 1", "Path 1, Node 2" };
-            static int selected = -1;
-
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
-            }
-            ImGui::EndListBox();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Nabbit Path"))
-    {
-        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
-        {
-            static const char* items[] = { "Nabbit Path, Node 0", "Nabbit Path, Node 1", "Nabbit Path, Node 2" };
-            static int selected = -1;
-
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-            {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
-            }
-            ImGui::EndListBox();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Events"))
-    {
-        if (ImGui::BeginListBox("##PathList", ImVec2(-1, -1)))
-        {
-            static bool events[64] = { false };
-
-            for (int n = 0; n < IM_ARRAYSIZE(events); n++)
-            {
-                char buf[32];
-                sprintf(buf, "Event %d", n + 1);
-                ImGui::Checkbox(buf, &events[n]);
-            }
-            ImGui::EndListBox();
-        }
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Stamps"))
-    {
-        ImGui::Text("Placeholder...");
-    }
-    ImGui::End();
-
-    if (ImGui::Begin("Comments"))
-    {
-        ImGui::Text("Placeholder...");
     }
     ImGui::End();
 }
