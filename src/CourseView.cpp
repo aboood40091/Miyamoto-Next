@@ -794,15 +794,29 @@ void CourseView::calcDistantViewScissor_()
             const rio::BaseVec2f& visible_area_min = worldToViewPos(visible_area_world_min);
             const rio::BaseVec2f& visible_area_max = worldToViewPos(visible_area_world_max);
 
-            mRenderBuffer.setScissor(visible_area_min.x, visible_area_max.y, visible_area_max.x - visible_area_min.x, visible_area_min.y - visible_area_max.y);
+            s32 scissor_min_x = std::max<s32>(visible_area_min.x, 0);
+            s32 scissor_min_y = std::max<s32>(visible_area_max.y, 0);
 
-            mDrawDV = true;
+            s32 scissor_max_x = std::min<s32>(visible_area_max.x, mRenderBuffer.getSize().x);
+            s32 scissor_max_y = std::min<s32>(visible_area_min.y, mRenderBuffer.getSize().y);
+
+            s32 scissor_w = scissor_max_x - scissor_min_x;
+            s32 scissor_h = scissor_max_y - scissor_min_y;
+
+            if (scissor_w > 0 && scissor_h > 0)
+            {
+                mRenderBuffer.setScissor(scissor_min_x, scissor_min_y, scissor_w, scissor_h);
+                mDrawDV = true;
+            }
         }
     }
 }
 
 void CourseView::gather()
 {
+    if (MainWindow::applyDistantViewScissor())
+        calcDistantViewScissor_();
+
     if (mDrawDV)
         DistantViewMgr::instance()->draw(getDistantViewLayer());
 
@@ -831,9 +845,6 @@ void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
 
 void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    if (MainWindow::applyDistantViewScissor())
-        mCourseView.calcDistantViewScissor_();
-
     mCourseView.mpColorTexture->setCompMap(0x00010203);
     mCourseView.mRenderBuffer.clear(
         rio::RenderBuffer::CLEAR_FLAG_COLOR_DEPTH,
@@ -858,14 +869,14 @@ void CourseView::DrawCallbackDV::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    if (MainWindow::applyDistantViewScissor())
-        mCourseView.mRenderBuffer.resetScissor();
-
     mCourseView.unbindRenderBuffer_();
 }
 
 void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    if (MainWindow::applyDistantViewScissor())
+        mCourseView.mRenderBuffer.resetScissor();
+
     mCourseView.mpColorTexture->setCompMap(0x00010203);
     mCourseView.bindRenderBuffer_();
 }
