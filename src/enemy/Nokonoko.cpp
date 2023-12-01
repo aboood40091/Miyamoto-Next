@@ -99,11 +99,8 @@ Nokonoko::~Nokonoko()
 {
     if (mpModelResource)
     {
-        delete mpModel->getModel();
-        delete mpModel;
-
-        delete mpShellModel->getModel();
-        delete mpShellModel;
+        BasicModel::destroy(mpModel);
+        BasicModel::destroy(mpShellModel);
 
         const std::string& res_name = cResName[cIsBig];
 

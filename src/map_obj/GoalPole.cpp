@@ -104,14 +104,9 @@ GoalPole::~GoalPole()
 {
     if (mpModelResource)
     {
-        delete mpBaseModel->getModel();
-        delete mpBaseModel;
-
-        delete mpGoalFlagModel->getModel();
-        delete mpGoalFlagModel;
-
-        delete mpTorideStdModel->getModel();
-        delete mpTorideStdModel;
+        BasicModel::destroy(mpBaseModel);
+        BasicModel::destroy(mpGoalFlagModel);
+        BasicModel::destroy(mpTorideStdModel);
 
         ModelResMgr::instance()->destroyResFile(*mpResName);
         ResMgr::instance()->destroyArchiveRes(*mpResName);

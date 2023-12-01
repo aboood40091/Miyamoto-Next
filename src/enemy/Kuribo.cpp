@@ -58,8 +58,7 @@ Kuribo::~Kuribo()
 {
     if (mpModel)
     {
-        delete mpModel->getModel();
-        delete mpModel;
+        BasicModel::destroy(mpModel);
 
         const std::string& res_name = cResName[cIsKakibo];
 

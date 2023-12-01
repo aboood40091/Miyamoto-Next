@@ -232,12 +232,10 @@ void ObjDokan::destroy()
     if (!isCreated())
         return;
 
-    delete mpModelA->getModel();
-    delete mpModelA;
+    BasicModel::destroy(mpModelA);
     mpModelA = nullptr;
 
-    delete mpModelB->getModel();
-    delete mpModelB;
+    BasicModel::destroy(mpModelB);
     mpModelB = nullptr;
 
     const std::string& res_name = cResName[mType];
