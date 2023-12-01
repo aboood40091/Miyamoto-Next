@@ -636,7 +636,11 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
     )
     {
 #if RIO_IS_CAFE
-        mIsCursorPress = false;
+        if (mIsCursorPress)
+        {
+            mIsCursorPress = false;
+            return false;
+        }
 #endif // RIO_IS_CAFE
         mSelectionBox = false;
 
