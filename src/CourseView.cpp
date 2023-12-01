@@ -685,12 +685,6 @@ void CourseView::update()
 
     if (mIsCursorPress)
     {
-        if (!mSelectedItems.empty())
-        {
-            mSelectedItems.clear();
-            mSelectionChange = true;
-        }
-
         s32 width = mpItemIDTexture->getWidth();
         s32 height = mpItemIDTexture->getHeight();
         s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
@@ -704,11 +698,21 @@ void CourseView::update()
         ItemID id_under_mouse = under_mouse;
         if (id_under_mouse.isValid())
         {
-            mSelectedItems.push_back(id_under_mouse);
-            mSelectionChange = true;
+            if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
+            {
+                mSelectedItems.clear();
+                mSelectedItems.push_back(id_under_mouse);
+                mSelectionChange = true;
+            }
         }
         else
         {
+            if (!mSelectedItems.empty())
+            {
+                mSelectedItems.clear();
+                mSelectionChange = true;
+            }
+
             mSelectionBox = true;
             mSelectionBoxP1 = mCursorPos;
         }
