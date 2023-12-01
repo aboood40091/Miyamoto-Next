@@ -125,7 +125,7 @@ public:
     }
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);
-    bool processMouseInput();
+    bool processMouseInput(bool focused, bool hovered);
     void processKeyboardInput();
 
     void update();
@@ -138,6 +138,8 @@ private:
     void bindRenderBuffer_();
     void unbindRenderBuffer_();
     void clearItemIDTexture_();
+
+    void drawSelectionBox_();
 
     void calcDistantViewScissor_();
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
@@ -161,7 +163,11 @@ private:
                                 mRealBgZoom;
     rio::Vector2f               mCursorPos;
     bool                        mIsCursorPress;
+    bool                        mIsCursorRelease;
+    bool                        mSelectionBox;
     bool                        mSelectionChange;
+    rio::BaseVec2f              mSelectionBoxP1,
+                                mSelectionBoxP2;
     std::vector<ItemID>         mSelectedItems;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >

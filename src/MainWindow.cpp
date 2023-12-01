@@ -353,11 +353,7 @@ void MainWindow::processMouseInput_()
     */
 
     mpCourseView->updateCursorPos(mCourseViewPos);
-
-    if (!mCourseViewFocused || !mCourseViewHovered)
-        return;
-
-    mCourseViewCameraMoved = mpCourseView->processMouseInput();
+    mCourseViewCameraMoved = mpCourseView->processMouseInput(mCourseViewFocused, mCourseViewHovered);
 }
 
 void MainWindow::processKeyboardInput_()

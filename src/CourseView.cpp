@@ -32,6 +32,8 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
     , mIsCursorPress(false)
+    , mIsCursorRelease(false)
+    , mSelectionBox(false)
     , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
 #if RIO_IS_WIN
@@ -428,6 +430,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     mpCourseDataFile = p_cd_file;
     mpDVControlArea = nullptr;
 
+    mSelectionBox = false;
+
     setZoomTileSize(24);
     mRealBgZoom = mBgZoom;
 
@@ -607,13 +611,19 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
   //RIO_LOG("Initialized DistantViewMgr\n");
 }
 
-bool CourseView::processMouseInput()
+bool CourseView::processMouseInput(bool focused, bool hovered)
 {
     static const rio::BaseVec2f zero { 0.0f, 0.0f };
 
-    mIsCursorPress = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+    mIsCursorRelease = !ImGui::IsMouseDown(ImGuiMouseButton_Left);
+
+    if (hovered)
+    {
+        mIsCursorPress = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+    }
 
     if (
+        focused &&
 #if RIO_IS_CAFE
         rio::ControllerMgr::instance()->getMainController()->isHold(
             (1 << rio::Controller::PAD_IDX_ZL) |
@@ -675,7 +685,11 @@ void CourseView::update()
 
     if (mIsCursorPress)
     {
-        mSelectedItems.clear(); mSelectionChange = true;
+        if (!mSelectedItems.empty())
+        {
+            mSelectedItems.clear();
+            mSelectionChange = true;
+        }
 
         s32 width = mpItemIDTexture->getWidth();
         s32 height = mpItemIDTexture->getHeight();
@@ -689,7 +703,49 @@ void CourseView::update()
 
         ItemID id_under_mouse = under_mouse;
         if (id_under_mouse.isValid())
+        {
             mSelectedItems.push_back(id_under_mouse);
+            mSelectionChange = true;
+        }
+        else
+        {
+            mSelectionBox = true;
+            mSelectionBoxP1 = mCursorPos;
+        }
+    }
+    else if (mIsCursorRelease && mSelectionBox)
+    {
+        RIO_ASSERT(mSelectedItems.empty());
+
+        mSelectionBoxP2 = mCursorPos;
+        mSelectionBox = false;
+
+        s32 width = mpItemIDTexture->getWidth();
+        s32 height = mpItemIDTexture->getHeight();
+
+        s32 x1 = std::clamp<s32>(std::min(mSelectionBoxP1.x, mSelectionBoxP2.x), 0, width - 1);
+        s32 x2 = std::clamp<s32>(std::max(mSelectionBoxP1.x, mSelectionBoxP2.x), 0, width - 1);
+        s32 y1 = std::clamp<s32>(std::min(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
+        s32 y2 = std::clamp<s32>(std::max(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
+
+        std::set<ItemID> selected_items;
+        for (s32 y = y1; y <= y2; y++)
+        {
+            for (s32 x = x1; x <= x2; x++)
+            {
+                u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
+#if RIO_IS_CAFE
+                under_mouse = __builtin_bswap32(under_mouse);
+#endif // RIO_IS_CAFE
+
+                ItemID id_under_mouse = under_mouse;
+                if (id_under_mouse.isValid())
+                    selected_items.insert(id_under_mouse);
+            }
+        }
+
+        mSelectedItems.insert(mSelectedItems.end(), selected_items.begin(), selected_items.end());
+        mSelectionChange = !mSelectedItems.empty();
     }
 
     const rio::BaseVec2f& camera_pos = mCamera.pos();
@@ -843,6 +899,32 @@ void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
         DistantViewMgr::instance()->applyDepthOfField();
 }
 
+void CourseView::drawSelectionBox_()
+{
+    const rio::BaseVec2f& p1 = viewToWorldPos(mSelectionBoxP1);
+    const rio::BaseVec2f& p2 = viewToWorldPos(mCursorPos);
+
+    const rio::Vector2f min {
+        std::min(p1.x, p2.x),
+        std::min(p1.y, p2.y)
+    };
+
+    const rio::Vector2f max {
+        std::max(p1.x, p2.x),
+        std::max(p1.y, p2.y)
+    };
+
+    rio::PrimitiveRenderer::instance()->begin();
+    {
+        rio::PrimitiveRenderer::instance()->drawQuad(
+            rio::PrimitiveRenderer::QuadArg()
+                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 0.5f })
+                .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
+        );
+    }
+    rio::PrimitiveRenderer::instance()->end();
+}
+
 void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
     mCourseView.mpColorTexture->setCompMap(0x00010203);
@@ -918,14 +1000,18 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
+    rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
+    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+
+    rio::RenderStateMRT render_state;
+    render_state.setBlendEnable(TARGET_TYPE_ITEM_ID, false);
+    render_state.apply();
+
     const CourseDataFile* p_cd_file = mCourseView.mpCourseDataFile;
     if (p_cd_file != nullptr)
     {
         const CourseDataFile& cd_file = *p_cd_file;
-
-        rio::RenderStateMRT render_state;
-        render_state.setBlendEnable(TARGET_TYPE_ITEM_ID, false);
-        render_state.apply();
 
         BgRenderer& bg_renderer = *(BgRenderer::instance());
         const bool* layer_shown = mCourseView.mLayerShown;
@@ -946,10 +1032,6 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         }
         render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
         render_buffer.bind();
-
-        rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
-        rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
-        rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer != LAYER_1)
@@ -984,6 +1066,9 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawXlu();
     }
+
+    if (mCourseView.mSelectionBox)
+        mCourseView.drawSelectionBox_();
 
     mCourseView.unbindRenderBuffer_();
 }
