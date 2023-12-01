@@ -47,6 +47,7 @@ void CoinOrigin::destroySingleton()
 
 CoinOrigin::CoinOrigin()
     : mIsInitialized(false)
+    , mCoinAngle(0)
 {
 }
 
