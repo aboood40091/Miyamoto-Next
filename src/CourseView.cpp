@@ -636,13 +636,11 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 #endif // RIO_IS_CAFE
     )
     {
-#if RIO_IS_CAFE
         if (mIsCursorPress)
         {
             mIsCursorPress = false;
             return false;
         }
-#endif // RIO_IS_CAFE
         mSelectionBox = false;
 
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
