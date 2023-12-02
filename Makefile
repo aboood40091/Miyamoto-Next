@@ -47,18 +47,18 @@ SOURCES		:=	../rio/src \
 				src/ui \
 				../imgui-wiiu \
 				../imgui-wiiu/backends/wiiu \
-				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/codec \
-				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/container \
-				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/src/resource \
-				../NSMBU_Projects/ModelStuff-Win-Port/src/distant_view \
-				../NSMBU_Projects/ModelStuff-Win-Port/src/graphics \
-				../NSMBU_Projects/ModelStuff-Win-Port/src/stream \
-				../NSMBU_Projects/ModelStuff-Win-Port/src/system \
-				../NSMBU_Projects/agl-Win-Port/src/common \
-				../NSMBU_Projects/agl-Win-Port/src/detail \
-				../NSMBU_Projects/agl-Win-Port/src/g3d \
-				../NSMBU_Projects/agl-Win-Port/src/postfx \
-				../NSMBU_Projects/agl-Win-Port/src/utility \
+				../NSMBU_Projects/agl-next/lib/rio_utils/src/codec \
+				../NSMBU_Projects/agl-next/lib/rio_utils/src/container \
+				../NSMBU_Projects/agl-next/lib/rio_utils/src/resource \
+				../NSMBU_Projects/ModelStuff-next/src/distant_view \
+				../NSMBU_Projects/ModelStuff-next/src/graphics \
+				../NSMBU_Projects/ModelStuff-next/src/stream \
+				../NSMBU_Projects/ModelStuff-next/src/system \
+				../NSMBU_Projects/agl-next/src/common \
+				../NSMBU_Projects/agl-next/src/detail \
+				../NSMBU_Projects/agl-next/src/g3d \
+				../NSMBU_Projects/agl-next/src/postfx \
+				../NSMBU_Projects/agl-next/src/utility \
 				../NSMBU_Projects/NW4F-G3d-SDK_Headers-NSMBU/src/nw/g3d \
 				../NSMBU_Projects/NW4F-G3d-SDK_Headers-NSMBU/src/nw/g3d/res \
 				../NSMBU_Projects/NW4F-G3d-SDK_Headers-NSMBU/src/nw/g3d/math \
@@ -68,10 +68,10 @@ INCLUDES	:=	../rio/include \
 				include \
 				../imgui-wiiu \
 				../imgui-wiiu/backends/wiiu \
-				../NSMBU_Projects/agl-Win-Port/lib/rio_utils/include \
-				../NSMBU_Projects/ModelStuff-Win-Port/include \
+				../NSMBU_Projects/agl-next/lib/rio_utils/include \
+				../NSMBU_Projects/ModelStuff-next/include \
 				../NSMBU_Projects/CafeSDKWrappers/cafe_wut \
-				../NSMBU_Projects/agl-Win-Port/include \
+				../NSMBU_Projects/agl-next/include \
 				../NSMBU_Projects/NW4F-G3d-SDK_Headers-NSMBU/include
 
 #-------------------------------------------------------------------------------
