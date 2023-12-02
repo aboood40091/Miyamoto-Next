@@ -52,6 +52,8 @@ Kuribo::Kuribo(MapActorData& map_actor_data, u32 index)
     updatePositionZ_();
 
     setModelMtxRT_();
+
+    setModelItemID_();
 }
 
 Kuribo::~Kuribo()
@@ -65,6 +67,18 @@ Kuribo::~Kuribo()
         ModelResMgr::instance()->destroyResFile(res_name);
         ResMgr::instance()->destroyArchiveRes(res_name);
     }
+}
+
+void Kuribo::setModelItemID_()
+{
+    if (mpModel)
+        mpModel->getModel()->setItemID(mItemID);
+}
+
+void Kuribo::setModelSelection_()
+{
+    if (mpModel)
+        mpModel->getModel()->setSelection(mIsSelected);
 }
 
 namespace {

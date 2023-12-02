@@ -37,6 +37,12 @@ private:
 
     void setModelMtxRT_();
 
+    void setModelItemID_();
+    void setModelSelection_();
+
+    void onIndexChange_() override { setModelItemID_(); }
+    void onSelectionChange_() override { setModelSelection_(); }
+
 private:
     const bool      cIsKakibo;
 

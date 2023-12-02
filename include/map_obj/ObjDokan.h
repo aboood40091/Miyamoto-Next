@@ -1,5 +1,7 @@
 #pragma once
 
+#include <item/ItemID.h>
+
 #include <math/rio_MathTypes.h>
 
 class BasicModel;
@@ -51,6 +53,9 @@ public:
     {
         return mpModelResource;
     }
+
+    void setModelItemID(ItemID item_id);
+    void setModelSelection(bool is_selected);
 
     void move(const rio::BaseVec3f& position);
     void onSceneUpdate() const;

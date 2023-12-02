@@ -25,6 +25,8 @@
 
 #include <imgui.h>
 
+#include <unordered_set>
+
 CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     : mDrawCallback3D(*this)
     , mDrawCallbackDV(*this)
@@ -264,8 +266,13 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     mRenderBuffer.clear(rio::RenderBuffer::CLEAR_FLAG_DEPTH);
 }
 
-void CourseView::bindRenderBuffer_()
+void CourseView::bindRenderBuffer_(bool with_item_id)
 {
+    if (with_item_id)
+        mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
+    else
+        mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+
     mRenderBuffer.bind();
 }
 
@@ -709,18 +716,15 @@ void CourseView::update()
         {
             if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
             {
-                mSelectedItems.clear();
+                clearSelection_();
                 mSelectedItems.push_back(id_under_mouse);
-                mSelectionChange = true;
+                setItemSelection_(id_under_mouse, true);
             }
         }
         else
         {
             if (!mSelectedItems.empty())
-            {
-                mSelectedItems.clear();
-                mSelectionChange = true;
-            }
+                clearSelection_();
 
             mSelectionBox = true;
             mSelectionBoxP1 = mCursorPos;
@@ -741,7 +745,7 @@ void CourseView::update()
         s32 y1 = std::clamp<s32>(std::min(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
         s32 y2 = std::clamp<s32>(std::max(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
 
-        std::set<ItemID> selected_items;
+        std::unordered_set<u32> selected_items;
         for (s32 y = y1; y <= y2; y++)
         {
             for (s32 x = x1; x <= x2; x++)
@@ -753,7 +757,11 @@ void CourseView::update()
 
                 ItemID id_under_mouse = under_mouse;
                 if (id_under_mouse.isValid())
-                    selected_items.insert(id_under_mouse);
+                {
+                    const auto& it = selected_items.insert(id_under_mouse);
+                    if (it.second)
+                        setItemSelection_(id_under_mouse, true);
+                }
             }
         }
 
@@ -912,6 +920,32 @@ void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
         DistantViewMgr::instance()->applyDepthOfField();
 }
 
+void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
+{
+    switch (item_id.getType())
+    {
+    case ITEM_TYPE_MAP_ACTOR:
+        mMapActorItemPtr[item_id.getIndex()]->setSelection(is_selected);
+        break;
+    default:
+        break;
+    }
+}
+
+void CourseView::clearSelection_()
+{
+    for (const ItemID& item_id : mSelectedItems)
+        setItemSelection_(item_id, false);
+
+    mSelectedItems.clear();
+    mSelectionChange = true;
+}
+
+void CourseView::onSelectionChange_()
+{
+    BgRenderer::instance()->calcSelectionVertexBuffer(mSelectedItems);
+}
+
 void CourseView::drawSelectionBox_()
 {
     const rio::BaseVec2f& p1 = viewToWorldPos(mSelectionBoxP1);
@@ -931,7 +965,12 @@ void CourseView::drawSelectionBox_()
     {
         rio::PrimitiveRenderer::instance()->drawQuad(
             rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 0.5f })
+                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 0.375f })
+                .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
+        );
+        rio::PrimitiveRenderer::instance()->drawBox(
+            rio::PrimitiveRenderer::QuadArg()
+                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 1.0f })
                 .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
         );
     }
@@ -973,15 +1012,18 @@ void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::Draw
         mCourseView.mRenderBuffer.resetScissor();
 
     mCourseView.mpColorTexture->setCompMap(0x00010203);
-    mCourseView.bindRenderBuffer_();
+    mCourseView.bindRenderBuffer_(true);
 }
 
 void CourseView::DrawCallback3D::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    mCourseView.bindRenderBuffer_(true);
 }
 
 void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    mCourseView.bindRenderBuffer_(false);
+
     rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
     rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
     rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
@@ -1013,6 +1055,8 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    mCourseView.bindRenderBuffer_(false);
+
     rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
     rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
     rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
@@ -1028,35 +1072,29 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
         BgRenderer& bg_renderer = *(BgRenderer::instance());
         const bool* layer_shown = mCourseView.mLayerShown;
-        rio::RenderBuffer& render_buffer = mCourseView.mRenderBuffer;
-        rio::RenderTargetColor* p_item_id_target = &mCourseView.mItemIDTarget;
         bool& selection_change = mCourseView.mSelectionChange;
 
         if (selection_change)
         {
-            bg_renderer.calcSelectionVertexBuffer(mCourseView.mSelectedItems);
+            mCourseView.onSelectionChange_();
             selection_change = false;
         }
 
-        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(true);
         {
             bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
         }
-        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(false);
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer != LAYER_1)
                 p_item->drawXlu(draw_info);
 
-        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(true);
         {
             bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
         }
-        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(false);
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer == LAYER_1)
@@ -1068,13 +1106,11 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         for (LocationItem& item : mCourseView.mLocationItem)
             item.drawXlu();
 
-        render_buffer.setRenderTargetColor(p_item_id_target, TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(true);
         {
             bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
         }
-        render_buffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
-        render_buffer.bind();
+        mCourseView.bindRenderBuffer_(false);
 
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawXlu();

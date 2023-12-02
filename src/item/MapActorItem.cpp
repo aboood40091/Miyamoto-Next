@@ -12,6 +12,7 @@ static const rio::Color4f sColor{
 MapActorItem::MapActorItem(MapActorData& map_actor_data, u32 index)
     : mMapActorData(map_actor_data)
     , mItemID(ITEM_TYPE_MAP_ACTOR, index)
+    , mIsSelected(false)
 {
 }
 

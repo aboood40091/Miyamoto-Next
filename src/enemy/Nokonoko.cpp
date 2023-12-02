@@ -93,6 +93,8 @@ Nokonoko::Nokonoko(MapActorData& map_actor_data, u32 index)
     updatePositionZ_();
 
     setModelMtxRT_();
+
+    setModelItemID_();
 }
 
 Nokonoko::~Nokonoko()
@@ -106,6 +108,24 @@ Nokonoko::~Nokonoko()
 
         ModelResMgr::instance()->destroyResFile(res_name);
         ResMgr::instance()->destroyArchiveRes(res_name);
+    }
+}
+
+void Nokonoko::setModelItemID_()
+{
+    if (mpModelResource)
+    {
+        mpModel->getModel()->setItemID(mItemID);
+        mpShellModel->getModel()->setItemID(mItemID);
+    }
+}
+
+void Nokonoko::setModelSelection_()
+{
+    if (mpModelResource)
+    {
+        mpModel->getModel()->setSelection(mIsSelected);
+        mpShellModel->getModel()->setSelection(mIsSelected);
     }
 }
 

@@ -135,10 +135,13 @@ public:
 
 private:
     void createRenderBuffer_(s32 width, s32 height);
-    void bindRenderBuffer_();
+    void bindRenderBuffer_(bool with_item_id = false);
     void unbindRenderBuffer_();
     void clearItemIDTexture_();
 
+    void setItemSelection_(const ItemID& item_id, bool is_selected);
+    void clearSelection_();
+    void onSelectionChange_();
     void drawSelectionBox_();
 
     void calcDistantViewScissor_();

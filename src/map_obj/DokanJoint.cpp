@@ -31,6 +31,8 @@ DokanJoint::DokanJoint(MapActorData& map_actor_data, u32 index)
     updatePositionXY_();
     updatePositionZ_();
     setModelMtxRT_();
+
+    setModelItemID_();
 }
 
 DokanJoint::~DokanJoint()
@@ -42,6 +44,18 @@ DokanJoint::~DokanJoint()
         ModelResMgr::instance()->destroyResFile(cResName);
         ResMgr::instance()->destroyArchiveRes(cResName);
     }
+}
+
+void DokanJoint::setModelItemID_()
+{
+    if (mpModel)
+        mpModel->setItemID(mItemID);
+}
+
+void DokanJoint::setModelSelection_()
+{
+    if (mpModel)
+        mpModel->setSelection(mIsSelected);
 }
 
 void DokanJoint::setModelMtxRT_()

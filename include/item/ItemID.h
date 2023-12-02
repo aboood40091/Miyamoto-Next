@@ -22,9 +22,7 @@ public:
 
     ItemID(ItemType type, u32 index)
     {
-        RIO_ASSERT(type < ITEM_TYPE_MAX_NUM);
-        RIO_ASSERT(index < 0x00FFFFFF);
-        mValue = type << 24 | index;
+        set(type, index);
     }
 
     operator u32() const
@@ -54,6 +52,20 @@ public:
         return mValue & 0x00FFFFFF;
     }
 
+    void set(ItemType type, u32 index)
+    {
+        RIO_ASSERT(type < ITEM_TYPE_MAX_NUM);
+        RIO_ASSERT(index < 0x00FFFFFF);
+        mValue = type << 24 | index;
+    }
+
+    void setIndex(u32 index)
+    {
+        RIO_ASSERT(isValid());
+        mValue &= 0x00FFFFFF;
+        mValue |= index;
+    }
+
     bool isValid() const
     {
         return mValue != cInvalidItemID;
@@ -62,3 +74,4 @@ public:
 private:
     u32 mValue;
 };
+static_assert(sizeof(ItemID) == sizeof(u32));

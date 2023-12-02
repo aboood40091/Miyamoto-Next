@@ -30,6 +30,8 @@ CollectionCoin::CollectionCoin(MapActorData& map_actor_data, u32 index)
 
     updatePositionXY_();
     updatePositionZ_();
+
+    setModelItemID_();
 }
 
 CollectionCoin::~CollectionCoin()
@@ -40,6 +42,18 @@ CollectionCoin::~CollectionCoin()
         ModelResMgr::instance()->destroyResFile(cResName);
         ResMgr::instance()->destroyArchiveRes(cResName);
     }
+}
+
+void CollectionCoin::setModelItemID_()
+{
+    if (mpModel)
+        mpModel->setItemID(mItemID);
+}
+
+void CollectionCoin::setModelSelection_()
+{
+    if (mpModel)
+        mpModel->setSelection(mIsSelected);
 }
 
 void CollectionCoin::onDataChange(DataChangeFlag flag)

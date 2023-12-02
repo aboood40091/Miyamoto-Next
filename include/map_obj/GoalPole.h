@@ -34,6 +34,12 @@ private:
 
     void updateFrame_();
 
+    void setModelItemID_();
+    void setModelSelection_();
+
+    void onIndexChange_() override { setModelItemID_(); }
+    void onSelectionChange_() override { setModelSelection_(); }
+
 private:
     const std::string*      mpResName;
 

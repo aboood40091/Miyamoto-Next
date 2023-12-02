@@ -113,6 +113,26 @@ GoalPole::~GoalPole()
     }
 }
 
+void GoalPole::setModelItemID_()
+{
+    if (mpModelResource)
+    {
+        mpBaseModel->getModel()->setItemID(mItemID);
+        mpGoalFlagModel->getModel()->setItemID(mItemID);
+        mpTorideStdModel->getModel()->setItemID(mItemID);
+    }
+}
+
+void GoalPole::setModelSelection_()
+{
+    if (mpModelResource)
+    {
+        mpBaseModel->getModel()->setSelection(mIsSelected);
+        mpGoalFlagModel->getModel()->setSelection(mIsSelected);
+        mpTorideStdModel->getModel()->setSelection(mIsSelected);
+    }
+}
+
 namespace {
 
 #pragma GCC diagnostic push

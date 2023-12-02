@@ -12,6 +12,18 @@ ObjDokanActorBase::ObjDokanActorBase(MapActorData& map_actor_data, u32 index, Ob
 
     if (updateParam_())
         mObjDokan.move(mPosition);
+
+    setModelItemID_();
+}
+
+void ObjDokanActorBase::setModelItemID_()
+{
+    mObjDokan.setModelItemID(mItemID);
+}
+
+void ObjDokanActorBase::setModelSelection_()
+{
+    mObjDokan.setModelSelection(mIsSelected);
 }
 
 bool ObjDokanActorBase::updateParam_()

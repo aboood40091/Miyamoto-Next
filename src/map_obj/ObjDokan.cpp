@@ -227,6 +227,24 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     return true;
 }
 
+void ObjDokan::setModelItemID(ItemID item_id)
+{
+    if (!isCreated())
+        return;
+
+    mpModelA->getModel()->setItemID(item_id);
+    mpModelB->getModel()->setItemID(item_id);
+}
+
+void ObjDokan::setModelSelection(bool is_selected)
+{
+    if (!isCreated())
+        return;
+
+    mpModelA->getModel()->setSelection(is_selected);
+    mpModelB->getModel()->setSelection(is_selected);
+}
+
 void ObjDokan::destroy()
 {
     if (!isCreated())
