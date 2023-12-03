@@ -5,6 +5,7 @@
 #include <course/BgRenderer.h>
 #include <distant_view/DistantViewMgr.h>
 #include <graphics/LayerID.h>
+#include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
 #include <item/AreaItem.h>
 #include <item/LocationItem.h>
@@ -13,7 +14,6 @@
 
 #include <container/SafeArray.h>
 #include <controller/rio_ControllerMgr.h>
-#include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
 #include <gfx/lyr/rio_Renderer.h>
 #include <gpu/rio_RenderState.h>
@@ -462,17 +462,25 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     BgRenderer::instance()->createVertexBuffer();
 
     {
-        std::vector<MapActorData>& map_actors = mpCourseDataFile->getMapActorData();
-        size_t map_actor_num = map_actors.size();
-        for (u32 i = 0; i < map_actor_num; i++)
-            mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(map_actors[i], i));
+        std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+        size_t num = vec.size();
+        for (u32 i = 0; i < num; i++)
+            mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(vec[i], i));
     }
 
-    for (NextGoto& next_goto : mpCourseDataFile->getNextGoto())
-        mNextGotoItem.emplace_back(next_goto);
+    {
+        std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+        size_t num = vec.size();
+        for (u32 i = 0; i < num; i++)
+            mNextGotoItem.emplace_back(vec[i], i);
+    }
 
-    for (Location& location : mpCourseDataFile->getLocation())
-        mLocationItem.emplace_back(location);
+    {
+        std::vector<Location>& vec = mpCourseDataFile->getLocation();
+        size_t num = vec.size();
+        for (u32 i = 0; i < num; i++)
+            mLocationItem.emplace_back(vec[i], i);
+    }
 
     for (AreaData& area : mpCourseDataFile->getAreaData())
         mAreaItem.emplace_back(area);
@@ -927,6 +935,12 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
     case ITEM_TYPE_MAP_ACTOR:
         mMapActorItemPtr[item_id.getIndex()]->setSelection(is_selected);
         break;
+    case ITEM_TYPE_NEXT_GOTO:
+        mNextGotoItem[item_id.getIndex()].setSelection(is_selected);
+        break;
+    case ITEM_TYPE_LOCATION:
+        mLocationItem[item_id.getIndex()].setSelection(is_selected);
+        break;
     default:
         break;
     }
@@ -961,20 +975,14 @@ void CourseView::drawSelectionBox_()
         std::max(p1.y, p2.y)
     };
 
-    rio::PrimitiveRenderer::instance()->begin();
-    {
-        rio::PrimitiveRenderer::instance()->drawQuad(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 0.375f })
-                .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
-        );
-        rio::PrimitiveRenderer::instance()->drawBox(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f{ 0.25f, 0.25f, 1.0f, 1.0f })
-                .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
-        );
-    }
-    rio::PrimitiveRenderer::instance()->end();
+    QuadRenderer::instance()->drawQuad(
+        QuadRenderer::Arg(rio::Color4f{ 0.25f, 0.25f, 1.0f, 0.375f })
+            .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
+    );
+    QuadRenderer::instance()->drawBox(
+        QuadRenderer::Arg(rio::Color4f{ 0.25f, 0.25f, 1.0f, 1.0f })
+            .setCornerAndSize({ min.x, min.y, -mProjection.getNear() + 10000.0f }, max - min)
+    );
 }
 
 void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -990,7 +998,7 @@ void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::Draw
         }
     );
     mCourseView.clearItemIDTexture_();
-    mCourseView.bindRenderBuffer_();
+    mCourseView.bindRenderBuffer_(false);
 }
 
 void CourseView::DrawCallbackDV::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -1017,16 +1025,11 @@ void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::Draw
 
 void CourseView::DrawCallback3D::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.bindRenderBuffer_(true);
 }
 
 void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.bindRenderBuffer_(false);
-
-    rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
-    rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
-    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+    QuadRenderer::instance()->setViewProjMtx(mCourseView.mCamera, mCourseView.mProjection);
 
     rio::RenderState render_state;
     render_state.setBlendEnable(false);
@@ -1055,11 +1058,7 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.bindRenderBuffer_(false);
-
-    rio::PrimitiveRenderer::instance()->setCamera(mCourseView.mCamera);
-    rio::PrimitiveRenderer::instance()->setProjection(mCourseView.mProjection);
-    rio::PrimitiveRenderer::instance()->setModelMatrix(rio::Matrix34f::ident);
+    QuadRenderer::instance()->setViewProjMtx(mCourseView.mCamera, mCourseView.mProjection);
 
     rio::RenderStateMRT render_state;
     render_state.setBlendEnable(TARGET_TYPE_ITEM_ID, false);
@@ -1080,21 +1079,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
             selection_change = false;
         }
 
-        mCourseView.bindRenderBuffer_(true);
-        {
-            bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
-        }
-        mCourseView.bindRenderBuffer_(false);
+        bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer != LAYER_1)
                 p_item->drawXlu(draw_info);
 
-        mCourseView.bindRenderBuffer_(true);
-        {
-            bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
-        }
-        mCourseView.bindRenderBuffer_(false);
+        bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
 
         for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
             if (p_item->getMapActorData().layer == LAYER_1)
@@ -1106,15 +1097,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         for (LocationItem& item : mCourseView.mLocationItem)
             item.drawXlu();
 
-        mCourseView.bindRenderBuffer_(true);
-        {
-            bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
-        }
-        mCourseView.bindRenderBuffer_(false);
+        bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
 
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawXlu();
     }
+
+    mCourseView.bindRenderBuffer_(false);
 
     if (mCourseView.mSelectionBox)
         mCourseView.drawSelectionBox_();

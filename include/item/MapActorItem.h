@@ -1,13 +1,13 @@
 #pragma once
 
 #include <course/CourseDataFile.h>
-#include <item/ItemID.h>
+#include <item/ItemBase.h>
 
 #include <gfx/lyr/rio_Drawable.h>
 
 #include <memory>
 
-class MapActorItem
+class MapActorItem : public ItemBase
 {
 public:
     enum DataChangeFlag
@@ -40,18 +40,6 @@ public:
     MapActorData& getMapActorData() { return mMapActorData; }
     const MapActorData& getMapActorData() const { return mMapActorData; }
 
-    void setIndex(u32 index)
-    {
-        mItemID.setIndex(index);
-        onIndexChange_();
-    }
-
-    virtual void setSelection(bool is_selected)
-    {
-        mIsSelected = is_selected;
-        onSelectionChange_();
-    }
-
     virtual void onDataChange(DataChangeFlag flag)
     {
     }
@@ -73,13 +61,8 @@ protected:
         return true;
     }
 
-    virtual void onIndexChange_() { }
-    virtual void onSelectionChange_() { }
-
 protected:
     MapActorData&   mMapActorData;
-    ItemID          mItemID;
-    bool            mIsSelected;
 };
 
 #define MAP_ACTOR_ITEM_CREATE(CLASS)                                                            \

@@ -7,6 +7,7 @@
 #include <item/MapActorItem.h>
 #include <graphics/LayerID.h>
 #include <graphics/ModelResMgr.h>
+#include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
 #include <resource/ResMgr.h>
 #include <graphics/ShaderHolder.h>
@@ -85,6 +86,8 @@ void MainWindow::prepare_()
     GX2InitSampler(&mGX2Sampler, GX2_TEX_CLAMP_MODE_CLAMP, GX2_TEX_XY_FILTER_MODE_POINT);
     mImGuiGX2Texture.Sampler = &mGX2Sampler;
 #endif // RIO_IS_CAFE
+
+    QuadRenderer::createSingleton();
 
     mLayerGather.it = rio::lyr::Renderer::instance()->addLayer("Gather", LAYER_ID_GATHER);
     mLayerGather.ptr = rio::lyr::Layer::peelIterator(mLayerGather.it);
@@ -310,6 +313,8 @@ void MainWindow::exit_()
         rio::lyr::Renderer::instance()->removeLayer(mLayerBgPrepare.it);
         mLayerBgPrepare.ptr = nullptr;
     }
+
+    QuadRenderer::destroySingleton();
 
     ImGuiUtil::shutdown();
 

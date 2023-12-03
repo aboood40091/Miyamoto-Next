@@ -1,8 +1,6 @@
 #include <course/BgTexMgr.h>
+#include <graphics/QuadRenderer.h>
 #include <map_obj/ActorBlockRenga.h>
-
-#include <gfx/lyr/rio_Layer.h>
-#include <utility/aglDevTools.h>
 
 void ActorBlockRenga::updateType_()
 {
@@ -93,27 +91,16 @@ void ActorBlockRenga::drawXlu(const rio::lyr::DrawInfo& draw_info)
     if (mItemType == BgTexMgr::ITEM_MAX)
         return;
 
-    agl::TextureSampler sampler(BgTexMgr::instance()->getItemsTexture());
+    const rio::Texture2D& texture = BgTexMgr::instance()->getItemsTexture();
 
-    rio::Matrix34f model_mtx;
-    model_mtx.makeST(
-        { 16.0f, 16.0f, 1.0f },
-        { mPosition.x + 8, mPosition.y - 8, mPosition.z }
-    );
-
-    rio::Matrix34f view_mtx;
-    draw_info.parent_layer.camera()->getMatrix(&view_mtx);
-
-    rio::Matrix34f mv_mtx;
-    mv_mtx.setMul(view_mtx, model_mtx);
-
-    const rio::Matrix44f& proj_mtx = static_cast<const rio::Matrix44f&>(draw_info.parent_layer.projection()->getMatrix());;
-
-    agl::utl::DevTools::drawTextureTexCoord(
-        sampler, mv_mtx, proj_mtx,
+    QuadRenderer::instance()->drawQuad(
+        QuadRenderer::TextureArg(&texture)
+            .setItemID(mItemID)
+            .setSelection(mIsSelected)
+            .setCenter({ mPosition.x + 8, mPosition.y - 8, mPosition.z })
+            .setSize({ 16.0f, 16.0f }),
         { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
         0.0f,
-        { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f },
-        agl::cShaderMode_Invalid
+        { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f }
     );
 }

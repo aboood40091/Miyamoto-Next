@@ -141,7 +141,7 @@ public:
 
 private:
     void createRenderBuffer_(s32 width, s32 height);
-    void bindRenderBuffer_(bool with_item_id = false);
+    void bindRenderBuffer_(bool with_item_id);
     void unbindRenderBuffer_();
     void clearItemIDTexture_();
 

@@ -1,8 +1,7 @@
 #include <course/BgRenderer.h>
 #include <course/BgTexMgr.h>
+#include <graphics/QuadRenderer.h>
 #include <map_obj/ActorBlockBigBase.h>
-
-#include <utility/aglDevTools.h>
 
 #include <MainWindow.h>
 
@@ -112,27 +111,16 @@ void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
     if (mItemType == BgTexMgr::ITEM_MAX)
         return;
 
-    agl::TextureSampler sampler(BgTexMgr::instance()->getItemsTexture());
+    const rio::Texture2D& texture = BgTexMgr::instance()->getItemsTexture();
 
-    rio::Matrix34f model_mtx;
-    model_mtx.makeST(
-        { MainWindow::getBigItemScale(), MainWindow::getBigItemScale(), 1.0f },
-        { mPosition.x + 16, mPosition.y - 16, mPosition.z }
-    );
-
-    rio::Matrix34f view_mtx;
-    draw_info.parent_layer.camera()->getMatrix(&view_mtx);
-
-    rio::Matrix34f mv_mtx;
-    mv_mtx.setMul(view_mtx, model_mtx);
-
-    const rio::Matrix44f& proj_mtx = static_cast<const rio::Matrix44f&>(draw_info.parent_layer.projection()->getMatrix());;
-
-    agl::utl::DevTools::drawTextureTexCoord(
-        sampler, mv_mtx, proj_mtx,
+    QuadRenderer::instance()->drawQuad(
+        QuadRenderer::TextureArg(&texture)
+            .setItemID(mItemID)
+            .setSelection(mIsSelected)
+            .setCenter({ mPosition.x + 16, mPosition.y - 16, mPosition.z })
+            .setSize({ MainWindow::getBigItemScale(), MainWindow::getBigItemScale() }),
         { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
         0.0f,
-        { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f },
-        agl::cShaderMode_Invalid
+        { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f }
     );
 }

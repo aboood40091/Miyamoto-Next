@@ -1,11 +1,12 @@
 #pragma once
 
 #include <course/CourseDataFile.h>
+#include <item/ItemBase.h>
 
-class LocationItem
+class LocationItem : public ItemBase
 {
 public:
-    LocationItem(Location& location);
+    LocationItem(Location& location, u32 index);
 
     Location& getLocation() { return mLocation; }
     const Location& getLocation() const { return mLocation; }

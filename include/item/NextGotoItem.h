@@ -1,11 +1,12 @@
 #pragma once
 
 #include <course/CourseDataFile.h>
+#include <item/ItemBase.h>
 
-class NextGotoItem
+class NextGotoItem : public ItemBase
 {
 public:
-    NextGotoItem(NextGoto& next_goto);
+    NextGotoItem(NextGoto& next_goto, u32 index);
 
     NextGoto& getNextGoto() { return mNextGoto; }
     const NextGoto& getNextGoto() const { return mNextGoto; }

@@ -1,6 +1,5 @@
+#include <graphics/QuadRenderer.h>
 #include <item/NextGotoItem.h>
-
-#include <gfx/rio_PrimitiveRenderer.h>
 
 static const rio::Color4f sColor{
     190 / 255.f,
@@ -9,41 +8,36 @@ static const rio::Color4f sColor{
     120 / 255.f
 };
 
-NextGotoItem::NextGotoItem(NextGoto& next_goto)
-    : mNextGoto(next_goto)
+NextGotoItem::NextGotoItem(NextGoto& next_goto, u32 index)
+    : ItemBase(ITEM_TYPE_NEXT_GOTO, index)
+    , mNextGoto(next_goto)
 {
 }
 
 void NextGotoItem::drawOpa()
 {
-    rio::PrimitiveRenderer::instance()->begin();
-    {
-        rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() + 10 };
-        rio::Vector2f size { 16.0f, 16.0f };
+    rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() + 10 };
+    rio::Vector2f size { 16.0f, 16.0f };
 
-        rio::PrimitiveRenderer::instance()->drawBox(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(rio::Color4f::cBlack, rio::Color4f::cBlack)
-                .setCenter(offs)
-                .setSize(size)
-        );
-    }
-    rio::PrimitiveRenderer::instance()->end();
+    QuadRenderer::instance()->drawBox(
+        QuadRenderer::Arg(rio::Color4f::cBlack)
+            .setItemID(mItemID)
+            .setSelection(mIsSelected)
+            .setCenter(offs)
+            .setSize(size)
+    );
 }
 
 void NextGotoItem::drawXlu()
 {
-    rio::PrimitiveRenderer::instance()->begin();
-    {
-        rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() };
-        rio::Vector2f size { 16.0f, 16.0f };
+    rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() };
+    rio::Vector2f size { 16.0f, 16.0f };
 
-        rio::PrimitiveRenderer::instance()->drawQuad(
-            rio::PrimitiveRenderer::QuadArg()
-                .setColor(sColor, sColor)
-                .setCenter(offs)
-                .setSize(size)
-        );
-    }
-    rio::PrimitiveRenderer::instance()->end();
+    QuadRenderer::instance()->drawQuad(
+        QuadRenderer::Arg(sColor)
+            .setItemID(mItemID)
+            .setSelection(mIsSelected)
+            .setCenter(offs)
+            .setSize(size)
+    );
 }
