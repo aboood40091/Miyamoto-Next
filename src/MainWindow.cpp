@@ -397,6 +397,7 @@ void MainWindow::calc_()
 
     drawCourseViewUI_();
     drawPaletteUI_();
+    drawSelectionUI_();
 
     if (mCourseViewResized)
     {
@@ -753,6 +754,33 @@ void MainWindow::drawPaletteUI_()
             }
             ImGui::EndTabBar();
         }
+    }
+    ImGui::End();
+}
+
+void MainWindow::drawSelectionUI_()
+{
+    if (ImGui::Begin("Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("68: Movement Controller - Pivotal Rotation (Spinning)");
+        ImGui::Separator();
+
+        static int movement_id = 0;
+        ImGui::DragInt("Movement ID", &movement_id, 1.0f, 0, 255, "ID %d", ImGuiSliderFlags_AlwaysClamp);
+
+        static int initial_rotation = 0;
+
+        char buf[32];
+        sprintf(buf, "%.2f deg", initial_rotation * 22.5f);
+
+        ImGui::SliderInt("Initial Rotation", &initial_rotation, 0, 15, buf, ImGuiSliderFlags_AlwaysClamp);
+
+        static const char* items[] = { "1500", "-1500" };
+        static int selected_item = 0;
+        ImGui::Combo("Z-Order", &selected_item, items, IM_ARRAYSIZE(items));
+
+        static bool ticked = false;
+        ImGui::Checkbox("Reversed Movement", &ticked);
     }
     ImGui::End();
 }

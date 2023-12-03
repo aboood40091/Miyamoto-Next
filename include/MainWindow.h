@@ -49,6 +49,7 @@ private:
 
     void drawCourseViewUI_();
     void drawPaletteUI_();
+    void drawSelectionUI_();
     void drawMetricsUI_();
 
     void gather_ (const rio::lyr::DrawInfo&);
