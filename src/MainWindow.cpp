@@ -3,6 +3,8 @@
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
+#include <course/CourseDataFile.h>
+#include <item/MapActorItem.h>
 #include <graphics/LayerID.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -760,12 +762,78 @@ void MainWindow::drawPaletteUI_()
 
 void MainWindow::drawSelectionUI_()
 {
-    if (ImGui::Begin("Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    if (!mpCourseView)
+        return;
+
+    const std::vector<ItemID>& selected_items = mpCourseView->getSelectedItems();
+
+    if (selected_items.empty())
+        return;
+
+    ItemType type_selected = selected_items[0].getType();
+    bool multiple_types_selected = false;
+
+    for (const ItemID& item_id : selected_items)
     {
-        ImGui::Text("68: Movement Controller - Pivotal Rotation (Spinning)");
+        if (item_id.getType() != type_selected)
+        {
+            multiple_types_selected = true;
+            break;
+        }
+    }
+
+    if (!ImGui::Begin("Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing))
+    {
+        ImGui::End();
+        return;
+    }
+
+    if (multiple_types_selected || selected_items.size() > 1)
+    {
+        ImGui::Text("%d item(s) selected.\nUnable to edit the selected items.", selected_items.size());
+    }
+    else if (type_selected == ITEM_TYPE_BG_UNIT_OBJ)
+    {
+        BgCourseData& selected_object = mpCourseView->getBgUnitObj(selected_items[0].getIndex());
+
+        u16 idx = selected_object.type & 0x0fff;
+        u16 env = selected_object.type >> 12;
+
+        ImGui::Text("Object (Tileset %d, Index %d)", env, idx);
         ImGui::Separator();
 
-        static int movement_id = 0;
+        ImGui::BeginDisabled(true);
+        ImGui::DragScalarN("Offset", ImGuiDataType_U16, &selected_object.offset, 2);
+        ImGui::DragScalarN("Size", ImGuiDataType_U16, &selected_object.size, 2);
+        ImGui::DragScalar("Flag", ImGuiDataType_U8, &selected_object.flag);
+        ImGui::EndDisabled();
+    }
+    else if (type_selected == ITEM_TYPE_MAP_ACTOR)
+    {
+        std::unique_ptr<MapActorItem>& selected_actor = mpCourseView->getMapActorItem(selected_items[0].getIndex());
+        MapActorData& actor_data = selected_actor->getMapActorData();
+
+        ImGui::Text("Actor (Id %d)", actor_data.id);
+        ImGui::Separator();
+
+        if (ImGui::DragScalarN("Offset", ImGuiDataType_U16, &actor_data.offset, 2))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_OFFSET);
+        if (ImGui::DragScalarN("Events", ImGuiDataType_U8, &actor_data.event_id, 2))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_EVENT_ID);
+        if (ImGui::DragScalarN("Settings", ImGuiDataType_U32, &actor_data.settings, 2, 1.0f, nullptr, nullptr, "%08X"))
+            selected_actor->onDataChange((MapActorItem::DataChangeFlag)(MapActorItem::DATA_CHANGE_FLAG_SETTINGS_0 | MapActorItem::DATA_CHANGE_FLAG_SETTINGS_1));
+        if (ImGui::DragScalar("Area", ImGuiDataType_U8, &actor_data.area))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_AREA);
+        if (ImGui::DragScalar("Layer", ImGuiDataType_U8, &actor_data.layer))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_LAYER);
+        if (ImGui::DragScalar("Movement ID", ImGuiDataType_U8, &actor_data.movement_id))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_MOVEMENT_ID);
+        if (ImGui::DragScalar("Link ID", ImGuiDataType_U8, &actor_data.link_id))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_LINK_ID);
+        if (ImGui::DragScalar("Init State", ImGuiDataType_U8, &actor_data.init_state))
+            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_INIT_STATE);
+
+        /*static int movement_id = 0;
         ImGui::DragInt("Movement ID", &movement_id, 1.0f, 0, 255, "ID %d", ImGuiSliderFlags_AlwaysClamp);
 
         static int initial_rotation = 0;
@@ -780,7 +848,8 @@ void MainWindow::drawSelectionUI_()
         ImGui::Combo("Z-Order", &selected_item, items, IM_ARRAYSIZE(items));
 
         static bool ticked = false;
-        ImGui::Checkbox("Reversed Movement", &ticked);
+        ImGui::Checkbox("Reversed Movement", &ticked);*/
     }
+
     ImGui::End();
 }

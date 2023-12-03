@@ -1121,3 +1121,18 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
     mCourseView.unbindRenderBuffer_();
 }
+
+const std::vector<ItemID>& CourseView::getSelectedItems() const
+{
+    return mSelectedItems;
+}
+
+std::unique_ptr<MapActorItem>& CourseView::getMapActorItem(int index)
+{
+    return mMapActorItemPtr[index];
+}
+
+BgCourseData& CourseView::getBgUnitObj(int index) const
+{
+    return mpCourseDataFile->getBgData((index >> 22) & 3)[index & 0x3FFFFF];
+}

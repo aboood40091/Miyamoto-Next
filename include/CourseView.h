@@ -14,6 +14,7 @@
 #include <memory>
 
 struct  AreaData;
+struct  BgCourseData;
 class   AreaItem;
 class   CourseDataFile;
 class   LocationItem;
@@ -112,6 +113,11 @@ public:
     {
         return mpColorTexture;
     }
+
+    //Temporary getter functions for selection window
+    const std::vector<ItemID>& getSelectedItems() const;
+    std::unique_ptr<MapActorItem>& getMapActorItem(int index);
+    BgCourseData& getBgUnitObj(int index) const;
 
     void resize(s32 width, s32 height, bool preserve_tile_size = false);
 
