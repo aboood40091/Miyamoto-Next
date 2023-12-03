@@ -1125,3 +1125,13 @@ BgCourseData& CourseView::getBgUnitObj(int index) const
 {
     return mpCourseDataFile->getBgData((index >> 22) & 3)[index & 0x3FFFFF];
 }
+
+NextGotoItem& CourseView::getNextGotoItem(int index)
+{
+    return mNextGotoItem[index];
+}
+
+LocationItem& CourseView::getLocationItem(int index)
+{
+    return mLocationItem[index];
+}

@@ -4,7 +4,9 @@
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
 #include <course/CourseDataFile.h>
+#include <item/LocationItem.h>
 #include <item/MapActorItem.h>
+#include <item/NextGotoItem.h>
 #include <graphics/LayerID.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/QuadRenderer.h>
@@ -854,6 +856,42 @@ void MainWindow::drawSelectionUI_()
 
         static bool ticked = false;
         ImGui::Checkbox("Reversed Movement", &ticked);*/
+    }
+    else if (type_selected == ITEM_TYPE_NEXT_GOTO)
+    {
+        NextGotoItem& selected_entrance = mpCourseView->getNextGotoItem(selected_items[0].getIndex());
+        NextGoto& entrance_data = selected_entrance.getNextGoto();
+
+        ImGui::Text("Entrance");
+        ImGui::Separator();
+
+        ImGui::DragScalarN("Offset", ImGuiDataType_U16, &entrance_data.offset, 2);
+        ImGui::DragScalarN("Camera Offset", ImGuiDataType_U16, &entrance_data.camera_offset, 2);
+        ImGui::DragScalar("Id", ImGuiDataType_U8, &entrance_data.id);
+        ImGui::DragScalar("Dest Area", ImGuiDataType_U8, &entrance_data.destination.file);
+        ImGui::DragScalar("Dest Id", ImGuiDataType_U8, &entrance_data.destination.next_goto);
+        ImGui::DragScalar("Type", ImGuiDataType_U8, &entrance_data.type);
+        ImGui::DragScalar("MP Spawn Flag", ImGuiDataType_U8, &entrance_data.mp_spawn_flag);
+        ImGui::DragScalar("Area", ImGuiDataType_U8, &entrance_data.area);
+        ImGui::DragScalar("MP Innter Gap", ImGuiDataType_U8, &entrance_data.mp_inner_gap);
+        ImGui::DragScalar("Flags", ImGuiDataType_U16, &entrance_data.flag, 1.0f, nullptr, nullptr, "%04X");
+        ImGui::DragScalar("Baby Yoshi Entrance", ImGuiDataType_U8, &entrance_data.chibi_yoshi_next_goto);
+        ImGui::DragScalar("Coin Edit Priority", ImGuiDataType_U8, &entrance_data.coin_edit_priority);
+        ImGui::DragScalar("Path Info", ImGuiDataType_U8, &entrance_data.rail.info);
+        ImGui::DragScalar("Path Node", ImGuiDataType_U8, &entrance_data.rail.point);
+        ImGui::DragScalar("Transition", ImGuiDataType_U8, &entrance_data.wipe_type);
+    }
+    else if (type_selected == ITEM_TYPE_LOCATION)
+    {
+        LocationItem& selected_location = mpCourseView->getLocationItem(selected_items[0].getIndex());
+        Location& location_data = selected_location.getLocation();
+
+        ImGui::Text("Location");
+        ImGui::Separator();
+
+        ImGui::DragScalarN("Offset", ImGuiDataType_U16, &location_data.offset, 2);
+        ImGui::DragScalarN("Size", ImGuiDataType_U16, &location_data.size, 2);
+        ImGui::DragScalar("Id", ImGuiDataType_U8, &location_data.id);
     }
 
     ImGui::End();
