@@ -1,5 +1,6 @@
 #include <CourseView.h>
 #include <MainWindow.h>
+#include <action/ActionMgr.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
@@ -89,6 +90,8 @@ void MainWindow::prepare_()
     GX2InitSampler(&mGX2Sampler, GX2_TEX_CLAMP_MODE_CLAMP, GX2_TEX_XY_FILTER_MODE_POINT);
     mImGuiGX2Texture.Sampler = &mGX2Sampler;
 #endif // RIO_IS_CAFE
+
+    ActionMgr::createSingleton();
 
     QuadRenderer::createSingleton();
 
@@ -241,6 +244,8 @@ void MainWindow::prepare_()
     CoinOrigin::createSingleton();
     CoinOrigin::instance()->initialize();
 
+    ActionMgr::instance()->discard(false);
+
     const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
     setCurrentCourseDataFile(0);
@@ -319,6 +324,8 @@ void MainWindow::exit_()
 
     QuadRenderer::destroySingleton();
 
+    ActionMgr::destroySingleton();
+
     ImGuiUtil::shutdown();
 
 #if RIO_IS_WIN
@@ -393,7 +400,10 @@ void MainWindow::processKeyboardInput_()
                 continue;
 
             if (mCurrentFile != prev_file)
+            {
+                ActionMgr::instance()->discard(true);
                 setCurrentCourseDataFile(mCurrentFile);
+            }
         }
     }
 }
