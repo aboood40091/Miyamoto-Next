@@ -4,6 +4,7 @@
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
 #include <course/CourseDataFile.h>
+#include <item/BgUnitItem.h>
 #include <item/LocationItem.h>
 #include <item/MapActorItem.h>
 #include <item/NextGotoItem.h>
@@ -801,7 +802,7 @@ void MainWindow::drawSelectionUI_()
     }
     else if (type_selected == ITEM_TYPE_BG_UNIT_OBJ)
     {
-        BgCourseData& selected_object = mpCourseView->getBgUnitObj(selected_items[0].getIndex());
+        BgCourseData& selected_object = mpCourseView->getBgUnitItem(selected_items[0].getIndex()).getBgCourseData();
 
         u16 idx = selected_object.type & 0x0fff;
         u16 env = selected_object.type >> 12;

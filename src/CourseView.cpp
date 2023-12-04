@@ -8,6 +8,7 @@
 #include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
 #include <item/AreaItem.h>
+#include <item/BgUnitItem.h>
 #include <item/LocationItem.h>
 #include <item/MapActorItem.h>
 #include <item/NextGotoItem.h>
@@ -33,9 +34,9 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
+    , mCursorAction(CURSOR_ACTION_NONE)
     , mIsCursorPress(false)
     , mIsCursorRelease(false)
-    , mSelectionBox(false)
     , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
 #if RIO_IS_WIN
@@ -103,6 +104,9 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 CourseView::~CourseView()
 {
     mSelectedItems.clear(); mSelectionChange = true;
+    mBgUnitItem[LAYER_0].clear();
+    mBgUnitItem[LAYER_1].clear();
+    mBgUnitItem[LAYER_2].clear();
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -430,6 +434,9 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     // Clear items
     mSelectedItems.clear(); mSelectionChange = true;
+    mBgUnitItem[LAYER_0].clear();
+    mBgUnitItem[LAYER_1].clear();
+    mBgUnitItem[LAYER_2].clear();
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
@@ -438,7 +445,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     mpCourseDataFile = p_cd_file;
     mpDVControlArea = nullptr;
 
-    mSelectionBox = false;
+    mCursorAction = CURSOR_ACTION_NONE;
 
     setZoomTileSize(24);
     mRealBgZoom = mBgZoom;
@@ -460,6 +467,14 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     Bg::instance()->processBgCourseData(*mpCourseDataFile);
     BgRenderer::instance()->createVertexBuffer();
+
+    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
+    {
+        std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(layer);
+        size_t num = vec.size();
+        for (u32 i = 0; i < num; i++)
+            mBgUnitItem[layer].emplace_back(vec[i], layer << 22 | i);
+    }
 
     {
         std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
@@ -660,7 +675,9 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             mIsCursorPress = false;
             return false;
         }
-        mSelectionBox = false;
+
+        if (mCursorAction)
+            mIsCursorRelease = true;
 
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
@@ -689,6 +706,139 @@ void CourseView::processKeyboardInput()
 
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_B))
         mLayerShown[LAYER_2] = !mLayerShown[LAYER_2];
+}
+
+void CourseView::moveItems_(bool commit)
+{
+    const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(mCursorP1);
+    const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(mCursorPos);
+
+    const rio::Vector2f& mouse_delta_world =
+        static_cast<const rio::Vector2f&>(cursor_pos_world)
+        - static_cast<const rio::Vector2f&>(last_cursor_pos_world);
+
+    bool bg_selected = false;
+    for (const ItemID& item_id : mSelectedItems)
+    {
+        if (item_id.getType() == ITEM_TYPE_BG_UNIT_OBJ)
+        {
+            bg_selected = true;
+            break;
+        }
+    }
+
+    s16 dx, dy;
+
+    if (bg_selected)
+    {
+        dx = std::lround( mouse_delta_world.x / 16) * 16;
+        dy = std::lround(-mouse_delta_world.y / 16) * 16;
+    }
+    else
+    {
+        dx = std::lround( mouse_delta_world.x / 8) * 8;
+        dy = std::lround(-mouse_delta_world.y / 8) * 8;
+    }
+
+    if (commit && dx == 0 && dy == 0)
+        return;
+
+    bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
+        false, false, false
+    };
+
+    for (const ItemID& item_id : mSelectedItems)
+    {
+        switch (item_id.getType())
+        {
+        case ITEM_TYPE_BG_UNIT_OBJ:
+            {
+                u8 layer = item_id.getIndex() >> 22;
+                mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF].move(dx, dy, commit);
+                layers_changed[layer] = true;
+            }
+            break;
+        case ITEM_TYPE_MAP_ACTOR:
+            mMapActorItemPtr[item_id.getIndex()]->move(dx, dy, commit);
+            break;
+        case ITEM_TYPE_NEXT_GOTO:
+            mNextGotoItem[item_id.getIndex()].move(dx, dy, commit);
+            break;
+        case ITEM_TYPE_LOCATION:
+            mLocationItem[item_id.getIndex()].move(dx, dy, commit);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (bg_selected)
+    {
+        Bg::instance()->processBgCourseData(*mpCourseDataFile);
+        for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
+            if (layers_changed[layer])
+                BgRenderer::instance()->createVertexBuffer(layer);
+        BgRenderer::instance()->calcSelectionVertexBuffer(mSelectedItems);
+    }
+}
+
+void CourseView::onCursorMove_MoveItem_()
+{
+    RIO_ASSERT(!mSelectedItems.empty());
+
+    const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
+    if (mouse_delta.x == 0.0f && mouse_delta.y == 0.0f)
+        return;
+
+    moveItems_(false);
+}
+
+void CourseView::onCursorRelease_MoveItem_()
+{
+    mCursorAction = CURSOR_ACTION_NONE;
+
+    if (mCursorPos == mCursorP1)
+        return;
+
+    moveItems_(true);
+}
+
+void CourseView::onCursorRelease_SelectionBox_()
+{
+    RIO_ASSERT(mSelectedItems.empty());
+
+    mCursorAction = CURSOR_ACTION_NONE;
+
+    s32 width = mpItemIDTexture->getWidth();
+    s32 height = mpItemIDTexture->getHeight();
+
+    s32 x1 = std::clamp<s32>(std::min(mCursorP1.x, mCursorPos.x), 0, width - 1);
+    s32 x2 = std::clamp<s32>(std::max(mCursorP1.x, mCursorPos.x), 0, width - 1);
+    s32 y1 = std::clamp<s32>(std::min(mCursorP1.y, mCursorPos.y), 0, height - 1);
+    s32 y2 = std::clamp<s32>(std::max(mCursorP1.y, mCursorPos.y), 0, height - 1);
+
+    std::unordered_set<u32> selected_items;
+    for (s32 y = y1; y <= y2; y++)
+    {
+        for (s32 x = x1; x <= x2; x++)
+        {
+            u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
+#if RIO_IS_CAFE
+            under_mouse = __builtin_bswap32(under_mouse);
+#endif // RIO_IS_CAFE
+
+            ItemID id_under_mouse = under_mouse;
+            if (id_under_mouse.isValid())
+            {
+                const auto& it = selected_items.insert(id_under_mouse);
+                if (it.second)
+                    setItemSelection_(id_under_mouse, true);
+            }
+        }
+    }
+
+    mSelectedItems.insert(mSelectedItems.end(), selected_items.begin(), selected_items.end());
+    mSelectionChange = !mSelectedItems.empty();
 }
 
 void CourseView::update()
@@ -728,53 +878,42 @@ void CourseView::update()
                 mSelectedItems.push_back(id_under_mouse);
                 setItemSelection_(id_under_mouse, true);
             }
+
+            mCursorAction = CURSOR_ACTION_MOVE_ITEM;
         }
         else
         {
             if (!mSelectedItems.empty())
                 clearSelection_();
 
-            mSelectionBox = true;
-            mSelectionBoxP1 = mCursorPos;
+            mCursorAction = CURSOR_ACTION_SELECTION_BOX;
+        }
+        mCursorP1 = mCursorPos;
+    }
+    else if (mIsCursorRelease)
+    {
+        switch (mCursorAction)
+        {
+        case CURSOR_ACTION_MOVE_ITEM:
+            onCursorRelease_MoveItem_();
+            break;
+        case CURSOR_ACTION_SELECTION_BOX:
+            onCursorRelease_SelectionBox_();
+            break;
+        default:
+            break;
         }
     }
-    else if (mIsCursorRelease && mSelectionBox)
+    else
     {
-        RIO_ASSERT(mSelectedItems.empty());
-
-        mSelectionBoxP2 = mCursorPos;
-        mSelectionBox = false;
-
-        s32 width = mpItemIDTexture->getWidth();
-        s32 height = mpItemIDTexture->getHeight();
-
-        s32 x1 = std::clamp<s32>(std::min(mSelectionBoxP1.x, mSelectionBoxP2.x), 0, width - 1);
-        s32 x2 = std::clamp<s32>(std::max(mSelectionBoxP1.x, mSelectionBoxP2.x), 0, width - 1);
-        s32 y1 = std::clamp<s32>(std::min(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
-        s32 y2 = std::clamp<s32>(std::max(mSelectionBoxP1.y, mSelectionBoxP2.y), 0, height - 1);
-
-        std::unordered_set<u32> selected_items;
-        for (s32 y = y1; y <= y2; y++)
+        switch (mCursorAction)
         {
-            for (s32 x = x1; x <= x2; x++)
-            {
-                u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
-#if RIO_IS_CAFE
-                under_mouse = __builtin_bswap32(under_mouse);
-#endif // RIO_IS_CAFE
-
-                ItemID id_under_mouse = under_mouse;
-                if (id_under_mouse.isValid())
-                {
-                    const auto& it = selected_items.insert(id_under_mouse);
-                    if (it.second)
-                        setItemSelection_(id_under_mouse, true);
-                }
-            }
+        case CURSOR_ACTION_MOVE_ITEM:
+            onCursorMove_MoveItem_();
+            break;
+        default:
+            break;
         }
-
-        mSelectedItems.insert(mSelectedItems.end(), selected_items.begin(), selected_items.end());
-        mSelectionChange = !mSelectedItems.empty();
     }
 
     const rio::BaseVec2f& camera_pos = mCamera.pos();
@@ -932,6 +1071,9 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
 {
     switch (item_id.getType())
     {
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        mBgUnitItem[item_id.getIndex() >> 22][item_id.getIndex() & 0x003FFFFF].setSelection(is_selected);
+        break;
     case ITEM_TYPE_MAP_ACTOR:
         mMapActorItemPtr[item_id.getIndex()]->setSelection(is_selected);
         break;
@@ -962,7 +1104,7 @@ void CourseView::onSelectionChange_()
 
 void CourseView::drawSelectionBox_()
 {
-    const rio::BaseVec2f& p1 = viewToWorldPos(mSelectionBoxP1);
+    const rio::BaseVec2f& p1 = viewToWorldPos(mCursorP1);
     const rio::BaseVec2f& p2 = viewToWorldPos(mCursorPos);
 
     const rio::Vector2f min {
@@ -1105,7 +1247,7 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
     mCourseView.bindRenderBuffer_(false);
 
-    if (mCourseView.mSelectionBox)
+    if (mCourseView.mCursorAction == CURSOR_ACTION_SELECTION_BOX)
         mCourseView.drawSelectionBox_();
 
     mCourseView.unbindRenderBuffer_();
@@ -1116,14 +1258,14 @@ const std::vector<ItemID>& CourseView::getSelectedItems() const
     return mSelectedItems;
 }
 
+BgUnitItem& CourseView::getBgUnitItem(int index)
+{
+    return mBgUnitItem[index >> 22][index & 0x003FFFFF];
+}
+
 std::unique_ptr<MapActorItem>& CourseView::getMapActorItem(int index)
 {
     return mMapActorItemPtr[index];
-}
-
-BgCourseData& CourseView::getBgUnitObj(int index) const
-{
-    return mpCourseDataFile->getBgData((index >> 22) & 3)[index & 0x3FFFFF];
 }
 
 NextGotoItem& CourseView::getNextGotoItem(int index)

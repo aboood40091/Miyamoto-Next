@@ -5,10 +5,12 @@
 class ItemBase
 {
 protected:
-    ItemBase(ItemType type, u32 index)
+    ItemBase(ItemType type, u32 index, u16 x, u16 y)
         : mItemID(type, index)
         , mIsSelected(false)
     {
+        mBasePosition.x = x;
+        mBasePosition.y = y;
     }
 
 public:
@@ -24,6 +26,8 @@ public:
         onSelectionChange_();
     }
 
+    virtual void move(s16 dx, s16 dy, bool commit) = 0;
+
 protected:
     virtual void onIndexChange_()
     {
@@ -36,4 +40,6 @@ protected:
 protected:
     ItemID  mItemID;
     bool    mIsSelected;
+
+    struct { u16 x, y; } mBasePosition;
 };

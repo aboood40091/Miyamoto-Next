@@ -11,10 +11,11 @@
 #include <gpu/rio_RenderBuffer.h>
 #include <gpu/rio_RenderTarget.h>
 
+#include <array>
 #include <memory>
 
 struct  AreaData;
-struct  BgCourseData;
+class   BgUnitItem;
 class   AreaItem;
 class   CourseDataFile;
 class   LocationItem;
@@ -56,6 +57,13 @@ private:
 
     private:
         CourseView& mCourseView;
+    };
+
+    enum CursorAction
+    {
+        CURSOR_ACTION_NONE,
+        CURSOR_ACTION_MOVE_ITEM,
+        CURSOR_ACTION_SELECTION_BOX
     };
 
 public:
@@ -116,8 +124,8 @@ public:
 
     //Temporary getter functions for selection window
     const std::vector<ItemID>& getSelectedItems() const;
+    BgUnitItem& getBgUnitItem(int index);
     std::unique_ptr<MapActorItem>& getMapActorItem(int index);
-    BgCourseData& getBgUnitObj(int index) const;
     NextGotoItem& getNextGotoItem(int index);
     LocationItem& getLocationItem(int index);
 
@@ -147,6 +155,12 @@ private:
     void unbindRenderBuffer_();
     void clearItemIDTexture_();
 
+    void moveItems_(bool commit);
+    void onCursorMove_MoveItem_();
+    void onCursorRelease_MoveItem_();
+
+    void onCursorRelease_SelectionBox_();
+
     void setItemSelection_(const ItemID& item_id, bool is_selected);
     void clearSelection_();
     void onSelectionChange_();
@@ -173,13 +187,14 @@ private:
     f32                         mBgZoom,
                                 mRealBgZoom;
     rio::Vector2f               mCursorPos;
+    CursorAction                mCursorAction;
     bool                        mIsCursorPress;
     bool                        mIsCursorRelease;
-    bool                        mSelectionBox;
     bool                        mSelectionChange;
-    rio::BaseVec2f              mSelectionBoxP1,
-                                mSelectionBoxP2;
+    rio::Vector2f               mCursorP1;
     std::vector<ItemID>         mSelectedItems;
+    std::array<std::vector<BgUnitItem>, CD_FILE_LAYER_MAX_NUM>
+                                mBgUnitItem;
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
                                 mMapActorItemPtr;

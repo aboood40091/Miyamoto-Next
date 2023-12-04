@@ -11,6 +11,17 @@ public:
     Location& getLocation() { return mLocation; }
     const Location& getLocation() const { return mLocation; }
 
+    void move(s16 dx, s16 dy, bool commit) override
+    {
+        mLocation.offset.x = mBasePosition.x + dx;
+        mLocation.offset.y = mBasePosition.y + dy;
+        if (commit)
+        {
+            mBasePosition.x = mLocation.offset.x;
+            mBasePosition.y = mLocation.offset.y;
+        }
+    }
+
     void drawOpa();
     void drawXlu();
 
