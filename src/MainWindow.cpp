@@ -834,8 +834,10 @@ void MainWindow::drawSelectionUI_()
         ImGui::Text("Actor (Id %d)", actor_data.id);
         ImGui::Separator();
 
-        if (ImGui::DragScalarN("Offset", ImGuiDataType_U16, &actor_data.offset, 2))
-            selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_OFFSET);
+        u16 offset[2] = { actor_data.offset.x, actor_data.offset.y };
+        if (ImGui::DragScalarN("Offset", ImGuiDataType_U16, offset, 2))
+            selected_actor->move(offset[0] - actor_data.offset.x, offset[1] - actor_data.offset.y, true);
+
         if (ImGui::DragScalarN("Events", ImGuiDataType_U8, &actor_data.event_id, 2))
             selected_actor->onDataChange(MapActorItem::DATA_CHANGE_FLAG_EVENT_ID);
         if (ImGui::DragScalarN("Settings", ImGuiDataType_U32, &actor_data.settings, 2, 1.0f, nullptr, nullptr, "%08X"))
@@ -876,7 +878,10 @@ void MainWindow::drawSelectionUI_()
         ImGui::Text("Entrance");
         ImGui::Separator();
 
-        ImGui::DragScalarN("Offset", ImGuiDataType_U16, &entrance_data.offset, 2);
+        u16 offset[2] = { entrance_data.offset.x, entrance_data.offset.y };
+        if (ImGui::DragScalarN("Offset", ImGuiDataType_U16, offset, 2))
+            selected_entrance.move(offset[0] - entrance_data.offset.x, offset[1] - entrance_data.offset.y, true);
+
         ImGui::DragScalarN("Camera Offset", ImGuiDataType_U16, &entrance_data.camera_offset, 2);
         ImGui::DragScalar("Id", ImGuiDataType_U8, &entrance_data.id);
         ImGui::DragScalar("Dest Area", ImGuiDataType_U8, &entrance_data.destination.file);
@@ -900,7 +905,10 @@ void MainWindow::drawSelectionUI_()
         ImGui::Text("Location");
         ImGui::Separator();
 
-        ImGui::DragScalarN("Offset", ImGuiDataType_U16, &location_data.offset, 2);
+        u16 offset[2] = { location_data.offset.x, location_data.offset.y };
+        if (ImGui::DragScalarN("Offset", ImGuiDataType_U16, offset, 2))
+            selected_location.move(offset[0] - location_data.offset.x, offset[1] - location_data.offset.y, true);
+
         ImGui::DragScalarN("Size", ImGuiDataType_U16, &location_data.size, 2);
         ImGui::DragScalar("Id", ImGuiDataType_U8, &location_data.id);
     }
