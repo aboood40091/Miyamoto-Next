@@ -30,7 +30,7 @@ ActionMgr::~ActionMgr()
 {
 }
 
-bool ActionMgr::pushAction(ActionFactory factory, void* context)
+bool ActionMgr::pushAction(ActionFactory factory, const void* context)
 {
     mAction.resize(mCurrentLength);
     if (mNonDirtyLength != u32(-1) && mNonDirtyLength > mCurrentLength)

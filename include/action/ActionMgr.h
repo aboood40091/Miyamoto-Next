@@ -2,10 +2,9 @@
 
 #include <action/IAction.h>
 
-#include <memory>
 #include <vector>
 
-using ActionFactory = std::unique_ptr<IAction> (*)(void*);
+using ActionFactory = std::unique_ptr<IAction> (*)(const void*);
 
 class ActionMgr
 {
@@ -24,10 +23,10 @@ private:
     ActionMgr& operator=(const ActionMgr&);
 
 public:
-    bool pushAction(ActionFactory factory, void* context);
+    bool pushAction(ActionFactory factory, const void* context);
 
     template <typename T>
-    bool pushAction(void* context)
+    bool pushAction(const void* context)
     {
         return pushAction(&T::create, context);
     }

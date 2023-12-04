@@ -1,5 +1,7 @@
 #include <CourseView.h>
 #include <MainWindow.h>
+#include <action/ActionItemSelectionMove.h>
+#include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
 #include <course/Bg.h>
 #include <course/BgRenderer.h>
@@ -708,6 +710,48 @@ void CourseView::processKeyboardInput()
         mLayerShown[LAYER_2] = !mLayerShown[LAYER_2];
 }
 
+void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit)
+{
+    bool bg_selected = false;
+    bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
+        false, false, false
+    };
+
+    for (const ItemID& item_id : items)
+    {
+        switch (item_id.getType())
+        {
+        case ITEM_TYPE_BG_UNIT_OBJ:
+            {
+                bg_selected = true;
+                u8 layer = item_id.getIndex() >> 22;
+                mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF].move(dx, dy, commit);
+                layers_changed[layer] = true;
+            }
+            break;
+        case ITEM_TYPE_MAP_ACTOR:
+            mMapActorItemPtr[item_id.getIndex()]->move(dx, dy, commit);
+            break;
+        case ITEM_TYPE_NEXT_GOTO:
+            mNextGotoItem[item_id.getIndex()].move(dx, dy, commit);
+            break;
+        case ITEM_TYPE_LOCATION:
+            mLocationItem[item_id.getIndex()].move(dx, dy, commit);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (bg_selected)
+    {
+        Bg::instance()->processBgCourseData(*mpCourseDataFile);
+        for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
+            if (layers_changed[layer])
+                BgRenderer::instance()->createVertexBuffer(layer);
+    }
+}
+
 void CourseView::moveItems_(bool commit)
 {
     const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(mCursorP1);
@@ -740,46 +784,21 @@ void CourseView::moveItems_(bool commit)
         dy = std::lround(-mouse_delta_world.y / 8) * 8;
     }
 
-    if (commit && dx == 0 && dy == 0)
-        return;
-
-    bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
-        false, false, false
-    };
-
-    for (const ItemID& item_id : mSelectedItems)
+    if (commit)
     {
-        switch (item_id.getType())
-        {
-        case ITEM_TYPE_BG_UNIT_OBJ:
-            {
-                u8 layer = item_id.getIndex() >> 22;
-                mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF].move(dx, dy, commit);
-                layers_changed[layer] = true;
-            }
-            break;
-        case ITEM_TYPE_MAP_ACTOR:
-            mMapActorItemPtr[item_id.getIndex()]->move(dx, dy, commit);
-            break;
-        case ITEM_TYPE_NEXT_GOTO:
-            mNextGotoItem[item_id.getIndex()].move(dx, dy, commit);
-            break;
-        case ITEM_TYPE_LOCATION:
-            mLocationItem[item_id.getIndex()].move(dx, dy, commit);
-            break;
-        default:
-            break;
-        }
+        if (dx == 0 && dy == 0)
+            return;
+
+        ActionItemSelectionMove::Context context { mSelectedItems, dx, dy };
+        ActionMgr::instance()->pushAction<ActionItemSelectionMove>(&context);
+    }
+    else
+    {
+        moveItems(mSelectedItems, dx, dy, false);
     }
 
     if (bg_selected)
-    {
-        Bg::instance()->processBgCourseData(*mpCourseDataFile);
-        for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
-            if (layers_changed[layer])
-                BgRenderer::instance()->createVertexBuffer(layer);
         BgRenderer::instance()->calcSelectionVertexBuffer(mSelectedItems);
-    }
 }
 
 void CourseView::onCursorMove_MoveItem_()

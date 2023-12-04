@@ -418,6 +418,7 @@ void MainWindow::calc_()
     drawCourseViewUI_();
     drawPaletteUI_();
     drawSelectionUI_();
+    drawMainMenuBarUI_();
 
     if (mCourseViewResized)
     {
@@ -914,4 +915,29 @@ void MainWindow::drawSelectionUI_()
     }
 
     ImGui::End();
+}
+
+void MainWindow::drawMainMenuBarUI_()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("Edit"))
+        {
+            if (ImGui::MenuItem("Undo", nullptr, false, ActionMgr::instance()->canUndo()))
+            {
+                mpCourseView->clearSelection();
+                ActionMgr::instance()->undo();
+            }
+
+            if (ImGui::MenuItem("Redo", nullptr, false, ActionMgr::instance()->canRedo()))
+            {
+                mpCourseView->clearSelection();
+                ActionMgr::instance()->redo();
+            }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
 }

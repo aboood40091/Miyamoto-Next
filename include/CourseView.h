@@ -149,6 +149,14 @@ public:
     void gather();
     void dispose();
 
+    void moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit);
+
+    void clearSelection()
+    {
+        clearSelection_();
+        mCursorAction = CURSOR_ACTION_NONE;
+    }
+
 private:
     void createRenderBuffer_(s32 width, s32 height);
     void bindRenderBuffer_(bool with_item_id);

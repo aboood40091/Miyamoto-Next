@@ -32,6 +32,16 @@ public:
         return static_cast<RenderObjLayer*>(mLayerBgPrepare.ptr);
     }
 
+    CourseView* getCourseView()
+    {
+        return mpCourseView;
+    }
+
+    const CourseView* getCourseView() const
+    {
+        return mpCourseView;
+    }
+
     void setCurrentCourseDataFile(u32 id);
 
 private:
@@ -47,10 +57,11 @@ private:
     void processMouseInput_();
     void processKeyboardInput_();
 
+    void drawMetricsUI_();
     void drawCourseViewUI_();
     void drawPaletteUI_();
     void drawSelectionUI_();
-    void drawMetricsUI_();
+    void drawMainMenuBarUI_();
 
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
