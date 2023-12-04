@@ -22,6 +22,8 @@ public:
         }
     }
 
+    void drawSelectionUI() override;
+
     void drawOpa();
     void drawXlu();
 

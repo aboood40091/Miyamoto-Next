@@ -52,6 +52,8 @@ public:
         onDataChange(DATA_CHANGE_FLAG_OFFSET);
     }
 
+    void drawSelectionUI() override;
+
     virtual void onDataChange(DataChangeFlag flag)
     {
     }

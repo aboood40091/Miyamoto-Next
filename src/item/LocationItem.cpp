@@ -1,6 +1,8 @@
 #include <graphics/QuadRenderer.h>
 #include <item/LocationItem.h>
 
+#include <imgui.h>
+
 static const rio::Color4f sColor{
     114 / 255.f,
      42 / 255.f,
@@ -38,4 +40,13 @@ void LocationItem::drawXlu()
             .setSelection(mIsSelected)
             .setCornerAndSize(offs, size)
     );
+}
+
+void LocationItem::drawSelectionUI()
+{
+    ImGui::Text("Location");
+    ImGui::Separator();
+
+    ImGui::DragScalar("Id", ImGuiDataType_U8, &mLocation.id);
+    ImGui::DragScalarN("Size", ImGuiDataType_U16, &mLocation.size, 2);
 }

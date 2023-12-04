@@ -27,6 +27,7 @@ public:
     }
 
     virtual void move(s16 dx, s16 dy, bool commit) = 0;
+    virtual void drawSelectionUI() = 0;
 
 protected:
     virtual void onIndexChange_()

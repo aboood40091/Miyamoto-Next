@@ -1272,27 +1272,40 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
     mCourseView.unbindRenderBuffer_();
 }
 
-const std::vector<ItemID>& CourseView::getSelectedItems() const
+void CourseView::drawSelectionUI()
 {
-    return mSelectedItems;
-}
+    if (mSelectedItems.empty())
+        return;
 
-BgUnitItem& CourseView::getBgUnitItem(int index)
-{
-    return mBgUnitItem[index >> 22][index & 0x003FFFFF];
-}
+    if (ImGui::Begin("Selection", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing))
+    {
+        const ItemID& selected_item = mSelectedItems[0];
 
-std::unique_ptr<MapActorItem>& CourseView::getMapActorItem(int index)
-{
-    return mMapActorItemPtr[index];
-}
-
-NextGotoItem& CourseView::getNextGotoItem(int index)
-{
-    return mNextGotoItem[index];
-}
-
-LocationItem& CourseView::getLocationItem(int index)
-{
-    return mLocationItem[index];
+        if (mSelectedItems.size() > 1)
+        {
+            ImGui::Text("%d item(s) selected.\nUnable to edit the selected items.", mSelectedItems.size());
+        }
+        else
+        {
+            switch (selected_item.getType())
+            {
+            case ITEM_TYPE_BG_UNIT_OBJ:
+                mBgUnitItem[selected_item.getIndex() >> 22][selected_item.getIndex() & 0x003FFFFF].drawSelectionUI();
+                break;
+            case ITEM_TYPE_MAP_ACTOR:
+                mMapActorItemPtr[selected_item.getIndex()]->drawSelectionUI();
+                break;
+            case ITEM_TYPE_NEXT_GOTO:
+                mNextGotoItem[selected_item.getIndex()].drawSelectionUI();
+                break;
+            case ITEM_TYPE_LOCATION:
+                mLocationItem[selected_item.getIndex()].drawSelectionUI();
+                break;
+            default:
+                ImGui::Text("Unknown item selected.");
+                break;
+            }
+        }
+    }
+    ImGui::End();
 }

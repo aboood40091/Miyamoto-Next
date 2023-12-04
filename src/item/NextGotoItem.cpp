@@ -1,6 +1,8 @@
 #include <graphics/QuadRenderer.h>
 #include <item/NextGotoItem.h>
 
+#include <imgui.h>
+
 static const rio::Color4f sColor{
     190 / 255.f,
       0 / 255.f,
@@ -40,4 +42,25 @@ void NextGotoItem::drawXlu()
             .setCenter(offs)
             .setSize(size)
     );
+}
+
+void NextGotoItem::drawSelectionUI()
+{
+    ImGui::Text("Entrance");
+    ImGui::Separator();
+
+    ImGui::DragScalar("Id", ImGuiDataType_U8, &mNextGoto.id);
+    ImGui::DragScalar("Area", ImGuiDataType_U8, &mNextGoto.area);
+    ImGui::DragScalar("Type", ImGuiDataType_U8, &mNextGoto.type);
+    ImGui::DragScalar("Dest Id", ImGuiDataType_U8, &mNextGoto.destination.next_goto);
+    ImGui::DragScalar("Dest Area", ImGuiDataType_U8, &mNextGoto.destination.file);
+    ImGui::DragScalarN("Camera Offset", ImGuiDataType_U16, &mNextGoto.camera_offset, 2);
+    ImGui::DragScalar("MP Spawn Flag", ImGuiDataType_U8, &mNextGoto.mp_spawn_flag);
+    ImGui::DragScalar("MP Innter Gap", ImGuiDataType_U8, &mNextGoto.mp_inner_gap);
+    ImGui::DragScalar("Flags", ImGuiDataType_U16, &mNextGoto.flag, 1.0f, nullptr, nullptr, "%04X");
+    ImGui::DragScalar("Baby Yoshi Entrance", ImGuiDataType_U8, &mNextGoto.chibi_yoshi_next_goto);
+    ImGui::DragScalar("Coin Edit Priority", ImGuiDataType_U8, &mNextGoto.coin_edit_priority);
+    ImGui::DragScalar("Path Info", ImGuiDataType_U8, &mNextGoto.rail.info);
+    ImGui::DragScalar("Path Node", ImGuiDataType_U8, &mNextGoto.rail.point);
+    ImGui::DragScalar("Transition", ImGuiDataType_U8, &mNextGoto.wipe_type);
 }

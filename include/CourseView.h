@@ -122,12 +122,7 @@ public:
         return mpColorTexture;
     }
 
-    //Temporary getter functions for selection window
-    const std::vector<ItemID>& getSelectedItems() const;
-    BgUnitItem& getBgUnitItem(int index);
-    std::unique_ptr<MapActorItem>& getMapActorItem(int index);
-    NextGotoItem& getNextGotoItem(int index);
-    LocationItem& getLocationItem(int index);
+    void drawSelectionUI();
 
     void resize(s32 width, s32 height, bool preserve_tile_size = false);
 

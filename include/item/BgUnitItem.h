@@ -12,6 +12,7 @@ public:
     const BgCourseData& getBgCourseData() const { return mBgCourseData; }
 
     void move(s16 dx, s16 dy, bool commit) override;
+    void drawSelectionUI() override;
 
 private:
     BgCourseData& mBgCourseData;
