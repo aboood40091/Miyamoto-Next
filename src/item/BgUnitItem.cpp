@@ -13,6 +13,11 @@ BgUnitItem::BgUnitItem(BgCourseData& data, u32 index)
     : ItemBase(ITEM_TYPE_BG_UNIT_OBJ, index, data.offset.x, data.offset.y)
     , mBgCourseData(data)
 {
+    mSelectionData.env = mBgCourseData.type >> 12;
+    mSelectionData.idx = mBgCourseData.type & 0xFFF;
+    mSelectionData.width = mBgCourseData.size.x;
+    mSelectionData.height = mBgCourseData.size.y;
+    mSelectionData.flag = mBgCourseData.flag;
 }
 
 void BgUnitItem::move(s16 dx, s16 dy, bool commit)
@@ -42,37 +47,58 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
 
 void BgUnitItem::drawSelectionUI()
 {
-    const CourseDataFile* p_cd_file = static_cast<MainWindow*>(rio::sRootTask)->getCourseView()->getCourseDataFile();
-    RIO_ASSERT(p_cd_file != nullptr);
-
-    u16 env = (mBgCourseData.type >> 12) & 3;
-    u16 idx = mBgCourseData.type & 0xFFF;
-
     ImGui::Text("Object");
     ImGui::Separator();
 
-    const u16 min_value_u16 = 0, env_max = CD_FILE_ENV_MAX_NUM - 1, index_max = 0xFFF;
-    const u8 min_value_u8 = 0, flag_max = 24;
+    const u16 env_max = CD_FILE_ENV_MAX_NUM - 1;
+    const u16 idx_max = 0xFFF;
+    const u8 flag_max = 24;
 
-    bool type_modified = ImGui::DragScalar("Environment Slot", ImGuiDataType_U16, &env, 1.0f, &min_value_u16, &env_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
-    type_modified     |= ImGui::DragScalar("Object Index", ImGuiDataType_U16, &idx, 1.0f, &min_value_u16, &index_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
-    bool size_modified = ImGui::DragScalarN("Size", ImGuiDataType_U16, &mBgCourseData.size, 2);
-    bool flag_modified = ImGui::DragScalar("Flag", ImGuiDataType_U8, &mBgCourseData.flag, 1.0f, &min_value_u8, &flag_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragScalar("Environment Slot", ImGuiDataType_U16, &mSelectionData.env, 1.0f, nullptr, &env_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragScalar("Object Index", ImGuiDataType_U16, &mSelectionData.idx, 1.0f, nullptr, &idx_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
+    ImGui::DragScalar("Width", ImGuiDataType_U16, &mSelectionData.width);
+    ImGui::DragScalar("Height", ImGuiDataType_U16, &mSelectionData.height);
+    ImGui::DragScalar("Flag", ImGuiDataType_U8, &mSelectionData.flag, 1.0f, nullptr, &flag_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
 
-    if (type_modified)
+    ImGui::Separator();
+
+    if (ImGui::Button("Apply"))
     {
-        const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(env));
-        if (file == nullptr || idx >= file->getObjCount())
-            type_modified = false;
+        u16 type = (mSelectionData.env << 12) | mSelectionData.idx;
+
+        const CourseDataFile* p_cd_file = static_cast<MainWindow*>(rio::sRootTask)->getCourseView()->getCourseDataFile();
+        RIO_ASSERT(p_cd_file != nullptr);
+
+        const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(mSelectionData.env));
+        if (!file || mSelectionData.idx >= file->getObjCount())
+            type = mBgCourseData.type;
+
+        const bool modified = type != mBgCourseData.type ||
+            mSelectionData.width != mBgCourseData.size.x ||
+            mSelectionData.height != mBgCourseData.size.y ||
+            mSelectionData.flag != mBgCourseData.flag;
+
+        if (modified)
+        {
+            mBgCourseData.type = type;
+            mBgCourseData.size.x = mSelectionData.width;
+            mBgCourseData.size.y = mSelectionData.height;
+            mBgCourseData.flag = mSelectionData.flag;
+
+            Bg::instance()->processBgCourseData(*p_cd_file);
+            BgRenderer::instance()->createVertexBuffer(mItemID.getIndex() >> 22);
+            BgRenderer::instance()->calcSelectionVertexBuffer({ mItemID });
+        }
     }
 
-    if (type_modified)
-        mBgCourseData.type = (env << 12) | idx;
+    ImGui::SameLine();
 
-    if (type_modified | size_modified | flag_modified)
+    if (ImGui::Button("Discard"))
     {
-        Bg::instance()->processBgCourseData(*p_cd_file);
-        BgRenderer::instance()->createVertexBuffer(mItemID.getIndex() >> 22);
-        BgRenderer::instance()->calcSelectionVertexBuffer({ mItemID });
+        mSelectionData.env = mBgCourseData.type >> 12;
+        mSelectionData.idx = mBgCourseData.type & 0xFFF;
+        mSelectionData.width = mBgCourseData.size.x;
+        mSelectionData.height = mBgCourseData.size.y;
+        mSelectionData.flag = mBgCourseData.flag;
     }
 }
