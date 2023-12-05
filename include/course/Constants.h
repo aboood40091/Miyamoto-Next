@@ -4,13 +4,13 @@
 
 enum
 {
-    CD_FILE_MAX_NUM         = 4,
-    CD_FILE_AREA_MAX_NUM    = 64,
-    CD_FILE_TS_NAME_MAX_LEN = 32,
-    CD_FILE_ENV_MAX_NUM     = 4,
-    CD_FILE_DV_NAME_MAX_LEN = 16,
+    CD_FILE_MAX_NUM                 = 4,
+    CD_FILE_AREA_MAX_NUM            = 64,
+    CD_FILE_ENV_PA_SLOT_NAME_MAX_LEN   = 32,
+    CD_FILE_ENV_MAX_NUM             = 4,
+    CD_FILE_DV_NAME_MAX_LEN         = 16,
 
-    CD_FILE_LAYER_MAX_NUM   = 3,
+    CD_FILE_LAYER_MAX_NUM           = 3,
 
     CD_FILE_BLOCK_ENVIRONMENT       =   1 - 1,
     CD_FILE_BLOCK_OPTIONS           =   2 - 1,

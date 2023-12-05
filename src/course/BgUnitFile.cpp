@@ -26,7 +26,7 @@ void BgUnitFile::unload()
 {
     rio::MemUtil::set(mBgCheck, 0, sizeof(u64) * BG_MAX_PER_UNIT_NUM);
 
-    mBgUnit.clear();
+    mObj.clear();
 
     Texture2DUtil::destroy(&mpTexture);
     Texture2DUtil::destroy(&mpNormalTexture);
@@ -108,23 +108,23 @@ bool BgUnitFile::load(std::span<const u8> data)
 
     {
         u32 size = uhd_filesize;
-        RIO_ASSERT(size % sizeof(BgUnitHead) == 0);
-        u32 count = size / sizeof(BgUnitHead);
+        RIO_ASSERT(size % sizeof(BgUnitObjHead) == 0);
+        u32 count = size / sizeof(BgUnitObjHead);
 
-        mBgUnit.resize(count);
+        mObj.resize(count);
 
-        const BgUnitHead* p_src = static_cast<const BgUnitHead*>(uhd);
+        const BgUnitObjHead* p_src = static_cast<const BgUnitObjHead*>(uhd);
 
         for (u32 i = 0; i < count; i++)
         {
-            const BgUnitHead&   src = p_src[i];
-            BgUnitHead          dst;
+            const BgUnitObjHead&    src = p_src[i];
+            BgUnitObjHead           dst;
 
             dst.data[0] = CD_FILE_READ_16_BE(src.data[0]);
             dst.data[1] =                    src.data[1];   // Yes, this is a u16 and endianness is not reversed.
             dst.data[2] = CD_FILE_READ_16_BE(src.data[2]);
 
-            mBgUnit[i].load(dst.width, dst.height, dst.random, dst.data_offs, unt, unt_filesize);
+            mObj[i].load(dst.width, dst.height, dst.random, dst.data_offs, unt, unt_filesize);
         }
     }
 
@@ -223,16 +223,16 @@ bool BgUnitFile::save()
 
     archive.addFile(chk_name, { (u8*)chk, chk_filesize });
 
-    const size_t uhd_filesize = sizeof(BgUnitHead) * mBgUnit.size();
+    const size_t uhd_filesize = sizeof(BgUnitObjHead) * mObj.size();
     void* const uhd = rio::MemUtil::alloc(uhd_filesize, 4);
 
     u32 unt_filesize = 0;
     {
-        BgUnitHead* p_dst = static_cast<BgUnitHead*>(uhd);
+        BgUnitObjHead* p_dst = static_cast<BgUnitObjHead*>(uhd);
 
-        for (const BgUnit& src : mBgUnit)
+        for (const BgUnitObj& src : mObj)
         {
-            BgUnitHead& dst = *p_dst++;
+            BgUnitObjHead& dst = *p_dst++;
 
             dst.data_offs   = CD_FILE_READ_16_BE(u16(unt_filesize));
             dst.width       = src.getWidth();
@@ -247,7 +247,7 @@ bool BgUnitFile::save()
     {
         u8* p_dst = static_cast<u8*>(unt);
 
-        for (const BgUnit& src : mBgUnit)
+        for (const BgUnitObj& src : mObj)
             p_dst += src.saveRows(p_dst);
 
         RIO_ASSERT(unt_filesize == (uintptr_t(p_dst) - uintptr_t(unt)));

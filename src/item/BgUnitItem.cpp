@@ -62,7 +62,7 @@ void BgUnitItem::drawSelectionUI()
     if (type_modified)
     {
         const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(env));
-        if (file == nullptr || idx >= file->getBgUnitCount())
+        if (file == nullptr || idx >= file->getObjCount())
             type_modified = false;
     }
 

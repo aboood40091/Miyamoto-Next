@@ -77,12 +77,12 @@ public:
     }
 
     template <typename T>
-    inline void setZoomTileSize(T tile_size)
+    inline void setZoomUnitSize(T unit_size)
     {
-        setZoom(16.f / tile_size * (mSize.y / 224.0f));
+        setZoom(16.f / unit_size * (mSize.y / 224.0f));
     }
 
-    f32 getZoomTileSize() const
+    f32 getZoomUnitSize() const
     {
         return mCamera.getZoomScale() * 16.f;
     }
@@ -124,7 +124,7 @@ public:
 
     void drawSelectionUI();
 
-    void resize(s32 width, s32 height, bool preserve_tile_size = false);
+    void resize(s32 width, s32 height, bool preserve_unit_size = false);
 
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;
@@ -133,6 +133,16 @@ public:
     void reset()
     {
         initialize(nullptr, false);
+    }
+
+    CourseDataFile* getCourseDataFile()
+    {
+        return mpCourseDataFile;
+    }
+
+    const CourseDataFile* getCourseDataFile() const
+    {
+        return mpCourseDataFile;
     }
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);

@@ -76,7 +76,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
          mSize.x    // Right
     );
 
-    setZoomTileSize(24);
+    setZoomUnitSize(24);
     mRealBgZoom = mBgZoom;
 
     mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
@@ -163,7 +163,7 @@ CourseView::~CourseView()
     }
 }
 
-void CourseView::resize(s32 width, s32 height, bool preserve_tile_size)
+void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
 {
 #if RIO_IS_CAFE
     GX2DrawDone();
@@ -190,8 +190,8 @@ void CourseView::resize(s32 width, s32 height, bool preserve_tile_size)
          mSize.x     // Right
     );
 
-    if (preserve_tile_size)
-        setZoomTileSize(getZoomTileSize());
+    if (preserve_unit_size)
+        setZoomUnitSize(getZoomUnitSize());
     else
         setZoom(mBgZoom);
 
@@ -449,7 +449,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     mCursorAction = CURSOR_ACTION_NONE;
 
-    setZoomTileSize(24);
+    setZoomUnitSize(24);
     mRealBgZoom = mBgZoom;
 
     if (mpCourseDataFile == nullptr)

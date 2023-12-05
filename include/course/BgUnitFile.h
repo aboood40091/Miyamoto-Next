@@ -1,6 +1,6 @@
 #pragma once
 
-#include <course/BgUnit.h>
+#include <course/BgUnitObj.h>
 #include <course/Constants.h>
 
 #include <gpu/rio_Texture.h>
@@ -35,15 +35,15 @@ public:
         return mBgCheck[index];
     }
 
-    size_t getBgUnitCount() const
+    size_t getObjCount() const
     {
-        return mBgUnit.size();
+        return mObj.size();
     }
 
-    const BgUnit& getBgUnit(u32 index) const
+    const BgUnitObj& getObj(u32 index) const
     {
-        RIO_ASSERT(index < mBgUnit.size());
-        return mBgUnit[index];
+        RIO_ASSERT(index < mObj.size());
+        return mObj[index];
     }
 
     const rio::Texture2D* getTexture() const
@@ -62,16 +62,16 @@ public:
     }
 
 private:
-    std::string         mName;
-    std::span<u8>       mData;
+    std::string             mName;
+    std::span<u8>           mData;
 
-    u64                 mBgCheck[BG_MAX_PER_UNIT_NUM];
+    u64                     mBgCheck[BG_MAX_PER_UNIT_NUM];
 
-    std::vector<BgUnit> mBgUnit;
+    std::vector<BgUnitObj>  mObj;
 
-    rio::Texture2D*     mpTexture;
-    rio::Texture2D*     mpNormalTexture;
-    rio::Texture2D*     mpAnimeTexture[ANIME_TYPE_MAX];
+    rio::Texture2D*         mpTexture;
+    rio::Texture2D*         mpNormalTexture;
+    rio::Texture2D*         mpAnimeTexture[ANIME_TYPE_MAX];
 
     friend class Bg;
 };

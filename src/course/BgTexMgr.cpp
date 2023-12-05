@@ -192,7 +192,7 @@ static inline void drawAnime(UnitID unit, s32 frame, const rio::Texture2D* textu
     RIO_ASSERT(unit < cUnitID_Pa0_Unit_Num);
     RIO_ASSERT(texture != nullptr);
 
-    u16 tile = unit & 0xFF;
+    u8 unit_idx = unit & 0xFF;
 
     u32 tex_width = texture->getWidth();
     u32 tex_height = texture->getHeight();
@@ -209,7 +209,7 @@ static inline void drawAnime(UnitID unit, s32 frame, const rio::Texture2D* textu
         rio::Matrix34f mtx;
         mtx.makeST(
             { f32(tex_width), cUnitSize, 1.0f },
-            { ((tile + i * cUnitPerRowReal) % cUnitPerRow) * cUnitSize + tex_width * 0.5f, cTexHeight + cUnitSize * 0.5f - ((tile + i * cUnitPerRowReal) / cUnitPerRow + 1) * cUnitSize, 0.0f }
+            { ((unit_idx + i * cUnitPerRowReal) % cUnitPerRow) * cUnitSize + tex_width * 0.5f, cTexHeight + cUnitSize * 0.5f - ((unit_idx + i * cUnitPerRowReal) / cUnitPerRow + 1) * cUnitSize, 0.0f }
         );
 
         agl::utl::DevTools::drawTextureTexCoord(
@@ -248,14 +248,14 @@ static inline void drawItem(UnitID unit, BgTexMgr::ItemType type, const rio::Tex
     RIO_ASSERT(unit < cUnitID_Pa0_Unit_Num);
     RIO_ASSERT(type < BgTexMgr::ITEM_MAX);
 
-    u16 tile = unit & 0xFF;
+    u8 unit_idx = unit & 0xFF;
 
     agl::TextureSampler sampler(texture);
 
     rio::Matrix34f mtx;
     mtx.makeST(
         { cUnitSizeNoPad, cUnitSizeNoPad, 1.0f },
-        { (tile % cUnitPerRow) * cUnitSize + cUnitSize * 0.5f, cTexHeight - (tile / cUnitPerRow + 1) * cUnitSize + cUnitSize * 0.5f, 0.0f }
+        { (unit_idx % cUnitPerRow) * cUnitSize + cUnitSize * 0.5f, cTexHeight - (unit_idx / cUnitPerRow + 1) * cUnitSize + cUnitSize * 0.5f, 0.0f }
     );
 
     agl::utl::DevTools::drawTextureTexCoord(

@@ -4,7 +4,7 @@
 
 #include <vector>
 
-struct BgUnitHead
+struct BgUnitObjHead
 {
     union
     {
@@ -18,22 +18,22 @@ struct BgUnitHead
         u16 data[3];
     };
 };
-static_assert(sizeof(BgUnitHead) == 6);
+static_assert(sizeof(BgUnitObjHead) == 6);
 
-class BgUnit
+class BgUnitObj
 {
 public:
-    struct Tile
+    struct Unit
     {
         u8 first;
-        u8 number;
+        u8 idx;
         u8 env;
         u8 extra;
     };
-    typedef std::vector<Tile> Row;
+    typedef std::vector<Unit> Row;
 
 public:
-    BgUnit();
+    BgUnitObj();
 
     void load(u8 width, u8 height, u16 random, u16 data_offs, const void* unt, u32 unt_size);
 
@@ -77,7 +77,7 @@ public:
         return mRows;
     }
 
-    void getSlopeSections(std::vector<BgUnit::Row>& main_block, std::vector<BgUnit::Row>& sub_block) const;
+    void getSlopeSections(std::vector<Row>& main_block, std::vector<Row>& sub_block) const;
 
     size_t calcRowsByteSize() const;
     size_t saveRows(void* unt) const;

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <course/BgUnit.h>
+#include <course/BgUnitObj.h>
 #include <course/Constants.h>
+#include <course/UnitID.h>
 
 #include <string>
 #include <unordered_map>
@@ -14,18 +15,18 @@ class  SharcArchiveRes;
 class Bg
 {
 public:
-    struct UnitNumber
+    struct Unit
     {
-        u16 value;
-        u32 obj_index;
+        UnitID  value;
+        u32     obj_index;
     };
 
-  //typedef std::array<UnitNumber, BG_MAX_UNIT_X>                   LayerBlockUnitRow;
-  //typedef std::array<LayerBlockUnitRow, BG_MAX_UNIT_Y>            LayerBlockUnitArray;
-  //typedef std::array<LayerBlockUnitArray, CD_FILE_LAYER_MAX_NUM>  BlockUntArray;
+  //typedef std::array<Unit, BG_MAX_UNIT_X>                         LayerUnitRow;
+  //typedef std::array<LayerUnitRow, BG_MAX_UNIT_Y>                 LayerUnitMtx;
+  //typedef std::array<LayerBlockUnitArray, CD_FILE_LAYER_MAX_NUM>  UnitMtx;
 
     using BgUnitFileMap = std::unordered_map<std::string, BgUnitFile* const>;
-    using BlockUntArray = UnitNumber[CD_FILE_LAYER_MAX_NUM][BG_MAX_UNIT_Y][BG_MAX_UNIT_X];
+    using UnitMtx = Unit[CD_FILE_LAYER_MAX_NUM][BG_MAX_UNIT_Y][BG_MAX_UNIT_X];
 
 public:
     static bool createSingleton();
@@ -67,25 +68,25 @@ public:
     void clearBgCourseData();
 
 private:
-    void processRow_(u8 layer, u32 y, const BgUnit::Row& row, const BgCourseData& obj, u32 obj_index);
-    void putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnit::Row>& rows, const BgCourseData& obj, u32 obj_index);
+    void processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseData& obj_instance, u32 obj_index);
+    void putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgCourseData& obj_instance, u32 obj_index);
 
-    void processBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u32 obj_index, u8 layer);
-    void processDiagonalBgUnit_(const BgUnit& bg_unit, const BgCourseData& obj, u32 obj_index, u8 layer);
+    void processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer);
+    void processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer);
 
 public:
-    u16 getUnitNumber(u16 x, u16 y, u8 layer) const
+    UnitID getUnitID(u16 x, u16 y, u8 layer) const
     {
         RIO_ASSERT(x < BG_MAX_X);
         RIO_ASSERT(y < BG_MAX_Y);
         RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
-        return mBlockUnitNumber[layer][y >> 4][x >> 4].value; // x >> 4 = x / 16
+        return mUnitMtx[layer][y >> 4][x >> 4].value; // x >> 4 = x / 16
     }
 
-    BlockUntArray& getUnitNumberArray() { return mBlockUnitNumber; }
-    const BlockUntArray& getUnitNumberArray() const { return mBlockUnitNumber; }
+    UnitMtx& getUnitMtx() { return mUnitMtx; }
+    const UnitMtx& getUnitMtx() const { return mUnitMtx; }
 
 private:
     BgUnitFileMap   mpBgUnitFile;
-    BlockUntArray   mBlockUnitNumber;
+    UnitMtx         mUnitMtx;
 };

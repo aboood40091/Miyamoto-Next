@@ -70,7 +70,7 @@ struct Environment
 {
     // Some functions in the game call it environment.
 
-    char tileset_name[CD_FILE_ENV_MAX_NUM][CD_FILE_TS_NAME_MAX_LEN];
+    char pa_slot_name[CD_FILE_ENV_MAX_NUM][CD_FILE_ENV_PA_SLOT_NAME_MAX_LEN];
 };
 static_assert(sizeof(Environment) == 0x80);
 
@@ -112,7 +112,7 @@ static_assert(sizeof(ScrollData) == 0x1C);
 
 struct DistantViewData
 {
-    // Not certain if official name, but official name in NSMBW is Bg2 (which is conflicting with tile layers)
+    // Not certain if official name, but official name in NSMBW is Bg2 (which is conflicting with bg unit layers)
 
     u16     id;
     struct
@@ -349,7 +349,7 @@ public:
     const char* getEnvironment(u32 index) const
     {
         RIO_ASSERT(index < CD_FILE_ENV_MAX_NUM);
-        return mEnvironment.tileset_name[index];
+        return mEnvironment.pa_slot_name[index];
     }
     void setEnvironment(u32 index, const char* name);
 

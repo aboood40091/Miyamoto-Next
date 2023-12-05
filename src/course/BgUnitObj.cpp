@@ -1,6 +1,6 @@
-#include <course/BgUnit.h>
+#include <course/BgUnitObj.h>
 
-BgUnit::BgUnit()
+BgUnitObj::BgUnitObj()
     : mWidth(0)
     , mHeight(0)
     , mRandom(0)
@@ -10,7 +10,7 @@ BgUnit::BgUnit()
 {
 }
 
-void BgUnit::load(u8 width, u8 height, u16 random, u16 data_offs, const void* unt, u32 unt_size)
+void BgUnitObj::load(u8 width, u8 height, u16 random, u16 data_offs, const void* unt, u32 unt_size)
 {
     // Clear
     mMainPartAt = -1;
@@ -72,7 +72,7 @@ void BgUnit::load(u8 width, u8 height, u16 random, u16 data_offs, const void* un
         mSubPartAt = mRows.size();
 }
 
-void BgUnit::getSlopeSections(std::vector<BgUnit::Row>& main_block, std::vector<BgUnit::Row>& sub_block) const
+void BgUnitObj::getSlopeSections(std::vector<Row>& main_block, std::vector<Row>& sub_block) const
 {
     main_block.clear();
     sub_block.clear();
@@ -96,9 +96,9 @@ void BgUnit::getSlopeSections(std::vector<BgUnit::Row>& main_block, std::vector<
         main_block.resize(main_part_len);
 
         for (s32 i = main_part_at; i < main_part_end; i++)
-            for (const BgUnit::Tile& tile : mRows[i])
-                if (!(tile.first & 0x80))
-                    main_block[i - main_part_at].push_back(tile);
+            for (const Unit& unit : mRows[i])
+                if (!(unit.first & 0x80))
+                    main_block[i - main_part_at].push_back(unit);
     }
 
     if (sub_part_len > 0)
@@ -106,22 +106,22 @@ void BgUnit::getSlopeSections(std::vector<BgUnit::Row>& main_block, std::vector<
         sub_block.resize(sub_part_len);
 
         for (s32 i = sub_part_at; i < sub_part_end; i++)
-            for (const BgUnit::Tile& tile : mRows[i])
-                if (!(tile.first & 0x80))
-                    sub_block[i - sub_part_at].push_back(tile);
+            for (const Unit& unit : mRows[i])
+                if (!(unit.first & 0x80))
+                    sub_block[i - sub_part_at].push_back(unit);
     }
 }
 
-size_t BgUnit::calcRowsByteSize() const
+size_t BgUnitObj::calcRowsByteSize() const
 {
     size_t size = 0;
 
     for (const Row& row : mRows)
     {
-        for (const Tile& tile : row)
+        for (const Unit& unit : row)
         {
             size++;
-            if (!(tile.first & 0x80))
+            if (!(unit.first & 0x80))
                 size += 2;
         }
 
@@ -133,19 +133,19 @@ size_t BgUnit::calcRowsByteSize() const
     return size;
 }
 
-size_t BgUnit::saveRows(void* unt) const
+size_t BgUnitObj::saveRows(void* unt) const
 {
     u8* p_dst = static_cast<u8*>(unt);
 
     for (const Row& row : mRows)
     {
-        for (const Tile& tile : row)
+        for (const Unit& unit : row)
         {
-            *p_dst++ = tile.first;
-            if (!(tile.first & 0x80))
+            *p_dst++ = unit.first;
+            if (!(unit.first & 0x80))
             {
-                *p_dst++ = tile.number;
-                *p_dst++ = tile.env | tile.extra << 2;
+                *p_dst++ = unit.idx;
+                *p_dst++ = unit.env | unit.extra << 2;
             }
         }
 

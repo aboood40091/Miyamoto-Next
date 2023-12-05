@@ -422,7 +422,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, preserveTileSize() && !useRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, preserveUnitSize() && !useRealZoom());
         mCourseViewResized = false;
     }
 

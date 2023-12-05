@@ -714,7 +714,7 @@ void CourseDataFile::setEnvironment(u32 index, const char* name)
 {
     RIO_ASSERT(index < CD_FILE_ENV_MAX_NUM);
 
-    size_t name_len = std::min(std::strlen(name), (size_t)(CD_FILE_TS_NAME_MAX_LEN - 1));
-    rio::MemUtil::copy(mEnvironment.tileset_name[index], name, name_len);
-    mEnvironment.tileset_name[index][name_len] = '\0';
+    size_t name_len = std::min(std::strlen(name), (size_t)(CD_FILE_ENV_PA_SLOT_NAME_MAX_LEN - 1));
+    rio::MemUtil::copy(mEnvironment.pa_slot_name[index], name, name_len);
+    mEnvironment.pa_slot_name[index][name_len] = '\0';
 }

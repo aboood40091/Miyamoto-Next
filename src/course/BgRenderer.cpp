@@ -137,7 +137,7 @@ void BgRenderer::destroy_()
     mIdxData = std::span<   u32>();
 }
 
-void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile, ItemID item_id)
+void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u8 unit_idx, ItemID item_id)
 {
     Vertex& vtx_tl = vtx_data[0];
     Vertex& vtx_bl = vtx_data[1];
@@ -158,22 +158,22 @@ void BgRenderer::setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl
 
     vtx_tl.pos = tl_pos;
 
-    const u32 row = tile / cTilesPerRow;
-    const u32 col = tile % cTilesPerRow;
-    RIO_ASSERT(row < cTilesPerColumn);
-    RIO_ASSERT(col < cTilesPerRow);
+    const u32 row = unit_idx / cUnitsPerRow;
+    const u32 col = unit_idx % cUnitsPerRow;
+    RIO_ASSERT(row < cUnitsPerColumn);
+    RIO_ASSERT(col < cUnitsPerRow);
 
-    vtx_tr.tex.x = (col + 1) * cTileSizePadXNorm - cPadXNorm;
-    vtx_tr.tex.y = row * cTileSizePadYNorm + cPadYNorm;
+    vtx_tr.tex.x = (col + 1) * cUnitSizePadXNorm - cPadXNorm;
+    vtx_tr.tex.y = row * cUnitSizePadYNorm + cPadYNorm;
 
-    vtx_br.tex.x = (col + 1) * cTileSizePadXNorm - cPadXNorm;
-    vtx_br.tex.y = (row + 1) * cTileSizePadYNorm - cPadYNorm;
+    vtx_br.tex.x = (col + 1) * cUnitSizePadXNorm - cPadXNorm;
+    vtx_br.tex.y = (row + 1) * cUnitSizePadYNorm - cPadYNorm;
 
-    vtx_bl.tex.x = col * cTileSizePadXNorm + cPadXNorm;
-    vtx_bl.tex.y = (row + 1) * cTileSizePadYNorm - cPadYNorm;
+    vtx_bl.tex.x = col * cUnitSizePadXNorm + cPadXNorm;
+    vtx_bl.tex.y = (row + 1) * cUnitSizePadYNorm - cPadYNorm;
 
-    vtx_tl.tex.x = col * cTileSizePadXNorm + cPadXNorm;
-    vtx_tl.tex.y = row * cTileSizePadYNorm + cPadYNorm;
+    vtx_tl.tex.x = col * cUnitSizePadXNorm + cPadXNorm;
+    vtx_tl.tex.y = row * cUnitSizePadYNorm + cPadYNorm;
 
     vtx_tr.item_id = item_id;
     vtx_br.item_id = item_id;
@@ -198,7 +198,7 @@ void BgRenderer::createVertexBuffer(u8 layer)
         break;
     }
 
-    const Bg::BlockUntArray& block_unit_number_array = Bg::instance()->getUnitNumberArray();
+    const Bg::UnitMtx& bg_unit_mtx = Bg::instance()->getUnitMtx();
 
     Vertex* const base_vtx_data = mVtxData.data();
 
@@ -212,19 +212,16 @@ void BgRenderer::createVertexBuffer(u8 layer)
         {
             for (s32 x = 0; x < BG_MAX_UNIT_X; x++)
             {
-                const Bg::UnitNumber& unit = block_unit_number_array[layer][y][x];
-                u16 tile = unit.value;
-                if (!tile || env != tile >> 8)
+                const Bg::Unit& unit = bg_unit_mtx[layer][y][x];
+                if (!unit.value || env != unit.value >> 8)
                     continue;
 
-                tile &= 0xff;
-
-              //RIO_LOG("Draw tileset %u tile %u at (%u, %u)\n", env, tile, x, y);
+                u8 unit_idx = unit.value & 0xff;
 
                 setUnitVertexBuffer_(
                     base_vtx_data + cVtxPerBlock * block_count,
                     rio::BaseVec3f { f32(x * 16), f32(-y * 16), z },
-                    tile,
+                    unit_idx,
                     ItemID(ITEM_TYPE_BG_UNIT_OBJ, u32(layer) << 22 | unit.obj_index)
                 );
 
@@ -247,7 +244,7 @@ void BgRenderer::createVertexBuffer(u8 layer)
 void BgRenderer::drawUnit(ItemID item_id, const rio::BaseVec3f& tl_pos, UnitID unit, u8 layer)
 {
     s32 env = unit >> 8;
-    u16 tile = unit & 0xFF;
+    u8 unit_idx = unit & 0xFF;
     RIO_ASSERT(env < CD_FILE_ENV_MAX_NUM);
 
     RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
@@ -262,7 +259,7 @@ void BgRenderer::drawUnit(ItemID item_id, const rio::BaseVec3f& tl_pos, UnitID u
 
     u32 index = block_start + mDynamicDrawNum[layer][env];
 
-    setUnitVertexBuffer_(base_vtx_data + cVtxPerBlock * index, tl_pos, tile, item_id);
+    setUnitVertexBuffer_(base_vtx_data + cVtxPerBlock * index, tl_pos, unit_idx, item_id);
 
     mDynamicDrawNum[layer][env]++;
 

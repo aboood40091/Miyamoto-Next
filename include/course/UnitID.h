@@ -2,9 +2,9 @@
 
 #include <misc/rio_Types.h>
 
-enum UnitID
+enum UnitID : u16
 {
-    cUnitID_Invalid = -1,
+    cUnitID_Invalid = u16(-1),
     cUnitID_Null = 0,
 
     cUnitID_InvBlockSolid,

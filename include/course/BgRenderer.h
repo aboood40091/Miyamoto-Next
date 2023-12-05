@@ -72,27 +72,27 @@ private:
         ItemID          item_id;
     };
 
-    void setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u16 tile, ItemID item_id);
+    void setUnitVertexBuffer_(Vertex* vtx_data, const rio::BaseVec3f& tl_pos, u8 unit_idx, ItemID item_id);
 
     static constexpr s32 cVtxPerBlock = 4;
     static constexpr s32 cIdxPerBlock = 6;
 
-    static constexpr s32 cTileSize          = 60;
-    static constexpr s32 cTileSizePad       = 64;
+    static constexpr s32 cUnitSize          = 60;
+    static constexpr s32 cUnitSizePad       = 64;
 
-    static constexpr s32 cPad               = (cTileSizePad - cTileSize) / 2;
+    static constexpr s32 cPad               = (cUnitSizePad - cUnitSize) / 2;
 
-    static constexpr s32 cTilesetWidth      = 2048;
-    static constexpr s32 cTilesetHeight     = 512;
+    static constexpr s32 cTextureWidth      = 2048;
+    static constexpr s32 cTextureHeight     = 512;
 
-    static constexpr s32 cTilesPerRow       = cTilesetWidth  / cTileSizePad;
-    static constexpr s32 cTilesPerColumn    = cTilesetHeight / cTileSizePad;
+    static constexpr s32 cUnitsPerRow       = cTextureWidth  / cUnitSizePad;
+    static constexpr s32 cUnitsPerColumn    = cTextureHeight / cUnitSizePad;
 
-    static constexpr f32 cTileSizePadXNorm  = f32(cTileSizePad) / cTilesetWidth;
-    static constexpr f32 cTileSizePadYNorm  = f32(cTileSizePad) / cTilesetHeight;
+    static constexpr f32 cUnitSizePadXNorm  = f32(cUnitSizePad) / cTextureWidth;
+    static constexpr f32 cUnitSizePadYNorm  = f32(cUnitSizePad) / cTextureHeight;
 
-    static constexpr f32 cPadXNorm          = f32(cPad) / cTilesetWidth;
-    static constexpr f32 cPadYNorm          = f32(cPad) / cTilesetHeight;
+    static constexpr f32 cPadXNorm          = f32(cPad) / cTextureWidth;
+    static constexpr f32 cPadYNorm          = f32(cPad) / cTextureHeight;
 
     static constexpr s32 cDynamicMaxNum = 0x800;
 
