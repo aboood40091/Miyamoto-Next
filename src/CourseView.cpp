@@ -752,6 +752,36 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
     }
 }
 
+void CourseView::setItemData(const ItemID& item_id, const void* data)
+{
+    RIO_ASSERT(data != nullptr);
+
+    switch (item_id.getType())
+    {
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            BgUnitItem& object_item = mBgUnitItem[item_id.getIndex() >> 22][item_id.getIndex() & 0x003FFFFF];
+            object_item.getBgCourseData() = *static_cast<const BgCourseData*>(data);
+
+            Bg::instance()->processBgCourseData(*mpCourseDataFile);
+            BgRenderer::instance()->createVertexBuffer(item_id.getIndex() >> 22);
+            BgRenderer::instance()->calcSelectionVertexBuffer({ item_id });
+        }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        //TODO
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        //TODO
+        break;
+    case ITEM_TYPE_LOCATION:
+        //TODO
+        break;
+    default:
+        break;
+    }
+}
+
 void CourseView::moveItems_(bool commit)
 {
     const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(mCursorP1);

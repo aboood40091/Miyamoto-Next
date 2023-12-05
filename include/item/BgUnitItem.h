@@ -16,13 +16,5 @@ public:
 
 private:
     BgCourseData& mBgCourseData;
-
-    struct SelectionData
-    {
-        u16 env;
-        u16 idx;
-        u16 width;
-        u16 height;
-        u8 flag;
-    } mSelectionData;
+    BgCourseData mSelectionData;
 };

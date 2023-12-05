@@ -155,6 +155,7 @@ public:
     void dispose();
 
     void moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit);
+    void setItemData(const ItemID& item_id, const void* data);
 
     void clearSelection()
     {
