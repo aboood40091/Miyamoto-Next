@@ -99,7 +99,7 @@ void MapActorItem::drawSelectionUI()
 
     ImGui::SameLine();
 
-    if (ImGui::Button("Revert"))
+    if (ImGui::Button("Discard"))
         mSelectionData = mMapActorData;
 }
 
