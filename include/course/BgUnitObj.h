@@ -31,6 +31,7 @@ public:
         u8 extra;
     };
     typedef std::vector<Unit> Row;
+    typedef std::vector<const Unit*> RefRow;
 
 public:
     BgUnitObj();
@@ -77,10 +78,18 @@ public:
         return mRows;
     }
 
-    void getSlopeSections(std::vector<Row>& main_block, std::vector<Row>& sub_block) const;
+    void getSlopeSections(std::vector<RefRow>& main_block, std::vector<RefRow>& sub_block) const;
 
     size_t calcRowsByteSize() const;
     size_t saveRows(void* unt) const;
+
+    void render(const Unit** out_mtx, u32 width, u32 height) const;
+
+private:
+    static void processRow_(u32 y, const Row& row, const Unit** out_mtx, u32 width);
+    static void putObjectArray_(s32 xS, s32 yS, const std::vector<RefRow>& rows, const Unit** out_mtx, u32 width, u32 height);
+
+    void renderDiagonal_(const Unit** out_mtx, u32 width, u32 height) const;
 
 private:
     u8                  mWidth;
