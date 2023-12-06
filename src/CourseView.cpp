@@ -765,7 +765,6 @@ void CourseView::setItemData(const ItemID& item_id, const void* data)
 
             Bg::instance()->processBgCourseData(*mpCourseDataFile);
             BgRenderer::instance()->createVertexBuffer(item_id.getIndex() >> 22);
-            BgRenderer::instance()->calcSelectionVertexBuffer({ item_id });
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:

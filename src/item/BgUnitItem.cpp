@@ -1,11 +1,11 @@
 #include <CourseView.h>
 #include <MainWindow.h>
+#include <action/ActionItemDataChange.h>
+#include <action/ActionMgr.h>
 #include <course/Bg.h>
 #include <course/BgRenderer.h>
 #include <course/BgUnitFile.h>
 #include <item/BgUnitItem.h>
-#include <action/ActionMgr.h>
-#include <action/ActionBgUnitItemEdit.h>
 
 #include <rio.h>
 
@@ -14,7 +14,6 @@
 BgUnitItem::BgUnitItem(BgCourseData& data, u32 index)
     : ItemBase(ITEM_TYPE_BG_UNIT_OBJ, index, data.offset.x, data.offset.y)
     , mBgCourseData(data)
-    , mSelectionData(data)
 {
 }
 
@@ -43,6 +42,12 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
     }
 }
 
+void BgUnitItem::onSelectionChange_()
+{
+    if (mIsSelected)
+        mSelectionData = mBgCourseData;
+}
+
 void BgUnitItem::drawSelectionUI()
 {
     const CourseDataFile* p_cd_file = static_cast<MainWindow*>(rio::sRootTask)->getCourseView()->getCourseDataFile();
@@ -66,9 +71,7 @@ void BgUnitItem::drawSelectionUI()
     if (type_modified)
     {
         const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(env));
-        if (!file || idx >= file->getObjCount())
-            mSelectionData.type = mBgCourseData.type; //Revert type if not a valid object.
-        else
+        if (file && idx < file->getObjCount())
             mSelectionData.type = (env << 12) | idx;
     }
 
@@ -84,10 +87,20 @@ void BgUnitItem::drawSelectionUI()
 
         if (anything_modified)
         {
-            mSelectionData.offset = mBgCourseData.offset; //Copy over stuff not modified by the selection ui.
+            mSelectionData.offset = mBgCourseData.offset; // Copy over stuff not modified by the selection ui.
 
-            ActionBgUnitItemEdit::Context context { mItemID, mBgCourseData, mSelectionData };
-            ActionMgr::instance()->pushAction<ActionBgUnitItemEdit>(&context);
+            ActionItemDataChange::Context context {
+                mItemID,
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const BgCourseData>(mBgCourseData)
+                ),
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const BgCourseData>(mSelectionData)
+                )
+            };
+            ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
+
+            BgRenderer::instance()->calcSelectionVertexBuffer({ mItemID });
         }
     }
 

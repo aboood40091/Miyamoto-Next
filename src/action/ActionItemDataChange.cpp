@@ -1,26 +1,26 @@
 #include <CourseView.h>
 #include <MainWindow.h>
-#include <action/ActionBgUnitItemEdit.h>
+#include <action/ActionItemDataChange.h>
 
 #include <rio.h>
 
-ActionBgUnitItemEdit::ActionBgUnitItemEdit(const void* context)
+ActionItemDataChange::ActionItemDataChange(const void* context)
     : IAction(context)
-    , mItemId(static_cast<const Context*>(context)->item_id)
+    , mItemID(static_cast<const Context*>(context)->item_id)
     , mBefore(static_cast<const Context*>(context)->before)
     , mAfter(static_cast<const Context*>(context)->after)
 {
 }
 
-bool ActionBgUnitItemEdit::apply() const
+bool ActionItemDataChange::apply() const
 {
     CourseView* p_view = static_cast<MainWindow*>(rio::sRootTask)->getCourseView();
-    p_view->setItemData(mItemId, &mAfter);
+    p_view->setItemData(mItemID, mAfter.get());
     return true;
 }
 
-void ActionBgUnitItemEdit::unapply() const
+void ActionItemDataChange::unapply() const
 {
     CourseView* p_view = static_cast<MainWindow*>(rio::sRootTask)->getCourseView();
-    p_view->setItemData(mItemId, &mBefore);
+    p_view->setItemData(mItemID, mBefore.get());
 }
