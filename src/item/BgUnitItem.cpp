@@ -56,24 +56,27 @@ void BgUnitItem::drawSelectionUI()
     ImGui::Text("Object");
     ImGui::Separator();
 
+    const u16 single_step = 1; //Needed for +/- buttons to appear.
+
     u16 env = mSelectionData.type >> 12;
     u16 idx = mSelectionData.type & 0xFFF;
 
-    const u16 env_max = CD_FILE_ENV_MAX_NUM - 1;
-    const u16 idx_max = 0xFFF;
-    const u8 flag_max = 24;
+    bool type_modified  = ImGui::InputScalar("Environment Slot", ImGuiDataType_U16, &env, &single_step);
+         type_modified |= ImGui::InputScalar("Object Index", ImGuiDataType_U16, &idx, &single_step);
 
-    bool type_modified = ImGui::DragScalar("Environment Slot", ImGuiDataType_U16, &env, 1.0f, nullptr, &env_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
-    type_modified     |= ImGui::DragScalar("Object Index", ImGuiDataType_U16, &idx, 1.0f, nullptr, &idx_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
-    ImGui::DragScalarN("Size", ImGuiDataType_U16, &mSelectionData.size, 2);
-    ImGui::DragScalar("Flag", ImGuiDataType_U8, &mSelectionData.flag, 1.0f, nullptr, &flag_max, nullptr, ImGuiSliderFlags_AlwaysClamp);
-
-    if (type_modified)
+     if (type_modified)
     {
         const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(env));
         if (file && idx < file->getObjCount())
             mSelectionData.type = (env << 12) | idx;
     }
+
+    int flag = mSelectionData.flag;
+
+    if (ImGui::InputInt("Override", &flag, 1))
+        mSelectionData.flag = std::clamp(flag, 0, 24);
+
+    ImGui::DragScalarN("Size", ImGuiDataType_U16, &mSelectionData.size, 2);
 
     ImGui::Separator();
 

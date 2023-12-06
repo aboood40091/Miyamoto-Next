@@ -57,13 +57,15 @@ void MapActorItem::drawSelectionUI()
     ImGui::Text("Actor (Id %d)", mMapActorData.id);
     ImGui::Separator();
 
-    ImGui::DragScalarN("Events", ImGuiDataType_U8, &mSelectionData.event_id, 2);
-    ImGui::DragScalarN("Settings", ImGuiDataType_U32, &mSelectionData.settings, 2, 1.0f, nullptr, nullptr, "%08X");
-    ImGui::DragScalar("Area", ImGuiDataType_U8, &mSelectionData.area);
-    ImGui::DragScalar("Layer", ImGuiDataType_U8, &mSelectionData.layer);
-    ImGui::DragScalar("Movement ID", ImGuiDataType_U8, &mSelectionData.movement_id);
-    ImGui::DragScalar("Link ID", ImGuiDataType_U8, &mSelectionData.link_id);
-    ImGui::DragScalar("Init State", ImGuiDataType_U8, &mSelectionData.init_state);
+    const u8 single_step = 1; //Needed for +/- buttons to appear.
+
+    ImGui::InputScalarN("Events", ImGuiDataType_U8, &mSelectionData.event_id, 2, &single_step);
+    ImGui::InputScalarN("Settings", ImGuiDataType_U32, &mSelectionData.settings, 2, nullptr, nullptr, "%08X");
+    ImGui::InputScalar("Area", ImGuiDataType_U8, &mSelectionData.area);
+    ImGui::InputScalar("Layer", ImGuiDataType_U8, &mSelectionData.layer);
+    ImGui::InputScalar("Movement ID", ImGuiDataType_U8, &mSelectionData.movement_id, &single_step);
+    ImGui::InputScalar("Link ID", ImGuiDataType_U8, &mSelectionData.link_id, &single_step);
+    ImGui::InputScalar("Init State", ImGuiDataType_U8, &mSelectionData.init_state);
 
     ImGui::Separator();
 

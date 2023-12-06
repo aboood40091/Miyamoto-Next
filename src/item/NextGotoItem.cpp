@@ -51,20 +51,22 @@ void NextGotoItem::drawSelectionUI()
     ImGui::Text("Entrance");
     ImGui::Separator();
 
-    ImGui::DragScalar("Id", ImGuiDataType_U8, &mSelectionData.id);
-    ImGui::DragScalar("Area", ImGuiDataType_U8, &mSelectionData.area);
-    ImGui::DragScalar("Type", ImGuiDataType_U8, &mSelectionData.type);
-    ImGui::DragScalar("Dest Id", ImGuiDataType_U8, &mSelectionData.destination.next_goto);
-    ImGui::DragScalar("Dest Area", ImGuiDataType_U8, &mSelectionData.destination.file);
+    const u8 single_step = 1; //Needed for +/- buttons to appear.
+
+    ImGui::InputScalar("Id", ImGuiDataType_U8, &mSelectionData.id, &single_step);
+    ImGui::InputScalar("Area", ImGuiDataType_U8, &mSelectionData.area, &single_step);
+    ImGui::InputScalar("Type", ImGuiDataType_U8, &mSelectionData.type);
+    ImGui::InputScalar("Dest Id", ImGuiDataType_U8, &mSelectionData.destination.next_goto, &single_step);
+    ImGui::InputScalar("Dest Area", ImGuiDataType_U8, &mSelectionData.destination.file, &single_step);
     ImGui::DragScalarN("Camera Offset", ImGuiDataType_U16, &mSelectionData.camera_offset, 2);
-    ImGui::DragScalar("MP Spawn Flag", ImGuiDataType_U8, &mSelectionData.mp_spawn_flag);
-    ImGui::DragScalar("MP Innter Gap", ImGuiDataType_U8, &mSelectionData.mp_inner_gap);
-    ImGui::DragScalar("Flags", ImGuiDataType_U16, &mSelectionData.flag, 1.0f, nullptr, nullptr, "%04X");
-    ImGui::DragScalar("Baby Yoshi Entrance", ImGuiDataType_U8, &mSelectionData.chibi_yoshi_next_goto);
-    ImGui::DragScalar("Coin Edit Priority", ImGuiDataType_U8, &mSelectionData.coin_edit_priority);
-    ImGui::DragScalar("Path Info", ImGuiDataType_U8, &mSelectionData.rail.info);
-    ImGui::DragScalar("Path Node", ImGuiDataType_U8, &mSelectionData.rail.point);
-    ImGui::DragScalar("Transition", ImGuiDataType_U8, &mSelectionData.wipe_type);
+    ImGui::InputScalar("MP Spawn Flag", ImGuiDataType_U8, &mSelectionData.mp_spawn_flag);
+    ImGui::InputScalar("MP Inner Gap", ImGuiDataType_U8, &mSelectionData.mp_inner_gap);
+    ImGui::InputScalar("Flags", ImGuiDataType_U16, &mSelectionData.flag, nullptr, nullptr, "%04X");
+    ImGui::InputScalar("Baby Yoshi Entrance", ImGuiDataType_U8, &mSelectionData.chibi_yoshi_next_goto, &single_step);
+    ImGui::InputScalar("Coin Edit Priority", ImGuiDataType_U8, &mSelectionData.coin_edit_priority, &single_step);
+    ImGui::InputScalar("Path Info", ImGuiDataType_U8, &mSelectionData.rail.info, &single_step);
+    ImGui::InputScalar("Path Node", ImGuiDataType_U8, &mSelectionData.rail.point, &single_step);
+    ImGui::InputScalar("Transition", ImGuiDataType_U8, &mSelectionData.wipe_type);
 
     ImGui::Separator();
 

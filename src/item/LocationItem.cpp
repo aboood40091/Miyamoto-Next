@@ -49,7 +49,9 @@ void LocationItem::drawSelectionUI()
     ImGui::Text("Location");
     ImGui::Separator();
 
-    ImGui::DragScalar("Id", ImGuiDataType_U8, &mSelectionData.id);
+    const u8 single_step = 1; //Needed for +/- buttons to appear.
+
+    ImGui::InputScalar("Id", ImGuiDataType_U8, &mSelectionData.id, &single_step);
     ImGui::DragScalarN("Size", ImGuiDataType_U16, &mSelectionData.size, 2);
 
     ImGui::Separator();
