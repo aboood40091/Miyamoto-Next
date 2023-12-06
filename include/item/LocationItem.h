@@ -33,6 +33,9 @@ private:
         return 3600.0f - 10;
     }
 
+    void onSelectionChange_() override;
+
 private:
     Location& mLocation;
+    Location mSelectionData;
 };

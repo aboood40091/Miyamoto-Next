@@ -768,13 +768,23 @@ void CourseView::setItemData(const ItemID& item_id, const void* data)
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:
-        //TODO
+        {
+            std::unique_ptr<MapActorItem>& actor_item = mMapActorItemPtr[item_id.getIndex()];
+            actor_item->getMapActorData() = *static_cast<const MapActorData*>(data);
+            actor_item->onDataChange((MapActorItem::DataChangeFlag)~0);
+        }
         break;
     case ITEM_TYPE_NEXT_GOTO:
-        //TODO
+        {
+            NextGotoItem& entrance_item = mNextGotoItem[item_id.getIndex()];
+            entrance_item.getNextGoto() = *static_cast<const NextGoto*>(data);
+        }
         break;
     case ITEM_TYPE_LOCATION:
-        //TODO
+        {
+            LocationItem& location_item = mLocationItem[item_id.getIndex()];
+            location_item.getLocation() = *static_cast<const Location*>(data);
+        }
         break;
     default:
         break;

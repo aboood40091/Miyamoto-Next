@@ -1,3 +1,5 @@
+#include <action/ActionItemDataChange.h>
+#include <action/ActionMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <item/LocationItem.h>
 
@@ -47,6 +49,43 @@ void LocationItem::drawSelectionUI()
     ImGui::Text("Location");
     ImGui::Separator();
 
-    ImGui::DragScalar("Id", ImGuiDataType_U8, &mLocation.id);
-    ImGui::DragScalarN("Size", ImGuiDataType_U16, &mLocation.size, 2);
+    ImGui::DragScalar("Id", ImGuiDataType_U8, &mSelectionData.id);
+    ImGui::DragScalarN("Size", ImGuiDataType_U16, &mSelectionData.size, 2);
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Apply"))
+    {
+        const bool anything_modified =
+            mSelectionData.id       != mLocation.id ||
+            mSelectionData.size.x   != mLocation.size.x ||
+            mSelectionData.size.y   != mLocation.size.y;
+
+        if (anything_modified)
+        {
+            mSelectionData.offset = mLocation.offset; // Copy over stuff not modified by the selection ui.
+
+            ActionItemDataChange::Context context {
+                mItemID,
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const Location>(mLocation)
+                ),
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const Location>(mSelectionData)
+                )
+            };
+            ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Revert"))
+        mSelectionData = mLocation;
+}
+
+void LocationItem::onSelectionChange_()
+{
+    if (mIsSelected)
+        mSelectionData = mLocation;
 }

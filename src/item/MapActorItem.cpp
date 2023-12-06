@@ -1,3 +1,5 @@
+#include <action/ActionItemDataChange.h>
+#include <action/ActionMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <item/MapActorItem.h>
 
@@ -55,20 +57,54 @@ void MapActorItem::drawSelectionUI()
     ImGui::Text("Actor (Id %d)", mMapActorData.id);
     ImGui::Separator();
 
-    if (ImGui::DragScalarN("Events", ImGuiDataType_U8, &mMapActorData.event_id, 2))
-        onDataChange(DATA_CHANGE_FLAG_EVENT_ID);
-    if (ImGui::DragScalar("Settings 1", ImGuiDataType_U32, &mMapActorData.settings[0], 1.0f, nullptr, nullptr, "%08X"))
-        onDataChange(DATA_CHANGE_FLAG_SETTINGS_0);
-    if (ImGui::DragScalar("Settings 2", ImGuiDataType_U32, &mMapActorData.settings[1], 1.0f, nullptr, nullptr, "%08X"))
-        onDataChange(DATA_CHANGE_FLAG_SETTINGS_1);
-    if (ImGui::DragScalar("Area", ImGuiDataType_U8, &mMapActorData.area))
-        onDataChange(DATA_CHANGE_FLAG_AREA);
-    if (ImGui::DragScalar("Layer", ImGuiDataType_U8, &mMapActorData.layer))
-        onDataChange(DATA_CHANGE_FLAG_LAYER);
-    if (ImGui::DragScalar("Movement ID", ImGuiDataType_U8, &mMapActorData.movement_id))
-        onDataChange(DATA_CHANGE_FLAG_MOVEMENT_ID);
-    if (ImGui::DragScalar("Link ID", ImGuiDataType_U8, &mMapActorData.link_id))
-        onDataChange(DATA_CHANGE_FLAG_LINK_ID);
-    if (ImGui::DragScalar("Init State", ImGuiDataType_U8, &mMapActorData.init_state))
-        onDataChange(DATA_CHANGE_FLAG_INIT_STATE);
+    ImGui::DragScalarN("Events", ImGuiDataType_U8, &mSelectionData.event_id, 2);
+    ImGui::DragScalarN("Settings", ImGuiDataType_U32, &mSelectionData.settings, 2, 1.0f, nullptr, nullptr, "%08X");
+    ImGui::DragScalar("Area", ImGuiDataType_U8, &mSelectionData.area);
+    ImGui::DragScalar("Layer", ImGuiDataType_U8, &mSelectionData.layer);
+    ImGui::DragScalar("Movement ID", ImGuiDataType_U8, &mSelectionData.movement_id);
+    ImGui::DragScalar("Link ID", ImGuiDataType_U8, &mSelectionData.link_id);
+    ImGui::DragScalar("Init State", ImGuiDataType_U8, &mSelectionData.init_state);
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Apply"))
+    {
+        const bool anything_modified =
+            mSelectionData.event_id     != mMapActorData.event_id ||
+            mSelectionData.settings[0]  != mMapActorData.settings[0] ||
+            mSelectionData.settings[1]  != mMapActorData.settings[1] ||
+            mSelectionData.area         != mMapActorData.area ||
+            mSelectionData.layer        != mMapActorData.layer ||
+            mSelectionData.movement_id  != mMapActorData.movement_id ||
+            mSelectionData.link_id      != mMapActorData.link_id ||
+            mSelectionData.init_state   != mMapActorData.init_state;
+
+        if (anything_modified)
+        {
+            mSelectionData.id = mMapActorData.id; // Copy over stuff not modified by the selection ui.
+            mSelectionData.offset = mMapActorData.offset; // Copy over stuff not modified by the selection ui.
+
+            ActionItemDataChange::Context context {
+                mItemID,
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const MapActorData>(mMapActorData)
+                ),
+                std::static_pointer_cast<const void>(
+                    std::make_shared<const MapActorData>(mSelectionData)
+                )
+            };
+            ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Revert"))
+        mSelectionData = mMapActorData;
+}
+
+void MapActorItem::onSelectionChange_()
+{
+    if (mIsSelected)
+        mSelectionData = mMapActorData;
 }

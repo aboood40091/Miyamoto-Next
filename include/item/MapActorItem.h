@@ -77,6 +77,12 @@ protected:
 
 protected:
     MapActorData&   mMapActorData;
+
+private:
+    void onSelectionChange_() override;
+
+private:
+    MapActorData    mSelectionData;
 };
 
 #define MAP_ACTOR_ITEM_CREATE(CLASS)                                                            \

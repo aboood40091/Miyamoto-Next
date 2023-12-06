@@ -33,6 +33,9 @@ private:
         return 3000.0f;
     }
 
+    void onSelectionChange_() override;
+
 private:
     NextGoto& mNextGoto;
+    NextGoto mSelectionData;
 };
