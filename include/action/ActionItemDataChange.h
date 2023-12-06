@@ -13,6 +13,8 @@ public:
         ItemID                      item_id;
         std::shared_ptr<const void> before;
         std::shared_ptr<const void> after;
+
+        ~Context();
     };
 
 public:

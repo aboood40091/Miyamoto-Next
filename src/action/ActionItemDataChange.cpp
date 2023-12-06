@@ -24,3 +24,5 @@ void ActionItemDataChange::unapply() const
     CourseView* p_view = static_cast<MainWindow*>(rio::sRootTask)->getCourseView();
     p_view->setItemData(mItemID, mBefore.get());
 }
+
+ActionItemDataChange::Context::~Context() = default;
