@@ -75,13 +75,10 @@ protected:
         return true;
     }
 
-protected:
-    MapActorData&   mMapActorData;
-
-private:
     void onSelectionChange_() override;
 
-private:
+protected:
+    MapActorData&   mMapActorData;
     MapActorData    mSelectionData;
 };
 

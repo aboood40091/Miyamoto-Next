@@ -51,7 +51,7 @@ private:
     void setModelSelection_();
 
     void onIndexChange_() override { setModelItemID_(); }
-    void onSelectionChange_() override { setModelSelection_(); }
+    void onSelectionChange_() override { MapActorItem::onSelectionChange_(); setModelSelection_(); }
 
 private:
     ModelG3d*       mpModel;
