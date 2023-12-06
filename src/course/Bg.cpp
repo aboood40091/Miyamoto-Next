@@ -104,10 +104,17 @@ void Bg::clear()
 
 void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseData& obj_instance, u32 obj_index)
 {
+    // Guaranteed by processBgUnitObj_()
+  //RIO_ASSERT(obj_instance.offset.x < BG_MAX_UNIT_X && obj_instance.offset.y < BG_MAX_UNIT_Y);
+
     if (row.size() == 0)
         return;
 
-    Unit* dest = &mUnitMtx[layer][obj_instance.offset.y + y][obj_instance.offset.x];
+    u16 offset_y = obj_instance.offset.y + y;
+    if (offset_y >= BG_MAX_UNIT_Y)
+        return;
+
+    Unit* dest = &mUnitMtx[layer][offset_y][obj_instance.offset.x];
 
     bool repeat_found = false;
     std::vector<const BgUnitObj::Unit*> repeat_before;
@@ -135,10 +142,13 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
     u32 ic = repeat_in.size();
     u32 ac = repeat_after.size();
 
-    if (ic == 0)
+    if (ic == 0 || obj_instance.size.x <= bc)
     {
         for (u32 x = 0; x < obj_instance.size.x; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_before[x % bc]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -152,6 +162,9 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
     {
         for (u32 x = 0; x < bc; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_before[x]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -163,6 +176,9 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
 
         for (u32 x = bc; x < obj_instance.size.x; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_after[x - bc]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -178,6 +194,9 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
 
         for (u32 x = 0; x < bc; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_before[x]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -189,6 +208,9 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
 
         for (u32 x = bc; x < after_threshold; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_in[(x - bc) % ic]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -200,6 +222,9 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
 
         for (u32 x = after_threshold; x < obj_instance.size.x; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = *(repeat_after[x - after_threshold]);
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
@@ -215,6 +240,12 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
 {
     const std::vector<BgUnitObj::Row>& rows = bg_unit_obj.getRows();
     if (rows.size() == 0)
+        return;
+
+    if (obj_instance.size.x == 0 || obj_instance.size.y == 0)
+        return;
+
+    if (obj_instance.offset.x >= BG_MAX_UNIT_X || obj_instance.offset.y >= BG_MAX_UNIT_Y)
         return;
 
     if (rows[0][0].first & 0x80)
@@ -249,7 +280,7 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
     u32 ic = repeat_in.size();
     u32 ac = repeat_after.size();
 
-    if (ic == 0)
+    if (ic == 0 || obj_instance.size.y <= bc)
     {
         for (u32 y = 0; y < obj_instance.size.y; y++)
             processRow_(layer, y, *(repeat_before[y % bc]), obj_instance, obj_index);
@@ -279,18 +310,28 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
 
 void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgCourseData& obj_instance, u32 obj_index)
 {
+    // Guaranteed by processBgUnitObj_()
+  //RIO_ASSERT(obj_instance.offset.x < BG_MAX_UNIT_X && obj_instance.offset.y < BG_MAX_UNIT_Y);
+
     xS = std::max(0, xS);
     yS = std::max(0, yS);
 
-    s32 yE = yS + std::min(size_t(obj_instance.size.y), rows.size());
+    s32 yE = std::min(size_t(obj_instance.size.y), yS + std::min(size_t(obj_instance.size.y), rows.size()));
     for (s32 y = yS; y < yE; y++)
     {
-        Unit* drow = &mUnitMtx[layer][obj_instance.offset.y + y][obj_instance.offset.x];
+        u16 offset_y = obj_instance.offset.y + y;
+        if (offset_y >= BG_MAX_UNIT_Y)
+            break;
+
+        Unit* drow = &mUnitMtx[layer][offset_y][obj_instance.offset.x];
         const BgUnitObj::Row& srow = rows[y - yS];
 
-        s32 xE = xS + std::min(size_t(obj_instance.size.x), srow.size());
+        s32 xE = std::min(size_t(obj_instance.size.x), xS + std::min(size_t(obj_instance.size.x), srow.size()));
         for (s32 x = xS; x < xE; x++)
         {
+            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
+                break;
+
             const BgUnitObj::Unit& unit = srow[x - xS];
             UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
             if (value == 0)
