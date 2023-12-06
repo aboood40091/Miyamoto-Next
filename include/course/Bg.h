@@ -67,12 +67,15 @@ public:
     void processBgCourseData(const CourseDataFile& cd_file);
     void clearBgCourseData();
 
+    static void processBgUnitObj(const BgUnitObj& bg_unit_obj, const BgUnitObj::Unit** out_mtx, u32 width, u32 height);
+
 private:
-    void processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseData& obj_instance, u32 obj_index);
-    void putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgCourseData& obj_instance, u32 obj_index);
+    static void processRow_(u32 y, const BgUnitObj::Row& row, const BgUnitObj::Unit** out_mtx, u32 width);
+    static void putObjectArray_(s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgUnitObj::Unit** out_mtx, u32 width, u32 height);
+
+    static void processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgUnitObj::Unit** out_mtx, u32 width, u32 height);
 
     void processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer);
-    void processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer);
 
 public:
     UnitID getUnitID(u16 x, u16 y, u8 layer) const

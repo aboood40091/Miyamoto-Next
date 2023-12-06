@@ -102,19 +102,12 @@ void Bg::clear()
     mpBgUnitFile.clear();
 }
 
-void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseData& obj_instance, u32 obj_index)
+void Bg::processRow_(u32 y, const BgUnitObj::Row& row, const BgUnitObj::Unit** out_mtx, u32 width)
 {
-    // Guaranteed by processBgUnitObj_()
-  //RIO_ASSERT(obj_instance.offset.x < BG_MAX_UNIT_X && obj_instance.offset.y < BG_MAX_UNIT_Y);
-
     if (row.size() == 0)
         return;
 
-    u16 offset_y = obj_instance.offset.y + y;
-    if (offset_y >= BG_MAX_UNIT_Y)
-        return;
-
-    Unit* dest = &mUnitMtx[layer][offset_y][obj_instance.offset.x];
+    const BgUnitObj::Unit** dest = out_mtx + y * width;
 
     bool repeat_found = false;
     std::vector<const BgUnitObj::Unit*> repeat_before;
@@ -142,115 +135,45 @@ void Bg::processRow_(u8 layer, u32 y, const BgUnitObj::Row& row, const BgCourseD
     u32 ic = repeat_in.size();
     u32 ac = repeat_after.size();
 
-    if (ic == 0 || obj_instance.size.x <= bc)
-    {
-        for (u32 x = 0; x < obj_instance.size.x; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
+    if (ic == 0 || width <= bc)
+        for (u32 x = 0; x < width; x++)
+            dest[x] = repeat_before[x % bc];
 
-            const BgUnitObj::Unit& unit = *(repeat_before[x % bc]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
-    }
-    else if (obj_instance.size.x <= bc + ac)
+    else if (width <= bc + ac)
     {
         for (u32 x = 0; x < bc; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
+            dest[x] = repeat_before[x];
 
-            const BgUnitObj::Unit& unit = *(repeat_before[x]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
-
-        for (u32 x = bc; x < obj_instance.size.x; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
-
-            const BgUnitObj::Unit& unit = *(repeat_after[x - bc]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
+        for (u32 x = bc; x < width; x++)
+            dest[x] = repeat_after[x - bc];
     }
     else
     {
-        u32 after_threshold = u32(obj_instance.size.x) - ac;
+        u32 after_threshold = width - ac;
 
         for (u32 x = 0; x < bc; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
-
-            const BgUnitObj::Unit& unit = *(repeat_before[x]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
+            dest[x] = repeat_before[x];
 
         for (u32 x = bc; x < after_threshold; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
+            dest[x] = repeat_in[(x - bc) % ic];
 
-            const BgUnitObj::Unit& unit = *(repeat_in[(x - bc) % ic]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
-
-        for (u32 x = after_threshold; x < obj_instance.size.x; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
-
-            const BgUnitObj::Unit& unit = *(repeat_after[x - after_threshold]);
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            dest[x].value = value;
-            dest[x].obj_index = obj_index;
-        }
+        for (u32 x = after_threshold; x < width; x++)
+            dest[x] = repeat_after[x - after_threshold];
     }
 }
 
-void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer)
+void Bg::processBgUnitObj(const BgUnitObj& bg_unit_obj, const BgUnitObj::Unit** out_mtx, u32 width, u32 height)
 {
     const std::vector<BgUnitObj::Row>& rows = bg_unit_obj.getRows();
     if (rows.size() == 0)
         return;
 
-    if (obj_instance.size.x == 0 || obj_instance.size.y == 0)
-        return;
-
-    if (obj_instance.offset.x >= BG_MAX_UNIT_X || obj_instance.offset.y >= BG_MAX_UNIT_Y)
+    if (width == 0 || height == 0)
         return;
 
     if (rows[0][0].first & 0x80)
     {
-        processDiagonalBgUnitObj_(bg_unit_obj, obj_instance, obj_index, layer);
+        processDiagonalBgUnitObj_(bg_unit_obj, out_mtx, width, height);
         return;
     }
 
@@ -280,70 +203,52 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
     u32 ic = repeat_in.size();
     u32 ac = repeat_after.size();
 
-    if (ic == 0 || obj_instance.size.y <= bc)
+    if (ic == 0 || height <= bc)
     {
-        for (u32 y = 0; y < obj_instance.size.y; y++)
-            processRow_(layer, y, *(repeat_before[y % bc]), obj_instance, obj_index);
+        for (u32 y = 0; y < height; y++)
+            processRow_(y, *(repeat_before[y % bc]), out_mtx, width);
     }
-    else if (obj_instance.size.y <= bc + ac)
+    else if (height <= bc + ac)
     {
         for (u32 y = 0; y < bc; y++)
-            processRow_(layer, y, *(repeat_before[y]), obj_instance, obj_index);
+            processRow_(y, *(repeat_before[y]), out_mtx, width);
 
-        for (u32 y = bc; y < obj_instance.size.y; y++)
-            processRow_(layer, y, *(repeat_after[y - bc]), obj_instance, obj_index);
+        for (u32 y = bc; y < height; y++)
+            processRow_(y, *(repeat_after[y - bc]), out_mtx, width);
     }
     else
     {
-        u32 after_threshold = u32(obj_instance.size.y) - ac;
+        u32 after_threshold = height - ac;
 
         for (u32 y = 0; y < bc; y++)
-            processRow_(layer, y, *(repeat_before[y]), obj_instance, obj_index);
+            processRow_(y, *(repeat_before[y]), out_mtx, width);
 
         for (u32 y = bc; y < after_threshold; y++)
-            processRow_(layer, y, *(repeat_in[(y - bc) % ic]), obj_instance, obj_index);
+            processRow_(y, *(repeat_in[(y - bc) % ic]), out_mtx, width);
 
-        for (u32 y = after_threshold; y < obj_instance.size.y; y++)
-            processRow_(layer, y, *(repeat_after[y - after_threshold]), obj_instance, obj_index);
+        for (u32 y = after_threshold; y < height; y++)
+            processRow_(y, *(repeat_after[y - after_threshold]), out_mtx, width);
     }
 }
 
-void Bg::putObjectArray_(u8 layer, s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgCourseData& obj_instance, u32 obj_index)
+void Bg::putObjectArray_(s32 xS, s32 yS, const std::vector<BgUnitObj::Row>& rows, const BgUnitObj::Unit** out_mtx, u32 width, u32 height)
 {
-    // Guaranteed by processBgUnitObj_()
-  //RIO_ASSERT(obj_instance.offset.x < BG_MAX_UNIT_X && obj_instance.offset.y < BG_MAX_UNIT_Y);
-
     xS = std::max(0, xS);
     yS = std::max(0, yS);
 
-    s32 yE = std::min(size_t(obj_instance.size.y), yS + std::min(size_t(obj_instance.size.y), rows.size()));
+    s32 yE = std::min<size_t>(height, yS + rows.size());
     for (s32 y = yS; y < yE; y++)
     {
-        u16 offset_y = obj_instance.offset.y + y;
-        if (offset_y >= BG_MAX_UNIT_Y)
-            break;
-
-        Unit* drow = &mUnitMtx[layer][offset_y][obj_instance.offset.x];
+        const BgUnitObj::Unit** drow = out_mtx + y * width;
         const BgUnitObj::Row& srow = rows[y - yS];
 
-        s32 xE = std::min(size_t(obj_instance.size.x), xS + std::min(size_t(obj_instance.size.x), srow.size()));
+        s32 xE = std::min<size_t>(width, xS + srow.size());
         for (s32 x = xS; x < xE; x++)
-        {
-            if (obj_instance.offset.x + x >= BG_MAX_UNIT_X)
-                break;
-
-            const BgUnitObj::Unit& unit = srow[x - xS];
-            UnitID value = mapUnit(unit.env, unit.idx, obj_instance.flag);
-            if (value == 0)
-                continue;
-
-            drow[x].value = value;
-            drow[x].obj_index = obj_index;
-        }
+            drow[x] = &(srow[x - xS]);
     }
 }
 
-void Bg::processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer)
+void Bg::processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgUnitObj::Unit** out_mtx, u32 width, u32 height)
 {
     std::vector<BgUnitObj::Row> main_block, sub_block;
     bg_unit_obj.getSlopeSections(main_block, sub_block);
@@ -367,14 +272,14 @@ void Bg::processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseD
         if (ssize_t(row.size()) > sub_block_width)
             sub_block_width = row.size();
 
-    s32 draw_num = std::min(obj_instance.size.y / main_block_height, obj_instance.size.x / main_block_width);
+    s32 draw_num = std::min(height / main_block_height, width / main_block_width);
 
     s32 x, y, xi, yi;
 
     if (!left && !down)
     {
         x = 0;
-        y = obj_instance.size.y - main_block_height - sub_block_height;
+        y = height - main_block_height - sub_block_height;
         xi = main_block_width;
         yi = -main_block_height;
     }
@@ -395,14 +300,14 @@ void Bg::processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseD
     else
     {
         x = 0;
-        y = obj_instance.size.y - main_block_height;
+        y = height - main_block_height;
         xi = main_block_width;
         yi = -main_block_height;
     }
 
     for (s32 i = 0; i < draw_num; i++)
     {
-        putObjectArray_(layer, x, y, main_block, obj_instance, obj_index);
+        putObjectArray_(x, y, main_block, out_mtx, width, height);
         if (sub_block_height > 0)
         {
             s32 xb;
@@ -413,13 +318,59 @@ void Bg::processDiagonalBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseD
                 xb = x;
 
             if (down)
-                putObjectArray_(layer, xb, y - sub_block_height, sub_block, obj_instance, obj_index);
+                putObjectArray_(xb, y - sub_block_height, sub_block, out_mtx, width, height);
             else
-                putObjectArray_(layer, xb, y + main_block_height, sub_block, obj_instance, obj_index);
+                putObjectArray_(xb, y + main_block_height, sub_block, out_mtx, width, height);
         }
         x += xi;
         y += yi;
     }
+}
+
+void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer)
+{
+    RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
+
+    u32 inst_x = obj_instance.offset.x;
+    u32 inst_y = obj_instance.offset.y;
+
+    if (inst_x >= BG_MAX_UNIT_X || inst_y >= BG_MAX_UNIT_Y)
+        return;
+
+    u32 width = obj_instance.size.x;
+    u32 height = obj_instance.size.y;
+
+    u32 real_w = std::min<u32>(width,  BG_MAX_UNIT_X - inst_x);
+    u32 real_h = std::min<u32>(height, BG_MAX_UNIT_Y - inst_y);
+
+    if (real_w == 0 || real_h == 0)
+        return;
+
+    const BgUnitObj::Unit** const mtx = new const BgUnitObj::Unit*[width * height];
+    rio::MemUtil::set(mtx, 0, sizeof(const BgUnitObj::Unit*) * (width * height));
+    {
+        processBgUnitObj(bg_unit_obj, mtx, width, height);
+
+        for (u32 y = 0; y < real_h; y++)
+        {
+            Unit* dest = mUnitMtx[layer][inst_y + y] + inst_x;
+
+            for (u32 x = 0; x < real_w; x++)
+            {
+                const BgUnitObj::Unit* p_unit = mtx[y * width + x];
+                if (p_unit == nullptr)
+                    continue;
+
+                UnitID value = mapUnit(p_unit->env, p_unit->idx, obj_instance.flag);
+                if (value == 0)
+                    continue;
+
+                dest[x].value = value;
+                dest[x].obj_index = obj_index;
+            }
+        }
+    }
+    delete[] mtx;
 }
 
 void Bg::processBgCourseData(const CourseDataFile& cd_file)
