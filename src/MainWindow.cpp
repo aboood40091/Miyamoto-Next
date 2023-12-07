@@ -369,6 +369,22 @@ void MainWindow::processMouseInput_()
     */
 
     mpCourseView->updateCursorPos(mCourseViewPos);
+
+    // If hovered, any mouse click action should restore focus
+    if (mCourseViewHovered && !mCourseViewFocused &&
+        (ImGui::IsMouseClicked(ImGuiMouseButton_Left) ||
+         ImGui::IsMouseClicked(ImGuiMouseButton_Right) ||
+         ImGui::IsMouseClicked(ImGuiMouseButton_Middle)))
+    {
+        ImGuiWindow* window = ImGui::FindWindowByName("CourseView");
+        if (window)
+        {
+            ImGui::FocusWindow(window, ImGuiFocusRequestFlags_UnlessBelowModal);
+            ImGuiContext* context = ImGui::GetCurrentContext();
+            mCourseViewFocused = context && context->NavWindow == window;
+        }
+    }
+
     mCourseViewCameraMoved = mpCourseView->processMouseInput(mCourseViewFocused, mCourseViewHovered);
 }
 
