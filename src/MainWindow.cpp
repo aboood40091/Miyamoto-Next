@@ -248,7 +248,6 @@ void MainWindow::prepare_()
 
     const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
-    mEnvSelectedObj = u16(-1);
     setCurrentCourseDataFile(0);
 }
 
@@ -337,6 +336,7 @@ void MainWindow::exit_()
 void MainWindow::setCurrentCourseDataFile(u32 id)
 {
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
+    mEnvSelectedObj = u16(-1);
 
     CourseDataFile* p_cd_file = CourseData::instance()->getFile(id);
     if (!p_cd_file)
@@ -552,20 +552,23 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
     ImGui::Text("Slot %d", s32(env));
     ImGui::Separator();
 
+    const ImVec2& spacing = ImGui::GetStyle().ItemSpacing;
+    const f32 window_max_x = ImGui::GetWindowContentRegionMax().x;
+
+    ImVec2 cursor_pos = ImGui::GetCursorPos();
+    cursor_pos.x += spacing.x;
+
+    const f32 line_start_x = cursor_pos.x;
+    f32 line_max_y = 0.0f;
+
     const int num_objects = obj_textures.size();
-
-    ImGuiStyle& style = ImGui::GetStyle();
-    float window_visible_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-
-    float next_box_x = 0.0f;
-    bool next_same_line = false;
-
     for (int n = 0; n < num_objects; n++)
     {
         char buf[32];
         sprintf(buf, "Object %d", n);
 
         const ImVec2& label_size = ImGui::CalcTextSize(buf, NULL, true);
+        ImVec2 self_box_size = label_size;
 
         ImVec2 icon_size { 0.0f, 0.0f };
         const rio::Texture2D* obj_tex = obj_textures[n].get();
@@ -590,34 +593,32 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
                     icon_size.y = 256;
                 }
             }
+
+            self_box_size.x = std::max<f32>(self_box_size.x, icon_size.x),
+            self_box_size.y += spacing.y + icon_size.y;
         }
 
-        const ImVec2 self_box_size {
-            std::max<f32>(label_size.x, icon_size.x),
-            label_size.y + icon_size.y
-        };
+        if (cursor_pos.x != line_start_x && cursor_pos.x + self_box_size.x + spacing.x > window_max_x)
+        {
+            cursor_pos.x = line_start_x;
+            cursor_pos.y += line_max_y + spacing.y;
+            line_max_y = 0.0f;
+        }
 
-        if (next_same_line && next_box_x + self_box_size.x <= window_visible_x)
-            ImGui::SameLine();
-
-        const ImVec2 cursor_before = ImGui::GetCursorScreenPos();
+        ImGui::SetCursorPos(cursor_pos);
 
         u16 type = env << 12 | n;
-        if (ImGui::Selectable(buf, selected == type, ImGuiSelectableFlags_AllowOverlap, self_box_size))
+        if (ImGui::Selectable(buf, selected == type, 0, self_box_size))
             selected = type;
-
-        const ImVec2 cursor_after = ImGui::GetCursorScreenPos();
 
         if (obj_tex)
         {
-            ImGui::SetCursorScreenPos({ cursor_before.x + std::max<f32>(0.0f, (label_size.x - icon_size.x) * 0.5f), cursor_before.y + label_size.y });
+            ImGui::SetCursorPos({ cursor_pos.x + std::max<f32>(0.0f, (label_size.x - icon_size.x) * 0.5f), cursor_pos.y + label_size.y + spacing.y });
             ImGui::Image((void*)obj_tex->getNativeTextureHandle(), icon_size);
-            ImGui::SetCursorScreenPos(cursor_after);
         }
 
-        float last_box_x = ImGui::GetItemRectMax().x;
-        next_box_x = last_box_x + style.ItemSpacing.x + self_box_size.x;
-        next_same_line = n + 1 < num_objects && next_box_x < window_visible_x;
+        cursor_pos.x += self_box_size.x + spacing.x;
+        line_max_y = std::max<f32>(line_max_y, self_box_size.y);
     }
 }
 
