@@ -248,6 +248,7 @@ void MainWindow::prepare_()
 
     const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
+    mEnvSelectedObj = u16(-1);
     setCurrentCourseDataFile(0);
 }
 
@@ -546,8 +547,11 @@ void MainWindow::drawCourseViewUI_()
     processKeyboardInput_();
 }
 
-static void DrawBgUnitObj(const BgTexMgr::UnitObjTexVector& obj_textures, s32& selected)
+static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures, u16& selected)
 {
+    ImGui::Text("Slot %d", s32(env));
+    ImGui::Separator();
+
     const int num_objects = obj_textures.size();
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -600,8 +604,9 @@ static void DrawBgUnitObj(const BgTexMgr::UnitObjTexVector& obj_textures, s32& s
 
         const ImVec2 cursor_before = ImGui::GetCursorScreenPos();
 
-        if (ImGui::Selectable(buf, selected == n, ImGuiSelectableFlags_AllowOverlap, self_box_size))
-            selected = n;
+        u16 type = env << 12 | n;
+        if (ImGui::Selectable(buf, selected == type, ImGuiSelectableFlags_AllowOverlap, self_box_size))
+            selected = type;
 
         const ImVec2 cursor_after = ImGui::GetCursorScreenPos();
 
@@ -771,11 +776,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    ImGui::Text("Slot 0");
-                    ImGui::Separator();
-
-                    static int selected = -1;
-                    DrawBgUnitObj(obj_textures[0], selected);
+                    DrawBgUnitObj(0, obj_textures[0], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -783,11 +784,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    ImGui::Text("Slot 1");
-                    ImGui::Separator();
-
-                    static int selected = -1;
-                    DrawBgUnitObj(obj_textures[1], selected);
+                    DrawBgUnitObj(1, obj_textures[1], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -795,11 +792,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    ImGui::Text("Slot 2");
-                    ImGui::Separator();
-
-                    static int selected = -1;
-                    DrawBgUnitObj(obj_textures[2], selected);
+                    DrawBgUnitObj(2, obj_textures[2], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -807,11 +800,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    ImGui::Text("Slot 3");
-                    ImGui::Separator();
-
-                    static int selected = -1;
-                    DrawBgUnitObj(obj_textures[3], selected);
+                    DrawBgUnitObj(3, obj_textures[3], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
