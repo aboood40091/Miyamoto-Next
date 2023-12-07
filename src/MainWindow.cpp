@@ -574,22 +574,20 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
             icon_size.x = obj_tex->getWidth()  * 32 / 60.0f;
             icon_size.y = obj_tex->getHeight() * 32 / 60.0f;
 
-            f32 aspect = icon_size.x / icon_size.y;
-
             if (icon_size.x >= icon_size.y)
             {
                 if (icon_size.x > 256)
                 {
+                    icon_size.y *= 256 / icon_size.x;
                     icon_size.x = 256;
-                    icon_size.y = 256 / aspect;
                 }
             }
             else
             {
                 if (icon_size.y > 256)
                 {
+                    icon_size.x *= 256 / icon_size.y;
                     icon_size.y = 256;
-                    icon_size.x = 256 * aspect;
                 }
             }
         }
@@ -772,11 +770,11 @@ void MainWindow::drawPaletteUI_()
         {
             if (ImGui::BeginTabItem("Embedded"))
             {
-                const BgTexMgr::UnitObjTexArray& obj_textures = BgTexMgr::instance()->getUnitObjTexArray();
+                const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
 
                 if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    DrawBgUnitObj(0, obj_textures[0], mEnvSelectedObj);
+                    DrawBgUnitObj(0, obj_tex_array[0], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -784,7 +782,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    DrawBgUnitObj(1, obj_textures[1], mEnvSelectedObj);
+                    DrawBgUnitObj(1, obj_tex_array[1], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -792,7 +790,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    DrawBgUnitObj(2, obj_textures[2], mEnvSelectedObj);
+                    DrawBgUnitObj(2, obj_tex_array[2], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
@@ -800,7 +798,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
-                    DrawBgUnitObj(3, obj_textures[3], mEnvSelectedObj);
+                    DrawBgUnitObj(3, obj_tex_array[3], mEnvSelectedObj);
                 }
                 ImGui::EndChild();
 
