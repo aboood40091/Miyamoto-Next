@@ -99,6 +99,7 @@ private:
     RenderMgr       mRenderMgrBgPrepare;
     s32             mCurrentFile;
 
+    u16                     mEnvSelectedObj;
     s32                     mMetricsLocation;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
