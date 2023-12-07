@@ -565,9 +565,6 @@ void MainWindow::drawCourseViewUI_()
 
 static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures, u16& selected)
 {
-    ImGui::Text("Slot %d", s32(env));
-    ImGui::Separator();
-
     const ImVec2& spacing = ImGui::GetStyle().ItemSpacing;
     const f32 window_max_x = ImGui::GetWindowContentRegionMax().x;
 
@@ -640,6 +637,7 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
 
 void MainWindow::drawPaletteUI_()
 {
+    /*
     if (ImGui::Begin("Comments"))
     {
         ImGui::Text("Placeholder...");
@@ -702,6 +700,7 @@ void MainWindow::drawPaletteUI_()
         }
     }
     ImGui::End();
+    */
 
     if (ImGui::Begin("Locations"))
     {
@@ -781,6 +780,7 @@ void MainWindow::drawPaletteUI_()
     }
     ImGui::End();
 
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg));
     if (ImGui::Begin("Environment"))
     {
         if (ImGui::BeginTabBar("EnvironmentTabBar"))
@@ -789,35 +789,41 @@ void MainWindow::drawPaletteUI_()
             {
                 const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
 
-                if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                if (ImGui::CollapsingHeader("Slot 0", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    DrawBgUnitObj(0, obj_tex_array[0], mEnvSelectedObj);
+                    if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    {
+                        DrawBgUnitObj(0, obj_tex_array[0], mEnvSelectedObj);
+                    }
+                    ImGui::EndChild();
                 }
-                ImGui::EndChild();
 
-                ImGui::Separator();
-
-                if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                if (ImGui::CollapsingHeader("Slot 1", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    DrawBgUnitObj(1, obj_tex_array[1], mEnvSelectedObj);
+                    if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    {
+                        DrawBgUnitObj(1, obj_tex_array[1], mEnvSelectedObj);
+                    }
+                    ImGui::EndChild();
                 }
-                ImGui::EndChild();
 
-                ImGui::Separator();
-
-                if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                if (ImGui::CollapsingHeader("Slot 2", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    DrawBgUnitObj(2, obj_tex_array[2], mEnvSelectedObj);
+                    if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    {
+                        DrawBgUnitObj(2, obj_tex_array[2], mEnvSelectedObj);
+                    }
+                    ImGui::EndChild();
                 }
-                ImGui::EndChild();
 
-                ImGui::Separator();
-
-                if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                if (ImGui::CollapsingHeader("Slot 3", ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    DrawBgUnitObj(3, obj_tex_array[3], mEnvSelectedObj);
+                    if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    {
+                        DrawBgUnitObj(3, obj_tex_array[3], mEnvSelectedObj);
+                    }
+                    ImGui::EndChild();
                 }
-                ImGui::EndChild();
 
                 ImGui::EndTabItem();
             }
@@ -854,6 +860,7 @@ void MainWindow::drawPaletteUI_()
         }
     }
     ImGui::End();
+    ImGui::PopStyleColor();
 }
 
 void MainWindow::drawSelectionUI_()
