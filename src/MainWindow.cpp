@@ -769,8 +769,11 @@ void MainWindow::drawPaletteUI_()
             {
                 const BgTexMgr::UnitObjTexArray& obj_textures = BgTexMgr::instance()->getUnitObjTexArray();
 
-                if (ImGui::BeginChild("Env0"))
+                if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
+                    ImGui::Text("Slot 0");
+                    ImGui::Separator();
+
                     static int selected = -1;
                     DrawBgUnitObj(obj_textures[0], selected);
                 }
@@ -778,8 +781,11 @@ void MainWindow::drawPaletteUI_()
 
                 ImGui::Separator();
 
-                if (ImGui::BeginChild("Env1"))
+                if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
+                    ImGui::Text("Slot 1");
+                    ImGui::Separator();
+
                     static int selected = -1;
                     DrawBgUnitObj(obj_textures[1], selected);
                 }
@@ -787,8 +793,11 @@ void MainWindow::drawPaletteUI_()
 
                 ImGui::Separator();
 
-                if (ImGui::BeginChild("Env2"))
+                if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
+                    ImGui::Text("Slot 2");
+                    ImGui::Separator();
+
                     static int selected = -1;
                     DrawBgUnitObj(obj_textures[2], selected);
                 }
@@ -796,8 +805,11 @@ void MainWindow::drawPaletteUI_()
 
                 ImGui::Separator();
 
-                if (ImGui::BeginChild("Env3"))
+                if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                 {
+                    ImGui::Text("Slot 3");
+                    ImGui::Separator();
+
                     static int selected = -1;
                     DrawBgUnitObj(obj_textures[3], selected);
                 }
