@@ -50,11 +50,12 @@ BgTexMgr::BgTexMgr()
     , mTexRenderBuffer(cTexWidthI, cTexHeightI)
     , mTexColor(rio::TEXTURE_FORMAT_R8_G8_B8_A8_UNORM, cTexWidthI, cTexHeightI, 1)
     , mTexDepth(rio::DEPTH_TEXTURE_FORMAT_R32_FLOAT, cTexWidthI, cTexHeightI, 1)
-    , mpBgUnitFile(nullptr)
     , mOverridesType(OVERRIDES_NORMAL)
     , mOverridesDrawn(false)
     , mItemsTexture("Items")
 {
+    rio::MemUtil::set(mBgUnitFile, 0, sizeof(mBgUnitFile));
+
     mTexColorTarget.linkTexture2D(mTexColor);
     mTexRenderBuffer.setRenderTargetColor(&mTexColorTarget);
 
@@ -88,19 +89,23 @@ void BgTexMgr::initialize(const CourseDataFile& cd_file, RenderObjLayer* p_bg_pr
 
     mOverridesDrawn = false;
 
-    const BgUnitFile* bg_unit_file = Bg::instance()->getUnitFile(cd_file.getEnvironment(0));
-    RIO_ASSERT(bg_unit_file != nullptr);
+    for (s32 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
+        mBgUnitFile[env] = Bg::instance()->getUnitFile(cd_file.getEnvironment(env));
 
-    mpBgUnitFile = bg_unit_file;
+    RIO_ASSERT(mBgUnitFile[0] != nullptr);
+
+    createUnitDefaultRender_();
 
     p_bg_prepare_layer->initialize();
-    p_bg_prepare_layer->addDrawMethod(RenderObjLayer::cRenderStep_Xlu, rio::lyr::DrawMethod(this, &BgTexMgr::drawXlu_));
+    p_bg_prepare_layer->addDrawMethod(RenderObjLayer::cRenderStep_UpdateGPUBuffer, rio::lyr::DrawMethod(this, &BgTexMgr::drawXlu_));
     p_bg_prepare_layer->getRenderMgr()->setDrawCallback(&mDrawCallback);
 }
 
 void BgTexMgr::destroy(RenderObjLayer* p_bg_prepare_layer)
 {
-    mpBgUnitFile = nullptr;
+    rio::MemUtil::set(mBgUnitFile, 0, sizeof(mBgUnitFile));
+
+    clearUnitDefaultRender_();
 
     p_bg_prepare_layer->getRenderMgr()->setDrawCallback(nullptr);
     p_bg_prepare_layer->clearDrawMethodsAll();
@@ -112,10 +117,8 @@ void BgTexMgr::bindTexRenderBuffer_() const
     mTexRenderBuffer.bind();
 }
 
-void BgTexMgr::restoreFramebuffer_() const
+void BgTexMgr::restoreFramebuffer_()
 {
-    mTexRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
-
     rio::Window::instance()->makeContextCurrent();
 
     u32 width = rio::Window::instance()->getWidth();
@@ -308,9 +311,10 @@ void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
 
     const rio::BaseMtx44f& proj_mtx = draw_info.parent_layer.projection()->getMatrix();
 
+    bool need_redraw_default = false;
     if (!mOverridesDrawn)
     {
-        drawTexture(mpBgUnitFile->getTexture(), proj_mtx);
+        drawTexture(mBgUnitFile[0]->getTexture(), proj_mtx);
 
         render_state.setBlendFactorDst(rio::Graphics::BLEND_MODE_ONE_MINUS_SRC_ALPHA);
         render_state.applyBlendAndFastZ();
@@ -321,19 +325,20 @@ void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
         render_state.applyBlendAndFastZ();
 
         mOverridesDrawn = true;
+        need_redraw_default = true;
     }
 
     for (s32 i = 0; i < ANIME_INFO_TYPE_MAX; i++)
     {
         const AnimeInfo& anime_info = cAnimeInfo[i];
-        drawAnime(cAnimeInfoUnitID[i], mFrame[i], mpBgUnitFile->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
+        drawAnime(cAnimeInfoUnitID[i], mFrame[i], mBgUnitFile[0]->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
     }
 
     for (s32 i = 0; i < cItemOverrideNum; i++)
     {
         const ItemOverrideInfo& item_override_info = cItemOverrideInfo[i];
         const AnimeInfo& anime_info = cAnimeInfo[item_override_info.anime_info_type];
-        drawAnime(item_override_info.unit, mFrame[item_override_info.anime_info_type], mpBgUnitFile->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
+        drawAnime(item_override_info.unit, mFrame[item_override_info.anime_info_type], mBgUnitFile[0]->getAnimeTexture(anime_info.anim_type), anime_info.square, proj_mtx);
 
         render_state.setBlendFactorDst(rio::Graphics::BLEND_MODE_ONE_MINUS_SRC_ALPHA);
         render_state.applyBlendAndFastZ();
@@ -344,7 +349,141 @@ void BgTexMgr::drawXlu_(const rio::lyr::DrawInfo& draw_info)
         render_state.applyBlendAndFastZ();
     }
 
+    mTexRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
+
+    if (need_redraw_default)
+        doUnitDefaultRender_();
+
     restoreFramebuffer_();
+}
+
+void BgTexMgr::createUnitDefaultRender_()
+{
+    for (u8 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
+    {
+        const BgUnitFile* const file = mBgUnitFile[env];
+        if (file == nullptr)
+            continue;
+
+        u32 size = file->getObjCount();
+        for (u32 i = 0; i < size; i++)
+        {
+            const BgUnitObj& bg_unit_obj = file->getObj(i);
+            const BgUnitObj::Unit* const* const unit_mtx = bg_unit_obj.getDefaultRender();
+            if (unit_mtx == nullptr)
+            {
+                mUnitObjTexArray[env].emplace_back(nullptr);
+                continue;
+            }
+
+            u32 w = bg_unit_obj.getWidth();
+            u32 h = bg_unit_obj.getHeight();
+
+            u32 tex_w = w * 60;
+            u32 tex_h = h * 60;
+
+            mUnitObjTexArray[env].emplace_back(std::make_unique<rio::Texture2D>(rio::TEXTURE_FORMAT_R8_G8_B8_A8_UNORM, tex_w, tex_h, 1));
+
+        }
+    }
+}
+
+void BgTexMgr::doUnitDefaultRender_()
+{
+    rio::RenderState render_state;
+    render_state.setDepthEnable(false, false);
+    render_state.setBlendFactor(rio::Graphics::BLEND_MODE_ONE, rio::Graphics::BLEND_MODE_ZERO);
+    render_state.setCullingMode(rio::Graphics::CULLING_MODE_NONE);
+    render_state.apply();
+
+    rio::RenderBuffer render_buffer;
+    rio::RenderTargetColor color_target;
+    render_buffer.setRenderTargetColor(&color_target);
+
+    agl::TextureSampler sampler;
+
+    for (u8 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
+    {
+        const BgUnitFile* const file = mBgUnitFile[env];
+        if (file == nullptr)
+            continue;
+
+        u32 size = file->getObjCount();
+        for (u32 i = 0; i < size; i++)
+        {
+            const BgUnitObj& bg_unit_obj = file->getObj(i);
+            const BgUnitObj::Unit* const* const unit_mtx = bg_unit_obj.getDefaultRender();
+            if (unit_mtx == nullptr)
+                continue;
+
+            u32 w = bg_unit_obj.getWidth();
+            u32 h = bg_unit_obj.getHeight();
+
+            u32 tex_w = w * 60;
+            u32 tex_h = h * 60;
+
+            rio::OrthoProjection projection(-1.0f, 1.0f, 0.0f, h, 0.0f, w);
+
+            render_buffer.setSize(tex_w, tex_h);
+            color_target.linkTexture2D(*(mUnitObjTexArray[env][i]));
+            render_buffer.clear(rio::RenderBuffer::CLEAR_FLAG_COLOR, { 0.0f, 0.0f, 0.0f, 0.0f });
+            render_buffer.bind();
+
+            for (u32 y = 0; y < h; y++)
+            {
+                for (u32 x = 0; x < w; x++)
+                {
+                    const BgUnitObj::Unit& unit = *(unit_mtx[y * w + x]);
+                    if (unit.env == 0 && unit.idx == 0)
+                        continue;
+
+                    const rio::Texture2D* env_texture = nullptr;
+                    if (unit.env == 0)
+                        env_texture = &mTexColor;
+
+                    else
+                    {
+                        const BgUnitFile* const file_for_tex = mBgUnitFile[unit.env];
+                        if (file_for_tex == nullptr)
+                            continue;
+
+                        env_texture = file_for_tex->getTexture();
+                    }
+                    RIO_ASSERT(env_texture);
+
+                    sampler.applyTextureData(*env_texture);
+
+                    u32 row = unit.idx / 32;
+                    u32 col = unit.idx % 32;
+
+                    rio::Matrix34f mtx;
+                    mtx.makeT({ x + 0.5f, y + 0.5f, 0.0f });
+
+                    const rio::Vector2f env_tex_size { 2048.0f, 512.0f };
+
+                    const rio::Vector2f unit_size { 60, -60 };
+                    const rio::Vector2f unit_center { -env_tex_size.x * 0.5f + (col + 0.5f) * 64, -env_tex_size.y * 0.5f + (row + 0.5f) * 64 };
+
+                    agl::utl::DevTools::drawTextureTexCoord(
+                        sampler,
+                        mtx, projection.getMatrix(),
+                        unit_size / env_tex_size,
+                        0.0f,
+                        unit_center / unit_size,
+                        agl::cShaderMode_Invalid
+                    );
+                }
+            }
+
+            color_target.invalidateGPUCache();
+        }
+    }
+}
+
+void BgTexMgr::clearUnitDefaultRender_()
+{
+    for (u8 env = 0; env < CD_FILE_ENV_MAX_NUM; env++)
+        mUnitObjTexArray[env].clear();
 }
 
 void BgTexMgr::DrawCallback::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -368,5 +507,6 @@ void BgTexMgr::DrawCallback::postDrawXlu(s32 view_index, const rio::lyr::DrawInf
     if (!mBgTexMgr.isReady())
         return;
 
-    mBgTexMgr.restoreFramebuffer_();
+    mBgTexMgr.mTexRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
+    restoreFramebuffer_();
 }

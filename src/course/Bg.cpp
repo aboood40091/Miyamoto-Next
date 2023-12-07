@@ -3,8 +3,6 @@
 #include <course/CourseDataFile.h>
 #include <resource/SharcArchiveRes.h>
 
-#include <misc/rio_MemUtil.h>
-
 namespace {
 
 static const u8 cUnit[24] = {
@@ -90,16 +88,16 @@ bool Bg::loadUnit(const SharcArchiveRes& pack_arc, const std::string& name)
         return false;
     }
 
-    mpBgUnitFile.try_emplace(name, p_unit_file);
+    mUnitFileMap.try_emplace(name, p_unit_file);
     return true;
 }
 
 void Bg::clear()
 {
-    for (auto it : mpBgUnitFile)
+    for (auto it : mUnitFileMap)
         delete it.second;
 
-    mpBgUnitFile.clear();
+    mUnitFileMap.clear();
 }
 
 void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer)
@@ -121,31 +119,27 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
     if (real_w == 0 || real_h == 0)
         return;
 
-    const BgUnitObj::Unit** const mtx = new const BgUnitObj::Unit*[width * height];
-    rio::MemUtil::set(mtx, 0, sizeof(const BgUnitObj::Unit*) * (width * height));
+    const BgUnitObj::UnitMtx unit_mtx(width, height);
+    bg_unit_obj.render(unit_mtx.mtx, width, height);
+
+    for (u32 y = 0; y < real_h; y++)
     {
-        bg_unit_obj.render(mtx, width, height);
+        Unit* dest = mUnitMtx[layer][inst_y + y] + inst_x;
 
-        for (u32 y = 0; y < real_h; y++)
+        for (u32 x = 0; x < real_w; x++)
         {
-            Unit* dest = mUnitMtx[layer][inst_y + y] + inst_x;
+            const BgUnitObj::Unit* p_unit = unit_mtx.mtx[y * width + x];
+            if (p_unit == nullptr)
+                continue;
 
-            for (u32 x = 0; x < real_w; x++)
-            {
-                const BgUnitObj::Unit* p_unit = mtx[y * width + x];
-                if (p_unit == nullptr)
-                    continue;
+            UnitID value = mapUnit(p_unit->env, p_unit->idx, obj_instance.flag);
+            if (value == 0)
+                continue;
 
-                UnitID value = mapUnit(p_unit->env, p_unit->idx, obj_instance.flag);
-                if (value == 0)
-                    continue;
-
-                dest[x].value = value;
-                dest[x].obj_index = obj_index;
-            }
+            dest[x].value = value;
+            dest[x].obj_index = obj_index;
         }
     }
-    delete[] mtx;
 }
 
 void Bg::processBgCourseData(const CourseDataFile& cd_file)

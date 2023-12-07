@@ -21,6 +21,11 @@ void BgUnitObj::load(u8 width, u8 height, u16 random, u16 data_offs, const void*
     mHeight     = height;
     mRandom     = random;
 
+    if (width && height)
+        mDefaultRender = std::make_unique<UnitMtx>(width, height);
+    else
+        mDefaultRender.reset();
+
     const u8* source = static_cast<const u8*>(unt) + data_offs;
 
     RIO_ASSERT(0 < unt_size);
@@ -70,6 +75,15 @@ void BgUnitObj::load(u8 width, u8 height, u16 random, u16 data_offs, const void*
 
     if (mMainPartAt != -1 && mSubPartAt == -1)
         mSubPartAt = mRows.size();
+
+    if (mWidth == 0 || mHeight == 0)
+        mDefaultRender.reset();
+
+    else
+    {
+        mDefaultRender = std::make_unique<UnitMtx>(mWidth, mHeight);
+        render(mDefaultRender->mtx, mWidth, mHeight);
+    }
 }
 
 void BgUnitObj::getSlopeSections(std::vector<RefRow>& main_block, std::vector<RefRow>& sub_block) const

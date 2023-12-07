@@ -546,6 +546,78 @@ void MainWindow::drawCourseViewUI_()
     processKeyboardInput_();
 }
 
+static void DrawBgUnitObj(const BgTexMgr::UnitObjTexVector& obj_textures, s32& selected)
+{
+    const int num_objects = obj_textures.size();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    float window_visible_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
+    float next_box_x = 0.0f;
+    bool next_same_line = false;
+
+    for (int n = 0; n < num_objects; n++)
+    {
+        char buf[32];
+        sprintf(buf, "Object %d", n);
+
+        const ImVec2& label_size = ImGui::CalcTextSize(buf, NULL, true);
+
+        ImVec2 icon_size { 0.0f, 0.0f };
+        const rio::Texture2D* obj_tex = obj_textures[n].get();
+        if (obj_tex)
+        {
+            icon_size.x = obj_tex->getWidth()  * 32 / 60.0f;
+            icon_size.y = obj_tex->getHeight() * 32 / 60.0f;
+
+            f32 aspect = icon_size.x / icon_size.y;
+
+            if (icon_size.x >= icon_size.y)
+            {
+                if (icon_size.x > 256)
+                {
+                    icon_size.x = 256;
+                    icon_size.y = 256 / aspect;
+                }
+            }
+            else
+            {
+                if (icon_size.y > 256)
+                {
+                    icon_size.y = 256;
+                    icon_size.x = 256 * aspect;
+                }
+            }
+        }
+
+        const ImVec2 self_box_size {
+            std::max<f32>(label_size.x, icon_size.x),
+            label_size.y + icon_size.y
+        };
+
+        if (next_same_line && next_box_x + self_box_size.x <= window_visible_x)
+            ImGui::SameLine();
+
+        const ImVec2 cursor_before = ImGui::GetCursorScreenPos();
+
+        if (ImGui::Selectable(buf, selected == n, ImGuiSelectableFlags_AllowOverlap, self_box_size))
+            selected = n;
+
+        const ImVec2 cursor_after = ImGui::GetCursorScreenPos();
+
+        if (obj_tex)
+        {
+            ImGui::SetCursorScreenPos({ cursor_before.x + std::max<f32>(0.0f, (label_size.x - icon_size.x) * 0.5f), cursor_before.y + label_size.y });
+            ImGui::Image((void*)obj_tex->getNativeTextureHandle(), icon_size);
+            ImGui::SetCursorScreenPos(cursor_after);
+        }
+
+        float last_box_x = ImGui::GetItemRectMax().x;
+        next_box_x = last_box_x + style.ItemSpacing.x + self_box_size.x;
+        next_same_line = n + 1 < num_objects && next_box_x < window_visible_x;
+    }
+}
+
 void MainWindow::drawPaletteUI_()
 {
     if (ImGui::Begin("Comments"))
@@ -689,44 +761,58 @@ void MainWindow::drawPaletteUI_()
     }
     ImGui::End();
 
-    if (ImGui::Begin("Objects"))
+    if (ImGui::Begin("Environment"))
     {
-        if (ImGui::BeginTabBar("ObjectsTabBar"))
+        if (ImGui::BeginTabBar("EnvironmentTabBar"))
         {
-            static const ImVec2 box_size(120, 120);
-
-            if (ImGui::BeginTabItem("Main"))
+            if (ImGui::BeginTabItem("Embedded"))
             {
-                if (ImGui::BeginChild("MainObjects"))
+                const BgTexMgr::UnitObjTexArray& obj_textures = BgTexMgr::instance()->getUnitObjTexArray();
+
+                if (ImGui::BeginChild("Env0"))
                 {
                     static int selected = -1;
-                    static const int num_objects = 40;
-
-                    ImGuiStyle& style = ImGui::GetStyle();
-                    float window_visible_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-
-                    for (int n = 0; n < num_objects; n++)
-                    {
-                        char buf[32];
-                        sprintf(buf, "Object %d", n);
-                        if (ImGui::Selectable(buf, selected == n, 0, box_size))
-                            selected = n;
-
-                        float last_box_x = ImGui::GetItemRectMax().x;
-                        float next_box_x = last_box_x + style.ItemSpacing.x + box_size.x;
-                        if (n + 1 < num_objects && next_box_x < window_visible_x)
-                            ImGui::SameLine();
-                    }
+                    DrawBgUnitObj(obj_textures[0], selected);
                 }
                 ImGui::EndChild();
+
+                ImGui::Separator();
+
+                if (ImGui::BeginChild("Env1"))
+                {
+                    static int selected = -1;
+                    DrawBgUnitObj(obj_textures[1], selected);
+                }
+                ImGui::EndChild();
+
+                ImGui::Separator();
+
+                if (ImGui::BeginChild("Env2"))
+                {
+                    static int selected = -1;
+                    DrawBgUnitObj(obj_textures[2], selected);
+                }
+                ImGui::EndChild();
+
+                ImGui::Separator();
+
+                if (ImGui::BeginChild("Env3"))
+                {
+                    static int selected = -1;
+                    DrawBgUnitObj(obj_textures[3], selected);
+                }
+                ImGui::EndChild();
+
                 ImGui::EndTabItem();
             }
+            /*
             if (ImGui::BeginTabItem("All"))
             {
                 if (ImGui::BeginChild("AllObjects"))
                 {
                     static int selected = -1;
                     static const int num_objects = 120;
+                    static const ImVec2 box_size(120, 120);
 
                     ImGuiStyle& style = ImGui::GetStyle();
                     float window_visible_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
@@ -747,32 +833,7 @@ void MainWindow::drawPaletteUI_()
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Embedded"))
-            {
-                if (ImGui::BeginChild("EmbeddedObjects"))
-                {
-                    static int selected = -1;
-                    static const int num_objects = 20;
-
-                    ImGuiStyle& style = ImGui::GetStyle();
-                    float window_visible_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-
-                    for (int n = 0; n < num_objects; n++)
-                    {
-                        char buf[32];
-                        sprintf(buf, "Object %d", n);
-                        if (ImGui::Selectable(buf, selected == n, 0, box_size))
-                            selected = n;
-
-                        float last_box_x = ImGui::GetItemRectMax().x;
-                        float next_box_x = last_box_x + style.ItemSpacing.x + box_size.x;
-                        if (n + 1 < num_objects && next_box_x < window_visible_x)
-                            ImGui::SameLine();
-                    }
-                }
-                ImGui::EndChild();
-                ImGui::EndTabItem();
-            }
+            */
             ImGui::EndTabBar();
         }
     }

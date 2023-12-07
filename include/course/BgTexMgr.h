@@ -58,6 +58,10 @@ public:
     };
     static_assert(ITEM_MAX == 15);
 
+    using UnitObjTex = std::unique_ptr<rio::Texture2D>;
+    using UnitObjTexVector = std::vector<UnitObjTex>;
+    using UnitObjTexArray = std::array<UnitObjTexVector, CD_FILE_ENV_MAX_NUM>;
+
 public:
     void initialize(const CourseDataFile& cd_file, RenderObjLayer* p_bg_prepare_layer);
     void destroy(RenderObjLayer* p_bg_prepare_layer);
@@ -66,7 +70,7 @@ public:
 
     bool isReady() const
     {
-        return mpBgUnitFile && mpBgUnitFile->getTexture();
+        return mBgUnitFile[0] && mBgUnitFile[0]->getTexture();
     }
 
     const rio::Texture2D& getTexColor() const
@@ -90,9 +94,14 @@ public:
         return mItemsTexture;
     }
 
+    const UnitObjTexArray& getUnitObjTexArray() const
+    {
+        return mUnitObjTexArray;
+    }
+
 private:
     void bindTexRenderBuffer_() const;
-    void restoreFramebuffer_() const;
+    static void restoreFramebuffer_();
 
 private:
     enum AnimeInfoType
@@ -135,6 +144,10 @@ private:
 private:
     void drawXlu_(const rio::lyr::DrawInfo& draw_info);
 
+    void createUnitDefaultRender_();
+    void doUnitDefaultRender_();
+    void clearUnitDefaultRender_();
+
 private:
     class DrawCallback : public RenderMgr::CallbackBase
     {
@@ -159,11 +172,12 @@ private:
     rio::Texture2D          mTexColor;
     rio::RenderTargetDepth  mTexDepthTarget;
     rio::Texture2D          mTexDepth;
-    const BgUnitFile*       mpBgUnitFile;
+    const BgUnitFile*       mBgUnitFile[CD_FILE_ENV_MAX_NUM];
     s32                     mDelayTimer[ANIME_INFO_TYPE_MAX];
     s32                     mFrame[ANIME_INFO_TYPE_MAX];
     rio::Texture2D*         mOverrides[OVERRIDES_MAX];
     OverridesType           mOverridesType;
     bool                    mOverridesDrawn;
     rio::Texture2D          mItemsTexture;
+    UnitObjTexArray         mUnitObjTexArray;
 };

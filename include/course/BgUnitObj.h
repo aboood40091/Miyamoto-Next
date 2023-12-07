@@ -1,7 +1,8 @@
 #pragma once
 
-#include <misc/rio_Types.h>
+#include <misc/rio_MemUtil.h>
 
+#include <memory>
 #include <vector>
 
 struct BgUnitObjHead
@@ -32,6 +33,27 @@ public:
     };
     typedef std::vector<Unit> Row;
     typedef std::vector<const Unit*> RefRow;
+
+    struct UnitMtx
+    {
+        const Unit** mtx;
+
+        UnitMtx(u32 width, u32 height)
+            : mtx(new const Unit*[width * height])
+        {
+            rio::MemUtil::set(mtx, 0, sizeof(const Unit*) * (width * height));
+        }
+
+        ~UnitMtx()
+        {
+            delete[] mtx;
+        }
+
+        UnitMtx(const UnitMtx&) = delete;
+        UnitMtx(UnitMtx&&) = delete;
+        UnitMtx& operator=(const UnitMtx&) = delete;
+        UnitMtx& operator=(UnitMtx&&) = delete;
+    };
 
 public:
     BgUnitObj();
@@ -78,6 +100,11 @@ public:
         return mRows;
     }
 
+    const Unit* const* getDefaultRender() const
+    {
+        return mDefaultRender ? mDefaultRender->mtx : nullptr;
+    }
+
     void getSlopeSections(std::vector<RefRow>& main_block, std::vector<RefRow>& sub_block) const;
 
     size_t calcRowsByteSize() const;
@@ -92,14 +119,16 @@ private:
     void renderDiagonal_(const Unit** out_mtx, u32 width, u32 height) const;
 
 private:
-    u8                  mWidth;
-    u8                  mHeight;
-    u16                 mRandom;
+    u8                          mWidth;
+    u8                          mHeight;
+    u16                         mRandom;
 
-    s32                 mMainPartAt;
-    s32                 mSubPartAt;
+    s32                         mMainPartAt;
+    s32                         mSubPartAt;
 
-    bool                mIsReversed;
+    bool                        mIsReversed;
 
-    std::vector<Row>    mRows;
+    std::vector<Row>            mRows;
+
+    std::shared_ptr<UnitMtx>    mDefaultRender;
 };
