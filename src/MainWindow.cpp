@@ -570,6 +570,7 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
 
     ImVec2 cursor_pos = ImGui::GetCursorPos();
     cursor_pos.x += spacing.x;
+    cursor_pos.y += spacing.y;
 
     const f32 line_start_x = cursor_pos.x;
     f32 line_max_y = 0.0f;
