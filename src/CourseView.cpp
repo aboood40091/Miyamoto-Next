@@ -752,7 +752,7 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
     }
 }
 
-void CourseView::setItemData(const ItemID& item_id, const void* data)
+void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_change_flag)
 {
     RIO_ASSERT(data != nullptr);
 
@@ -771,7 +771,7 @@ void CourseView::setItemData(const ItemID& item_id, const void* data)
         {
             std::unique_ptr<MapActorItem>& actor_item = mMapActorItemPtr[item_id.getIndex()];
             actor_item->getMapActorData() = *static_cast<const MapActorData*>(data);
-            actor_item->onDataChange((MapActorItem::DataChangeFlag)~0);
+            actor_item->onDataChange((MapActorItem::DataChangeFlag)data_change_flag);
         }
         break;
     case ITEM_TYPE_NEXT_GOTO:

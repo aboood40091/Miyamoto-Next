@@ -12,6 +12,8 @@ class MapActorItem : public ItemBase
 public:
     enum DataChangeFlag
     {
+        DATA_CHANGE_FLAG_NONE           = 0,
+
         DATA_CHANGE_FLAG_OFFSET         = 1 << 0,
         DATA_CHANGE_FLAG_EVENT_ID       = 1 << 1,
         DATA_CHANGE_FLAG_SETTINGS_0     = 1 << 2,
@@ -22,6 +24,17 @@ public:
         DATA_CHANGE_FLAG_LINK_ID        = 1 << 7,
         DATA_CHANGE_FLAG_INIT_STATE     = 1 << 8
     };
+
+    friend DataChangeFlag operator|(const DataChangeFlag& lhs, const DataChangeFlag& rhs)
+    {
+        return (DataChangeFlag)((u32)lhs | (u32)rhs);
+    }
+
+    friend DataChangeFlag& operator|=(DataChangeFlag& lhs, const DataChangeFlag& rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
 
     static f32 getDefaultZPos(u8 layer)
     {

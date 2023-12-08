@@ -71,17 +71,33 @@ void MapActorItem::drawSelectionUI()
 
     if (ImGui::Button("Apply"))
     {
-        const bool anything_modified =
-            mSelectionData.event_id     != mMapActorData.event_id ||
-            mSelectionData.settings[0]  != mMapActorData.settings[0] ||
-            mSelectionData.settings[1]  != mMapActorData.settings[1] ||
-            mSelectionData.area         != mMapActorData.area ||
-            mSelectionData.layer        != mMapActorData.layer ||
-            mSelectionData.movement_id  != mMapActorData.movement_id ||
-            mSelectionData.link_id      != mMapActorData.link_id ||
-            mSelectionData.init_state   != mMapActorData.init_state;
+        DataChangeFlag data_change_flag = DATA_CHANGE_FLAG_NONE;
 
-        if (anything_modified)
+        if (mSelectionData.event_id != mMapActorData.event_id)
+            data_change_flag |= DATA_CHANGE_FLAG_EVENT_ID;
+
+        if (mSelectionData.settings[0] != mMapActorData.settings[0])
+            data_change_flag |= DATA_CHANGE_FLAG_SETTINGS_0;
+
+        if (mSelectionData.settings[1] != mMapActorData.settings[1])
+            data_change_flag |= DATA_CHANGE_FLAG_SETTINGS_1;
+
+        if (mSelectionData.area != mMapActorData.area)
+            data_change_flag |= DATA_CHANGE_FLAG_AREA;
+
+        if (mSelectionData.layer != mMapActorData.layer)
+            data_change_flag |= DATA_CHANGE_FLAG_LAYER;
+
+        if (mSelectionData.movement_id != mMapActorData.movement_id)
+            data_change_flag |= DATA_CHANGE_FLAG_MOVEMENT_ID;
+
+        if (mSelectionData.link_id != mMapActorData.link_id)
+            data_change_flag |= DATA_CHANGE_FLAG_LINK_ID;
+
+        if (mSelectionData.init_state != mMapActorData.init_state)
+            data_change_flag |= DATA_CHANGE_FLAG_INIT_STATE;
+
+        if (data_change_flag)
         {
             mSelectionData.id = mMapActorData.id; // Copy over stuff not modified by the selection ui.
             mSelectionData.offset = mMapActorData.offset; // Copy over stuff not modified by the selection ui.
@@ -93,7 +109,8 @@ void MapActorItem::drawSelectionUI()
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const MapActorData>(mSelectionData)
-                )
+                ),
+                data_change_flag
             };
             ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
         }
