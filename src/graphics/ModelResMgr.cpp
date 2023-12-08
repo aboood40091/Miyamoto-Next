@@ -1,7 +1,6 @@
+#include <MainWindow.h>
 #include <graphics/ModelResMgr.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 ModelResMgr* ModelResMgr::sInstance = nullptr;
 

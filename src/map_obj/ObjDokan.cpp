@@ -1,10 +1,9 @@
+#include <MainWindow.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/ObjDokan.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 static const std::string cResName[ObjDokan::TYPE_MAX] = {
     "obj_dokan",

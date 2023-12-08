@@ -1,10 +1,9 @@
+#include <MainWindow.h>
 #include <graphics/ModelG3d.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/DokanJoint.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 static const std::string cResName = "obj_dokan_joint";
 

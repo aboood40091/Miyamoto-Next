@@ -1,11 +1,10 @@
+#include <MainWindow.h>
 #include <course/CoinOrigin.h>
 #include <graphics/ModelG3d.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/CollectionCoin.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 static const std::string cResName = "star_coin";
 

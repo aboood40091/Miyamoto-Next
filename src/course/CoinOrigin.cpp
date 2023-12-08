@@ -1,3 +1,4 @@
+#include <MainWindow.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <course/UnitID.h>
@@ -6,8 +7,6 @@
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 #include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>

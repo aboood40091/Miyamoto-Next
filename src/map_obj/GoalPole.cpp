@@ -1,10 +1,9 @@
+#include <MainWindow.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/GoalPole.h>
 #include <resource/ResMgr.h>
-
-#include <MainWindow.h>
 
 static const std::string cResNameNormal = "goal_set";
 static const std::string cResNameKaiga = "goal_set_kaiga";

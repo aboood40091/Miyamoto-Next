@@ -4,8 +4,6 @@
 #include <course/BgTexMgr.h>
 #include <graphics/RenderObjLayer.h>
 
-#include <MainWindow.h>
-
 #include <gfx/rio_Window.h>
 #include <gpu/rio_RenderState.h>
 #include <misc/rio_MemUtil.h>

@@ -1,9 +1,8 @@
+#include <MainWindow.h>
 #include <course/BgRenderer.h>
 #include <course/BgTexMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <map_obj/ActorBlockBigBase.h>
-
-#include <MainWindow.h>
 
 void ActorBlockBigBase::updateItemType_()
 {
