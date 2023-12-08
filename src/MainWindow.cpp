@@ -628,7 +628,9 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
         if (obj_tex)
         {
             ImGui::SetCursorPos({ cursor_pos.x + std::max<f32>(0.0f, (label_size.x - icon_size.x) * 0.5f), cursor_pos.y + label_size.y + spacing.y });
+#if RIO_IS_WIN
             ImGui::Image((void*)obj_tex->getNativeTextureHandle(), icon_size);
+#endif // RIO_IS_WIN
         }
 
         cursor_pos.x += self_box_size.x + spacing.x;
