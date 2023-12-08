@@ -914,6 +914,23 @@ void CourseView::update()
     }
     mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
 
+    // Check cursor release before cursor press,
+    // in case cursor release was forced.
+    if (mIsCursorRelease)
+    {
+        switch (mCursorAction)
+        {
+        case CURSOR_ACTION_MOVE_ITEM:
+            onCursorRelease_MoveItem_();
+            break;
+        case CURSOR_ACTION_SELECTION_BOX:
+            onCursorRelease_SelectionBox_();
+            break;
+        default:
+            break;
+        }
+    }
+
     if (mIsCursorPress)
     {
         s32 width = mpItemIDTexture->getWidth();
@@ -948,21 +965,7 @@ void CourseView::update()
         }
         mCursorP1 = mCursorPos;
     }
-    else if (mIsCursorRelease)
-    {
-        switch (mCursorAction)
-        {
-        case CURSOR_ACTION_MOVE_ITEM:
-            onCursorRelease_MoveItem_();
-            break;
-        case CURSOR_ACTION_SELECTION_BOX:
-            onCursorRelease_SelectionBox_();
-            break;
-        default:
-            break;
-        }
-    }
-    else
+    else if (!mIsCursorRelease)
     {
         switch (mCursorAction)
         {
