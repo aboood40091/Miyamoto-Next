@@ -54,17 +54,17 @@ void ObjDokanActorBase::onDataChange(DataChangeFlag flag)
     if (flag & DATA_CHANGE_FLAG_LAYER)
     {
         updatePositionZ_();
-        position_changed = position_changed || mObjDokan.isCreated();
+        position_changed = mObjDokan.isCreated() || position_changed;
     }
 
     if (flag & DATA_CHANGE_FLAG_OFFSET)
     {
         updatePositionXY_();
-        position_changed = position_changed || mObjDokan.isCreated();
+        position_changed = mObjDokan.isCreated() || position_changed;
     }
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
-        position_changed = position_changed || updateParam_();
+        position_changed = updateParam_() || position_changed;
 
     if (position_changed)
         mObjDokan.move(mPosition);
