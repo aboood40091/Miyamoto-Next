@@ -76,7 +76,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
          mSize.x    // Right
     );
 
-    setZoomUnitSize(24);
+    setZoomUnitSize(32);
     mRealBgZoom = mBgZoom;
 
     mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
@@ -449,7 +449,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     mCursorAction = CURSOR_ACTION_NONE;
 
-    setZoomUnitSize(24);
+    setZoomUnitSize(32);
     mRealBgZoom = mBgZoom;
 
     if (mpCourseDataFile == nullptr)
