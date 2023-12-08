@@ -1,4 +1,4 @@
-#include <MainWindow.h>
+#include <Globals.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -32,10 +32,10 @@ GoalPole::GoalPole(MapActorData& map_actor_data, u32 index)
     , cIsKaiga(map_actor_data.id == 503 || map_actor_data.id == 631)
     , mFrame(0)
 {
-    static const std::string archive_path_normal        = MainWindow::getContentPath() + "/Common/actor/" + cResNameNormal      + ".szs";
-    static const std::string archive_path_kaiga         = MainWindow::getContentPath() + "/Common/actor/" + cResNameKaiga       + ".szs";
-    static const std::string archive_path_rdash         = MainWindow::getContentPath() + "/Common/actor/" + cResNameRDash       + ".szs";
-    static const std::string archive_path_kaiga_rdash   = MainWindow::getContentPath() + "/Common/actor/" + cResNameKaigaRDash  + ".szs";
+    static const std::string archive_path_normal        = Globals::getContentPath() + "/Common/actor/" + cResNameNormal     + ".szs";
+    static const std::string archive_path_kaiga         = Globals::getContentPath() + "/Common/actor/" + cResNameKaiga      + ".szs";
+    static const std::string archive_path_rdash         = Globals::getContentPath() + "/Common/actor/" + cResNameRDash      + ".szs";
+    static const std::string archive_path_kaiga_rdash   = Globals::getContentPath() + "/Common/actor/" + cResNameKaigaRDash + ".szs";
 
     bool rdash = map_actor_data.id == 630 || map_actor_data.id == 631;
 

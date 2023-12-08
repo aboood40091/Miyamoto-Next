@@ -1,4 +1,4 @@
-#include <MainWindow.h>
+#include <Globals.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <course/UnitID.h>
@@ -66,7 +66,7 @@ bool CoinOrigin::initialize()
 {
     RIO_ASSERT(mIsInitialized == false);
 
-    static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".sarc";
+    static const std::string archive_path = Globals::getContentPath() + "/Common/actor/" + cResName + ".sarc";
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, false);
     if (archive_res == nullptr)
         return false;

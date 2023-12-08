@@ -1,4 +1,4 @@
-#include <MainWindow.h>
+#include <Globals.h>
 #include <graphics/ModelG3d.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -11,7 +11,7 @@ DokanJoint::DokanJoint(MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {
-    static const std::string archive_path = MainWindow::getContentPath() + "/Common/actor/" + cResName + ".szs";
+    static const std::string archive_path = Globals::getContentPath() + "/Common/actor/" + cResName + ".szs";
 
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, true);
     if (archive_res == nullptr)

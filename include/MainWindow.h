@@ -17,14 +17,6 @@ class CourseView;
 class MainWindow : public rio::ITask, public rio::lyr::IDrawable
 {
 public:
-    static const std::string& getContentPath();
-    static bool forceSharcfb() { return true; }
-    static f32 getBigItemScale() { return 16; }
-    static bool useRealZoom() { return true; }
-    static bool preserveUnitSize() { return false; }    // Ignored if real zoom
-    static bool applyDistantViewScissor() { return true; }
-
-public:
     MainWindow();
 
     RenderObjLayer* getBgPrepareLayer() const

@@ -1,4 +1,4 @@
-#include <MainWindow.h>
+#include <Globals.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -37,8 +37,8 @@ Nokonoko::Nokonoko(MapActorData& map_actor_data, u32 index)
     , mIsAltColor(false)
 {
     static const std::string cArchivePath[2] = {
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
+        Globals::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
+        Globals::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
     };
 
     const std::string& res_name = cResName[cIsBig];

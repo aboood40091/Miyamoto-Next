@@ -1,4 +1,5 @@
 #include <CourseView.h>
+#include <Globals.h>
 #include <MainWindow.h>
 #include <action/ActionMgr.h>
 #include <course/BgTexMgr.h>
@@ -43,7 +44,7 @@
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
 
-const std::string& MainWindow::getContentPath()
+const std::string& Globals::getContentPath()
 {
     return nsmbu_content_path;
 }
@@ -177,7 +178,7 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized agl!\n");
 
     ShaderHolder::createSingleton();
-    ShaderHolder::instance()->initialize(getContentPath() + "/Common/shader/shaderfb");
+    ShaderHolder::instance()->initialize(Globals::getContentPath() + "/Common/shader/shaderfb");
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
@@ -187,7 +188,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = getContentPath() + "/Common/actor/jyotyuActorPack.szs";
+        arg.path = Globals::getContentPath() + "/Common/actor/jyotyuActorPack.szs";
         arg.alignment = 0x2000;
 
         mJyotyuActorPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -204,7 +205,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = getContentPath() + "/Common/actor/cobPack.szs";
+        arg.path = Globals::getContentPath() + "/Common/actor/cobPack.szs";
         arg.alignment = 0x2000;
 
         mCobPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -246,7 +247,7 @@ void MainWindow::prepare_()
 
     ActionMgr::instance()->discard(false);
 
-    const std::string& level_path = getContentPath() + "/Common/course_res_pack/" + level_fname;
+    const std::string& level_path = Globals::getContentPath() + "/Common/course_res_pack/" + level_fname;
     CourseData::instance()->loadFromPack(level_path);
     setCurrentCourseDataFile(0);
 }
@@ -351,7 +352,7 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     BgTexMgr::instance()->initialize(*p_cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(p_cd_file, useRealZoom());
+    mpCourseView->initialize(p_cd_file, Globals::useRealZoom());
 }
 
 void MainWindow::processMouseInput_()
@@ -439,7 +440,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, preserveUnitSize() && !useRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Globals::preserveUnitSize() && !Globals::useRealZoom());
         mCourseViewResized = false;
     }
 

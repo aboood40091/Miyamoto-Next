@@ -1,5 +1,5 @@
 #include <CourseView.h>
-#include <MainWindow.h>
+#include <Globals.h>
 #include <action/ActionItemSelectionMove.h>
 #include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
@@ -460,9 +460,9 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
         // Load default distant view
         const char* dv_name = "Nohara";
-        const std::string& dv_path = MainWindow::getContentPath() + "/Common/distant_view";
+        const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
         RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
-        DistantViewMgr::instance()->initialize(dv_name, dv_path, MainWindow::forceSharcfb());
+        DistantViewMgr::instance()->initialize(dv_name, dv_path, Globals::forceSharcfb());
 
         return;
     }
@@ -600,7 +600,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     RIO_ASSERT(dv_name != nullptr);
 
-    const std::string& dv_path = MainWindow::getContentPath() + "/Common/distant_view";
+    const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
     RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
 
     const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
@@ -638,7 +638,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     DistantViewMgr::instance()->initialize(
         dv_name, dv_path,
-        MainWindow::forceSharcfb(),
+        Globals::forceSharcfb(),
         bg_pos,
         bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
@@ -1096,7 +1096,7 @@ void CourseView::calcDistantViewScissor_()
 
 void CourseView::gather()
 {
-    if (MainWindow::applyDistantViewScissor())
+    if (Globals::applyDistantViewScissor())
         calcDistantViewScissor_();
 
     if (mDrawDV)
@@ -1216,7 +1216,7 @@ void CourseView::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
 void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    if (MainWindow::applyDistantViewScissor())
+    if (Globals::applyDistantViewScissor())
         mCourseView.mRenderBuffer.resetScissor();
 
     mCourseView.mpColorTexture->setCompMap(0x00010203);

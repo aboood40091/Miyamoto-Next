@@ -1,4 +1,4 @@
-#include <MainWindow.h>
+#include <Globals.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -137,11 +137,11 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     mType = type;
 
     static const std::string cArchivePath[TYPE_MAX] = {
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[TYPE_NORMAL] + ".szs",
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[TYPE_KAIGA]  + ".szs",
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[TYPE_MAME]   + ".szs",
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[TYPE_BIG]    + ".szs",
-        MainWindow::getContentPath() + "/Common/actor/" + cResName[TYPE_CB]     + ".szs"
+        Globals::getContentPath() + "/Common/actor/" + cResName[TYPE_NORMAL] + ".szs",
+        Globals::getContentPath() + "/Common/actor/" + cResName[TYPE_KAIGA]  + ".szs",
+        Globals::getContentPath() + "/Common/actor/" + cResName[TYPE_MAME]   + ".szs",
+        Globals::getContentPath() + "/Common/actor/" + cResName[TYPE_BIG]    + ".szs",
+        Globals::getContentPath() + "/Common/actor/" + cResName[TYPE_CB]     + ".szs"
     };
 
     const std::string& res_name = cResName[mType];
