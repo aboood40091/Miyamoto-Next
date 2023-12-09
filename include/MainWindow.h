@@ -2,11 +2,10 @@
 
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
+#include <item/ItemType.h>
 #include <resource/SharcArchiveRes.h>
 
 #include <task/rio_Task.h>
-
-#include <string>
 
 #if RIO_IS_CAFE
 #include <imgui_impl_gx2.h>
@@ -81,18 +80,18 @@ private:
         SharcArchiveRes archive_res;
     } mAglRes, mJyotyuActorPack, mCobPack;
 
-    CourseView*     mpCourseView;
-    rio::BaseVec2f  mCourseViewPos;
-    rio::BaseVec2i  mCourseViewSize;
-    bool            mCourseViewResized;
-    bool            mCourseViewHovered;
-    bool            mCourseViewFocused;
-    bool            mCourseViewCameraMoved;
-    RenderMgr       mRenderMgrBgPrepare;
-    s32             mCurrentFile;
-
+    CourseView*             mpCourseView;
+    rio::BaseVec2f          mCourseViewPos;
+    rio::BaseVec2i          mCourseViewSize;
+    bool                    mCourseViewResized;
+    bool                    mCourseViewHovered;
+    bool                    mCourseViewFocused;
+    bool                    mCourseViewCameraMoved;
+    RenderMgr               mRenderMgrBgPrepare;
+    s32                     mCurrentFile;
     u16                     mEnvSelectedObj;
     s32                     mMetricsLocation;
+    ItemType                mPaintType;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;

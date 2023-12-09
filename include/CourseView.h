@@ -15,6 +15,7 @@
 #include <memory>
 
 struct  AreaData;
+struct  BgCourseData;
 class   BgUnitItem;
 class   AreaItem;
 class   CourseDataFile;
@@ -99,6 +100,19 @@ private:
         return lhs;
     }
 
+    struct PaintContext
+    {
+        ItemType    type;
+        u8          layer;
+        u16         bg_unit_obj_type;
+        // ...
+
+        PaintContext()
+            : type(ITEM_TYPE_MAX_NUM)
+        {
+        }
+    };
+
 public:
     CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos);
     ~CourseView();
@@ -178,6 +192,27 @@ public:
         return mpCourseDataFile;
     }
 
+    void clearSelection()
+    {
+        clearSelection_();
+        mCursorAction = CURSOR_ACTION_NONE;
+    }
+
+    void setPaintType_None()
+    {
+        mPaintNext.type = ITEM_TYPE_MAX_NUM;
+    }
+
+    void setPaintType_BgUnitObj(u8 layer, u16 bg_unit_obj_type)
+    {
+        RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
+        RIO_ASSERT(bg_unit_obj_type < 0x3fff);
+
+        mPaintNext.type = ITEM_TYPE_BG_UNIT_OBJ;
+        mPaintNext.layer = layer;
+        mPaintNext.bg_unit_obj_type = bg_unit_obj_type;
+    }
+
     void updateCursorPos(const rio::BaseVec2f& window_pos);
     bool processMouseInput(bool focused, bool hovered);
     void processKeyboardInput();
@@ -190,11 +225,8 @@ public:
     void moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit);
     void setItemData(const ItemID& item_id, const void* data, u32 data_change_flag);
 
-    void clearSelection()
-    {
-        clearSelection_();
-        mCursorAction = CURSOR_ACTION_NONE;
-    }
+    void pushBackItem(ItemType item_type, const void* data, const void* extra);
+    void popBackItem(ItemType item_type, const void* extra);
 
 private:
     void createRenderBuffer_(s32 width, s32 height);
@@ -211,10 +243,17 @@ private:
     void onCursorRelease_R_();
 
     void moveItems_(bool commit);
-    void onCursorMove_MoveItem_();
+    void onCursorHold_MoveItem_();
     void onCursorRelease_MoveItem_();
 
     void onCursorRelease_SelectionBox_();
+
+    void pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer);
+    void popBackItem_BgUnitObj_(u8 layer);
+
+    void onCursorPress_Paint_BgUnitObj_();
+    void onCursorHold_Paint_BgUnitObj_();
+    void onCursorRelease_Paint_BgUnitObj_();
 
     void setItemSelection_(const ItemID& item_id, bool is_selected);
     void clearSelection_();
@@ -241,6 +280,8 @@ private:
     const AreaData*             mpDVControlArea;
     f32                         mBgZoom,
                                 mRealBgZoom;
+    PaintContext                mPaintCurrent,
+                                mPaintNext;
     rio::Vector2f               mCursorPos;
     CursorAction                mCursorAction;
     CursorButton                mCursorButtonCurrent;

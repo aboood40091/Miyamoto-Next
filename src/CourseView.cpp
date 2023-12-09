@@ -1,5 +1,6 @@
 #include <CourseView.h>
 #include <Globals.h>
+#include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
 #include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
@@ -188,7 +189,7 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
          0.0f,      // Top
         -mSize.y,   // Bottom
          0.0f,      // Left
-         mSize.x     // Right
+         mSize.x    // Right
     );
 
     if (preserve_unit_size)
@@ -429,11 +430,18 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 {
+    onCursorRelease_L_();
+    onCursorRelease_R_();
+
 #if RIO_IS_CAFE
     GX2DrawDone();
 #elif RIO_IS_WIN
     RIO_GL_CALL(glFinish());
 #endif
+
+    mCursorState = CURSOR_STATE_RELEASE;;
+    mCursorButtonCurrent = CURSOR_BUTTON_NONE;
+    mCursorForceReleaseFlag = CURSOR_RELEASE_FLAG_NONE;
 
     // Clear items
     mSelectedItems.clear(); mSelectionChange = true;
@@ -757,6 +765,8 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
     {
         switch (item_id.getType())
         {
+        default:
+            break;
         case ITEM_TYPE_BG_UNIT_OBJ:
             {
                 bg_selected = true;
@@ -773,8 +783,6 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
             break;
         case ITEM_TYPE_LOCATION:
             mLocationItem[item_id.getIndex()].move(dx, dy, commit);
-            break;
-        default:
             break;
         }
     }
@@ -794,6 +802,8 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
 
     switch (item_id.getType())
     {
+    default:
+        break;
     case ITEM_TYPE_BG_UNIT_OBJ:
         {
             BgUnitItem& object_item = mBgUnitItem[item_id.getIndex() >> 22][item_id.getIndex() & 0x003FFFFF];
@@ -821,8 +831,6 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
             LocationItem& location_item = mLocationItem[item_id.getIndex()];
             location_item.getLocation() = *static_cast<const Location*>(data);
         }
-        break;
-    default:
         break;
     }
 }
@@ -876,7 +884,7 @@ void CourseView::moveItems_(bool commit)
         BgRenderer::instance()->calcSelectionVertexBuffer(mSelectedItems);
 }
 
-void CourseView::onCursorMove_MoveItem_()
+void CourseView::onCursorHold_MoveItem_()
 {
     RIO_ASSERT(!mSelectedItems.empty());
 
@@ -889,8 +897,6 @@ void CourseView::onCursorMove_MoveItem_()
 
 void CourseView::onCursorRelease_MoveItem_()
 {
-    mCursorAction = CURSOR_ACTION_NONE;
-
     if (mCursorPos == mCursorP1)
         return;
 
@@ -900,8 +906,6 @@ void CourseView::onCursorRelease_MoveItem_()
 void CourseView::onCursorRelease_SelectionBox_()
 {
     RIO_ASSERT(mSelectedItems.empty());
-
-    mCursorAction = CURSOR_ACTION_NONE;
 
     s32 width = mpItemIDTexture->getWidth();
     s32 height = mpItemIDTexture->getHeight();
@@ -955,6 +959,7 @@ void CourseView::onCursorPress_L_()
         {
             clearSelection_();
             mSelectedItems.push_back(id_under_mouse);
+            mSelectionChange = true;
             setItemSelection_(id_under_mouse, true);
         }
 
@@ -962,9 +967,7 @@ void CourseView::onCursorPress_L_()
     }
     else
     {
-        if (!mSelectedItems.empty())
-            clearSelection_();
-
+        clearSelection_();
         mCursorAction = CURSOR_ACTION_SELECTION_BOX;
     }
     mCursorP1 = mCursorPos;
@@ -974,10 +977,10 @@ void CourseView::onCursorHold_L_()
 {
     switch (mCursorAction)
     {
-    case CURSOR_ACTION_MOVE_ITEM:
-        onCursorMove_MoveItem_();
-        break;
     default:
+        break;
+    case CURSOR_ACTION_MOVE_ITEM:
+        onCursorHold_MoveItem_();
         break;
     }
 }
@@ -986,27 +989,172 @@ void CourseView::onCursorRelease_L_()
 {
     switch (mCursorAction)
     {
+    default:
+        break;
     case CURSOR_ACTION_MOVE_ITEM:
         onCursorRelease_MoveItem_();
+        mCursorAction = CURSOR_ACTION_NONE;
         break;
     case CURSOR_ACTION_SELECTION_BOX:
         onCursorRelease_SelectionBox_();
-        break;
-    default:
+        mCursorAction = CURSOR_ACTION_NONE;
         break;
     }
 }
 
+void CourseView::pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer)
+{
+    mBgUnitItem[layer].emplace_back(
+        mpCourseDataFile->getBgData(layer).emplace_back(data),
+        layer << 22 | mBgUnitItem[layer].size()
+    );
+}
+
+void CourseView::popBackItem_BgUnitObj_(u8 layer)
+{
+    mBgUnitItem[layer].pop_back();
+    mpCourseDataFile->getBgData(layer).pop_back();
+}
+
+void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
+{
+    switch (item_type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            u8 layer = *static_cast<const u8*>(extra);
+            pushBackItem_BgUnitObj_(*static_cast<const BgCourseData*>(data), layer);
+            Bg::instance()->processBgCourseData(*mpCourseDataFile);
+            BgRenderer::instance()->createVertexBuffer(layer);
+        }
+        break;
+    }
+}
+
+void CourseView::popBackItem(ItemType item_type, const void* extra)
+{
+    switch (item_type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            u8 layer = *static_cast<const u8*>(extra);
+            popBackItem_BgUnitObj_(layer);
+            Bg::instance()->processBgCourseData(*mpCourseDataFile);
+            BgRenderer::instance()->createVertexBuffer(layer);
+        }
+        break;
+    }
+}
+
+void CourseView::onCursorPress_Paint_BgUnitObj_()
+{
+    clearSelection_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x =  p.x / 16;
+    s32 y = -p.y / 16;
+
+    if (x < 0 || x >= BG_MAX_UNIT_X || y < 0 || y >= BG_MAX_UNIT_Y)
+    {
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        return;
+    }
+
+    pushBackItem_BgUnitObj_({ mPaintCurrent.bg_unit_obj_type, { u16(x), u16(y) }, { 1, 1 } }, mPaintCurrent.layer);
+
+    Bg::instance()->processBgCourseData(*mpCourseDataFile);
+    BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
+}
+
+void CourseView::onCursorHold_Paint_BgUnitObj_()
+{
+    std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(mPaintCurrent.layer);
+    BgCourseData& data = vec[vec.size() - 1];
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>( p.x / 16, 0, BG_MAX_UNIT_X - 1);
+    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_X - 1);
+
+    u32 w = std::max<s32>(x - data.offset.x, 0) + 1;
+    u32 h = std::max<s32>(y - data.offset.y, 0) + 1;
+
+    if (w == data.size.x && h == data.size.y)
+        return;
+
+    data.size.x = w;
+    data.size.y = h;
+
+    Bg::instance()->processBgCourseData(*mpCourseDataFile);
+    BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
+}
+
+void CourseView::onCursorRelease_Paint_BgUnitObj_()
+{
+    const std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(mPaintCurrent.layer);
+    std::shared_ptr<BgCourseData> p_data = std::make_shared<BgCourseData>(vec[vec.size() - 1]);
+
+    popBackItem_BgUnitObj_(mPaintCurrent.layer);
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>( p.x / 16, 0, BG_MAX_UNIT_X - 1);
+    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_X - 1);
+
+    u32 w = std::max<s32>(x - p_data->offset.x, 0) + 1;
+    u32 h = std::max<s32>(y - p_data->offset.y, 0) + 1;
+
+    p_data->size.x = w;
+    p_data->size.y = h;
+
+    ActionItemPushBack::Context context {
+        ITEM_TYPE_BG_UNIT_OBJ,
+        std::static_pointer_cast<const void>(p_data),
+        std::static_pointer_cast<const void>(std::make_shared<u8>(mPaintCurrent.layer))
+    };
+    ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+}
+
 void CourseView::onCursorPress_R_()
 {
+    switch (mPaintNext.type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        mPaintCurrent.type = ITEM_TYPE_BG_UNIT_OBJ;
+        mPaintCurrent.layer = mPaintNext.layer;
+        mPaintCurrent.bg_unit_obj_type = mPaintNext.bg_unit_obj_type;
+        onCursorPress_Paint_BgUnitObj_();
+        break;
+    }
 }
 
 void CourseView::onCursorHold_R_()
 {
+    switch (mPaintCurrent.type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        onCursorHold_Paint_BgUnitObj_();
+        break;
+    }
 }
 
 void CourseView::onCursorRelease_R_()
 {
+    switch (mPaintCurrent.type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        onCursorRelease_Paint_BgUnitObj_();
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        break;
+    }
 }
 
 void CourseView::update()
@@ -1237,6 +1385,8 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
 {
     switch (item_id.getType())
     {
+    default:
+        break;
     case ITEM_TYPE_BG_UNIT_OBJ:
         mBgUnitItem[item_id.getIndex() >> 22][item_id.getIndex() & 0x003FFFFF].setSelection(is_selected);
         break;
@@ -1249,13 +1399,14 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
     case ITEM_TYPE_LOCATION:
         mLocationItem[item_id.getIndex()].setSelection(is_selected);
         break;
-    default:
-        break;
     }
 }
 
 void CourseView::clearSelection_()
 {
+    if (mSelectedItems.empty())
+        return;
+
     for (const ItemID& item_id : mSelectedItems)
         setItemSelection_(item_id, false);
 
@@ -1436,6 +1587,9 @@ void CourseView::drawSelectionUI()
         {
             switch (selected_item.getType())
             {
+            default:
+                ImGui::Text("Unknown item selected.");
+                break;
             case ITEM_TYPE_BG_UNIT_OBJ:
                 mBgUnitItem[selected_item.getIndex() >> 22][selected_item.getIndex() & 0x003FFFFF].drawSelectionUI();
                 break;
@@ -1447,9 +1601,6 @@ void CourseView::drawSelectionUI()
                 break;
             case ITEM_TYPE_LOCATION:
                 mLocationItem[selected_item.getIndex()].drawSelectionUI();
-                break;
-            default:
-                ImGui::Text("Unknown item selected.");
                 break;
             }
         }

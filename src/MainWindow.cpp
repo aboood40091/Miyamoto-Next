@@ -337,6 +337,8 @@ void MainWindow::exit_()
 void MainWindow::setCurrentCourseDataFile(u32 id)
 {
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
+
+    mPaintType = ITEM_TYPE_MAX_NUM;
     mEnvSelectedObj = u16(-1);
 
     CourseDataFile* p_cd_file = CourseData::instance()->getFile(id);
@@ -442,6 +444,19 @@ void MainWindow::calc_()
     {
         mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Globals::preserveUnitSize() && !Globals::useRealZoom());
         mCourseViewResized = false;
+    }
+
+    switch (mPaintType)
+    {
+    default:
+        mpCourseView->setPaintType_None();
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        if (mEnvSelectedObj == u16(-1))
+            mpCourseView->setPaintType_None();
+        else
+            mpCourseView->setPaintType_BgUnitObj(LAYER_1, mEnvSelectedObj);
+        break;
     }
 
     mpCourseView->update();
@@ -708,6 +723,9 @@ void MainWindow::drawPaletteUI_()
 
     if (ImGui::Begin("Locations"))
     {
+        if (ImGui::IsWindowFocused())
+            mPaintType = ITEM_TYPE_LOCATION;
+
         if (ImGui::BeginListBox("##LocationList", ImVec2(-1, -1)))
         {
             static const char* items[] = { "0: Location 0 (at 234, 2384)", "1: Location 9 (at 84, 865)" };
@@ -725,6 +743,9 @@ void MainWindow::drawPaletteUI_()
 
     if (ImGui::Begin("Entrances"))
     {
+        if (ImGui::IsWindowFocused())
+            mPaintType = ITEM_TYPE_NEXT_GOTO;
+
         if (ImGui::BeginListBox("##EntranceList", ImVec2(-1, -1)))
         {
             static const char* items[] = { "0: (0) Normal (enterable)", "1: (1) Pipe Facing Up (enterable)", "2: (2) Pipe Facing Up (cannot be entered)", "3: (3) Checkpoint", "4: (4) Normal (enterable)", "5: (5) Falling (Fast) (enterable)" };
@@ -742,10 +763,15 @@ void MainWindow::drawPaletteUI_()
 
     if (ImGui::Begin("Actors"))
     {
+        bool focused = ImGui::IsWindowFocused();
+
         if (ImGui::BeginTabBar("ActorTabBar"))
         {
             if (ImGui::BeginTabItem("Add"))
             {
+                if (focused)
+                    mPaintType = ITEM_TYPE_MAP_ACTOR;
+
                 static ImGuiTextFilter filter;
                 filter.Draw("##ActorSearch", -1);
 
@@ -787,10 +813,15 @@ void MainWindow::drawPaletteUI_()
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg));
     if (ImGui::Begin("Environment"))
     {
+        bool focused = ImGui::IsWindowFocused();
+
         if (ImGui::BeginTabBar("EnvironmentTabBar"))
         {
             if (ImGui::BeginTabItem("Embedded"))
             {
+                if (focused)
+                    mPaintType = ITEM_TYPE_BG_UNIT_OBJ;
+
                 const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
 
                 if (ImGui::CollapsingHeader("Slot 0", ImGuiTreeNodeFlags_DefaultOpen))
