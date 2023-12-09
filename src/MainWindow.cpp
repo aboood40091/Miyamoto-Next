@@ -943,7 +943,7 @@ void MainWindow::setupUiStyle_()
     ImGuiStyle& style = ImGui::GetStyle();
 
     //Fonts
-    io.Fonts->AddFontFromFileTTF("Roboto-Regular.ttf", 18);
+    io.Fonts->AddFontFromFileTTF(rio::FileDeviceMgr::instance()->getDefaultFileDevice()->getNativePath("fonts/Roboto-Regular.ttf").c_str(), 18);
 
     // Colors
     ImVec4* colors = style.Colors;
