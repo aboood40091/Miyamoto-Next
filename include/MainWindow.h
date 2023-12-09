@@ -53,6 +53,7 @@ private:
     void drawPaletteUI_();
     void drawSelectionUI_();
     void drawMainMenuBarUI_();
+    void setupUiStyle_();
 
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
