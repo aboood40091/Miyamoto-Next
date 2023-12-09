@@ -90,6 +90,7 @@ private:
     RenderMgr               mRenderMgrBgPrepare;
     s32                     mCurrentFile;
     u16                     mEnvSelectedObj;
+    s32                     mEnvPaintLayer;
     s32                     mMetricsLocation;
     ItemType                mPaintType;
 #if RIO_IS_CAFE

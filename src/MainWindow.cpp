@@ -56,6 +56,7 @@ MainWindow::MainWindow()
     , mCourseViewHovered(false)
     , mCourseViewFocused(false)
     , mCourseViewCameraMoved(false)
+    , mEnvPaintLayer(LAYER_1)
     , mMetricsLocation(0)
 {
 }
@@ -455,7 +456,7 @@ void MainWindow::calc_()
         if (mEnvSelectedObj == u16(-1))
             mpCourseView->setPaintType_None();
         else
-            mpCourseView->setPaintType_BgUnitObj(LAYER_1, mEnvSelectedObj);
+            mpCourseView->setPaintType_BgUnitObj(mEnvPaintLayer, mEnvSelectedObj);
         break;
     }
 
@@ -811,9 +812,14 @@ void MainWindow::drawPaletteUI_()
     ImGui::End();
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg));
+    ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImVec4(0, 0, 0, 0));
     if (ImGui::Begin("Environment"))
     {
         bool focused = ImGui::IsWindowFocused();
+
+        ImGui::RadioButton("Layer 0", &mEnvPaintLayer, LAYER_0); ImGui::SameLine();
+        ImGui::RadioButton("Layer 1", &mEnvPaintLayer, LAYER_1); ImGui::SameLine();
+        ImGui::RadioButton("Layer 2", &mEnvPaintLayer, LAYER_2);
 
         if (ImGui::BeginTabBar("EnvironmentTabBar"))
         {
@@ -822,43 +828,47 @@ void MainWindow::drawPaletteUI_()
                 if (focused)
                     mPaintType = ITEM_TYPE_BG_UNIT_OBJ;
 
-                const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
-
-                if (ImGui::CollapsingHeader("Slot 0", ImGuiTreeNodeFlags_DefaultOpen))
+                if (ImGui::BeginChild("EmbeddedScrollable"))
                 {
-                    if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
-                    {
-                        DrawBgUnitObj(0, obj_tex_array[0], mEnvSelectedObj);
-                    }
-                    ImGui::EndChild();
-                }
+                    const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
 
-                if (ImGui::CollapsingHeader("Slot 1", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    if (ImGui::CollapsingHeader("Slot 0", ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        DrawBgUnitObj(1, obj_tex_array[1], mEnvSelectedObj);
+                        if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                        {
+                            DrawBgUnitObj(0, obj_tex_array[0], mEnvSelectedObj);
+                        }
+                        ImGui::EndChild();
                     }
-                    ImGui::EndChild();
-                }
 
-                if (ImGui::CollapsingHeader("Slot 2", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    if (ImGui::CollapsingHeader("Slot 1", ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        DrawBgUnitObj(2, obj_tex_array[2], mEnvSelectedObj);
+                        if (ImGui::BeginChild("Env1", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                        {
+                            DrawBgUnitObj(1, obj_tex_array[1], mEnvSelectedObj);
+                        }
+                        ImGui::EndChild();
                     }
-                    ImGui::EndChild();
-                }
 
-                if (ImGui::CollapsingHeader("Slot 3", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                    if (ImGui::CollapsingHeader("Slot 2", ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        DrawBgUnitObj(3, obj_tex_array[3], mEnvSelectedObj);
+                        if (ImGui::BeginChild("Env2", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                        {
+                            DrawBgUnitObj(2, obj_tex_array[2], mEnvSelectedObj);
+                        }
+                        ImGui::EndChild();
                     }
-                    ImGui::EndChild();
+
+                    if (ImGui::CollapsingHeader("Slot 3", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        if (ImGui::BeginChild("Env3", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
+                        {
+                            DrawBgUnitObj(3, obj_tex_array[3], mEnvSelectedObj);
+                        }
+                        ImGui::EndChild();
+                    }
                 }
+                ImGui::EndChild();
 
                 ImGui::EndTabItem();
             }
@@ -895,7 +905,7 @@ void MainWindow::drawPaletteUI_()
         }
     }
     ImGui::End();
-    ImGui::PopStyleColor();
+    ImGui::PopStyleColor(2);
 }
 
 void MainWindow::drawSelectionUI_()
