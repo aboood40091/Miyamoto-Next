@@ -90,10 +90,10 @@ private:
     bool                    mCourseViewCameraMoved;
     RenderMgr               mRenderMgrBgPrepare;
     s32                     mCurrentFile;
+    ItemType                mPaintType;
     u16                     mEnvSelectedObj;
     s32                     mEnvPaintLayer;
     s32                     mMetricsLocation;
-    ItemType                mPaintType;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;

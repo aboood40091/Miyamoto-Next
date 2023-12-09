@@ -56,6 +56,7 @@ MainWindow::MainWindow()
     , mCourseViewHovered(false)
     , mCourseViewFocused(false)
     , mCourseViewCameraMoved(false)
+    , mPaintType(ITEM_TYPE_MAX_NUM)
     , mEnvPaintLayer(LAYER_1)
     , mMetricsLocation(0)
 {
@@ -340,7 +341,6 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 {
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
 
-    mPaintType = ITEM_TYPE_MAX_NUM;
     mEnvSelectedObj = u16(-1);
 
     CourseDataFile* p_cd_file = CourseData::instance()->getFile(id);
