@@ -37,8 +37,9 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayerDV(nullptr)
     , mpDVControlArea(nullptr)
     , mCursorAction(CURSOR_ACTION_NONE)
-    , mIsCursorPress(false)
-    , mIsCursorRelease(false)
+    , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
+    , mCursorState(CURSOR_STATE_RELEASE)
+    , mCursorForceReleaseFlag(CURSOR_RELEASE_FLAG_NONE)
     , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
 #if RIO_IS_WIN
@@ -652,34 +653,69 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 {
     static const rio::BaseVec2f zero { 0.0f, 0.0f };
 
-    mIsCursorRelease = !ImGui::IsMouseDown(ImGuiMouseButton_Left);
+    bool press = false;
 
-    if (hovered)
+    if (hovered && mCursorButtonCurrent == CURSOR_BUTTON_NONE)
     {
-        mIsCursorPress = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+        bool press_l = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+        bool press_r = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+
+        if (press_l && !press_r)
+        {
+            press = true;
+            mCursorButtonCurrent = CURSOR_BUTTON_L;
+        }
+        else if (press_r && !press_l)
+        {
+            press = true;
+            mCursorButtonCurrent = CURSOR_BUTTON_R;
+        }
     }
 
-    if (
-        focused &&
-#if RIO_IS_CAFE
-        rio::ControllerMgr::instance()->getMainController()->isHold(
-            (1 << rio::Controller::PAD_IDX_ZL) |
-            (1 << rio::Controller::PAD_IDX_ZR)
-        ) &&
-        ImGui::IsMouseDown(ImGuiMouseButton_Left)
-#else
-        ImGui::IsMouseDown(ImGuiMouseButton_Middle)
-#endif // RIO_IS_CAFE
-    )
+    if (press)
+        mCursorState = CURSOR_STATE_PRESS;
+
+    else
     {
-        if (mIsCursorPress)
+        bool hold = false;
+
+        switch (mCursorButtonCurrent)
         {
-            mIsCursorPress = false;
-            return false;
+        default:
+            break;
+        case CURSOR_BUTTON_L:
+            hold = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+            break;
+        case CURSOR_BUTTON_R:
+            hold = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+            break;
         }
 
-        if (mCursorAction)
-            mIsCursorRelease = true;
+        if (hold)
+            mCursorState = CURSOR_STATE_HOLD;
+        else
+            mCursorState = CURSOR_STATE_RELEASE;
+    }
+
+    if (focused && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
+    {
+        if (!press)
+        {
+            switch (mCursorButtonCurrent)
+            {
+            default:
+                break;
+            case CURSOR_BUTTON_L:
+                mCursorForceReleaseFlag = CURSOR_RELEASE_FLAG_L;
+                break;
+            case CURSOR_BUTTON_R:
+                mCursorForceReleaseFlag = CURSOR_RELEASE_FLAG_R;
+                break;
+            }
+        }
+
+        mCursorState = CURSOR_STATE_RELEASE;
+        mCursorButtonCurrent = CURSOR_BUTTON_NONE;
 
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
@@ -899,6 +935,80 @@ void CourseView::onCursorRelease_SelectionBox_()
     mSelectionChange = !mSelectedItems.empty();
 }
 
+void CourseView::onCursorPress_L_()
+{
+    s32 width = mpItemIDTexture->getWidth();
+    s32 height = mpItemIDTexture->getHeight();
+
+    s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
+    s32 y = std::clamp<s32>(mCursorPos.y, 0, height - 1);
+
+    u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
+#if RIO_IS_CAFE
+    under_mouse = __builtin_bswap32(under_mouse);
+#endif // RIO_IS_CAFE
+
+    ItemID id_under_mouse = under_mouse;
+    if (id_under_mouse.isValid())
+    {
+        if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
+        {
+            clearSelection_();
+            mSelectedItems.push_back(id_under_mouse);
+            setItemSelection_(id_under_mouse, true);
+        }
+
+        mCursorAction = CURSOR_ACTION_MOVE_ITEM;
+    }
+    else
+    {
+        if (!mSelectedItems.empty())
+            clearSelection_();
+
+        mCursorAction = CURSOR_ACTION_SELECTION_BOX;
+    }
+    mCursorP1 = mCursorPos;
+}
+
+void CourseView::onCursorHold_L_()
+{
+    switch (mCursorAction)
+    {
+    case CURSOR_ACTION_MOVE_ITEM:
+        onCursorMove_MoveItem_();
+        break;
+    default:
+        break;
+    }
+}
+
+void CourseView::onCursorRelease_L_()
+{
+    switch (mCursorAction)
+    {
+    case CURSOR_ACTION_MOVE_ITEM:
+        onCursorRelease_MoveItem_();
+        break;
+    case CURSOR_ACTION_SELECTION_BOX:
+        onCursorRelease_SelectionBox_();
+        break;
+    default:
+        break;
+    }
+}
+
+void CourseView::onCursorPress_R_()
+{
+}
+
+void CourseView::onCursorHold_R_()
+{
+}
+
+void CourseView::onCursorRelease_R_()
+{
+}
+
 void CourseView::update()
 {
     mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
@@ -914,67 +1024,62 @@ void CourseView::update()
     }
     mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
 
-    // Check cursor release before cursor press,
-    // in case cursor release was forced.
-    if (mIsCursorRelease)
+    CursorReleaseFlag cursor_release_flag = mCursorForceReleaseFlag;
+    mCursorForceReleaseFlag = CURSOR_RELEASE_FLAG_NONE;
+
+    if (mCursorState == CURSOR_STATE_RELEASE)
     {
-        switch (mCursorAction)
+        switch (mCursorButtonCurrent)
         {
-        case CURSOR_ACTION_MOVE_ITEM:
-            onCursorRelease_MoveItem_();
-            break;
-        case CURSOR_ACTION_SELECTION_BOX:
-            onCursorRelease_SelectionBox_();
-            break;
         default:
+            break;
+        case CURSOR_BUTTON_L:
+            cursor_release_flag |= CURSOR_RELEASE_FLAG_L;
+            mCursorButtonCurrent = CURSOR_BUTTON_NONE;
+            break;
+        case CURSOR_BUTTON_R:
+            cursor_release_flag |= CURSOR_RELEASE_FLAG_R;
+            mCursorButtonCurrent = CURSOR_BUTTON_NONE;
             break;
         }
     }
 
-    if (mIsCursorPress)
+    if (cursor_release_flag & CURSOR_RELEASE_FLAG_L)
+        onCursorRelease_L_();
+
+    if (cursor_release_flag & CURSOR_RELEASE_FLAG_R)
+        onCursorRelease_R_();
+
+    switch (mCursorState)
     {
-        s32 width = mpItemIDTexture->getWidth();
-        s32 height = mpItemIDTexture->getHeight();
-
-        s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
-        s32 y = std::clamp<s32>(mCursorPos.y, 0, height - 1);
-
-        u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
-#if RIO_IS_CAFE
-        under_mouse = __builtin_bswap32(under_mouse);
-#endif // RIO_IS_CAFE
-
-        ItemID id_under_mouse = under_mouse;
-        if (id_under_mouse.isValid())
+    default:
+        break;
+    case CURSOR_STATE_PRESS:
+        switch (mCursorButtonCurrent)
         {
-            if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
-            {
-                clearSelection_();
-                mSelectedItems.push_back(id_under_mouse);
-                setItemSelection_(id_under_mouse, true);
-            }
-
-            mCursorAction = CURSOR_ACTION_MOVE_ITEM;
-        }
-        else
-        {
-            if (!mSelectedItems.empty())
-                clearSelection_();
-
-            mCursorAction = CURSOR_ACTION_SELECTION_BOX;
-        }
-        mCursorP1 = mCursorPos;
-    }
-    else if (!mIsCursorRelease)
-    {
-        switch (mCursorAction)
-        {
-        case CURSOR_ACTION_MOVE_ITEM:
-            onCursorMove_MoveItem_();
-            break;
         default:
             break;
+        case CURSOR_BUTTON_L:
+            onCursorPress_L_();
+            break;
+        case CURSOR_BUTTON_R:
+            onCursorPress_R_();
+            break;
         }
+        break;
+    case CURSOR_STATE_HOLD:
+        switch (mCursorButtonCurrent)
+        {
+        default:
+            break;
+        case CURSOR_BUTTON_L:
+            onCursorHold_L_();
+            break;
+        case CURSOR_BUTTON_R:
+            onCursorHold_R_();
+            break;
+        }
+        break;
     }
 
     const rio::BaseVec2f& camera_pos = mCamera.pos();

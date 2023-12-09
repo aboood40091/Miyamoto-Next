@@ -61,10 +61,43 @@ private:
 
     enum CursorAction
     {
-        CURSOR_ACTION_NONE,
+        CURSOR_ACTION_NONE = 0,
         CURSOR_ACTION_MOVE_ITEM,
         CURSOR_ACTION_SELECTION_BOX
     };
+
+    enum CursorButton
+    {
+        CURSOR_BUTTON_NONE = 0,
+        CURSOR_BUTTON_L,
+        CURSOR_BUTTON_R
+    };
+
+    enum CursorState
+    {
+        CURSOR_STATE_RELEASE,
+        CURSOR_STATE_PRESS,
+        CURSOR_STATE_HOLD
+    };
+
+    enum CursorReleaseFlag
+    {
+        CURSOR_RELEASE_FLAG_NONE    = 0,
+        CURSOR_RELEASE_FLAG_L       = 1 << 0,
+        CURSOR_RELEASE_FLAG_R       = 1 << 1,
+        CURSOR_RELEASE_FLAG_ALL     = CURSOR_RELEASE_FLAG_L | CURSOR_RELEASE_FLAG_R
+    };
+
+    friend CursorReleaseFlag operator|(const CursorReleaseFlag& lhs, const CursorReleaseFlag& rhs)
+    {
+        return (CursorReleaseFlag)((u32)lhs | (u32)rhs);
+    }
+
+    friend CursorReleaseFlag& operator|=(CursorReleaseFlag& lhs, const CursorReleaseFlag& rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
 
 public:
     CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos);
@@ -169,6 +202,14 @@ private:
     void unbindRenderBuffer_();
     void clearItemIDTexture_();
 
+    void onCursorPress_L_();
+    void onCursorHold_L_();
+    void onCursorRelease_L_();
+
+    void onCursorPress_R_();
+    void onCursorHold_R_();
+    void onCursorRelease_R_();
+
     void moveItems_(bool commit);
     void onCursorMove_MoveItem_();
     void onCursorRelease_MoveItem_();
@@ -202,8 +243,9 @@ private:
                                 mRealBgZoom;
     rio::Vector2f               mCursorPos;
     CursorAction                mCursorAction;
-    bool                        mIsCursorPress;
-    bool                        mIsCursorRelease;
+    CursorButton                mCursorButtonCurrent;
+    CursorState                 mCursorState;
+    CursorReleaseFlag           mCursorForceReleaseFlag;
     bool                        mSelectionChange;
     rio::Vector2f               mCursorP1;
     std::vector<ItemID>         mSelectedItems;
