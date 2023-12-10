@@ -19,9 +19,11 @@ struct  BgCourseData;
 class   BgUnitItem;
 class   AreaItem;
 class   CourseDataFile;
+struct  Location;
 class   LocationItem;
 struct  MapActorData;
 class   MapActorItem;
+struct  NextGoto;
 class   NextGotoItem;
 
 class CourseView : public rio::lyr::IDrawable
@@ -237,6 +239,16 @@ public:
         mPaintNext.map_actor_id = map_actor_id;
     }
 
+    void setPaintType_NextGoto()
+    {
+        mPaintNext.type = ITEM_TYPE_NEXT_GOTO;
+    }
+
+    void setPaintType_Location()
+    {
+        mPaintNext.type = ITEM_TYPE_LOCATION;
+    }
+
     const std::vector< std::unique_ptr<MapActorItem> >& getMapActorItem() const
     {
         return mMapActorItemPtr;
@@ -297,6 +309,12 @@ private:
     void pushBackItem_MapActor_(const MapActorData& data);
     void popBackItem_MapActor_();
 
+    void pushBackItem_NextGoto_(const NextGoto& data);
+    void popBackItem_NextGoto_();
+
+    void pushBackItem_Location_(const Location& data);
+    void popBackItem_Location_();
+
     void onCursorPress_Paint_BgUnitObj_();
     void onCursorHold_Paint_BgUnitObj_();
     void onCursorRelease_Paint_BgUnitObj_();
@@ -304,6 +322,14 @@ private:
     void onCursorPress_Paint_MapActor_();
     void onCursorHold_Paint_MapActor_();
     void onCursorRelease_Paint_MapActor_();
+
+    void onCursorPress_Paint_NextGoto_();
+    void onCursorHold_Paint_NextGoto_();
+    void onCursorRelease_Paint_NextGoto_();
+
+    void onCursorPress_Paint_Location_();
+    void onCursorHold_Paint_Location_();
+    void onCursorRelease_Paint_Location_();
 
     void setItemSelection_(const ItemID& item_id, bool is_selected);
     void clearSelection_();

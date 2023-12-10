@@ -1076,6 +1076,54 @@ void CourseView::popBackItem_MapActor_()
     RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
 }
 
+void CourseView::pushBackItem_NextGoto_(const NextGoto& data)
+{
+    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    RIO_ASSERT(vec.size() == mNextGotoItem.size());
+    u32 i = mNextGotoItem.size();
+
+    vec.push_back(data);
+    RIO_ASSERT(vec.size() == i + 1);
+
+    mNextGotoItem.emplace_back(data, i);
+    RIO_ASSERT(mNextGotoItem.size() == i + 1);
+}
+
+void CourseView::popBackItem_NextGoto_()
+{
+    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    RIO_ASSERT(vec.size() == mNextGotoItem.size());
+
+    mNextGotoItem.pop_back();
+    vec.pop_back();
+
+    RIO_ASSERT(vec.size() == mNextGotoItem.size());
+}
+
+void CourseView::pushBackItem_Location_(const Location& data)
+{
+    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    RIO_ASSERT(vec.size() == mLocationItem.size());
+    u32 i = mLocationItem.size();
+
+    vec.push_back(data);
+    RIO_ASSERT(vec.size() == i + 1);
+
+    mLocationItem.emplace_back(data, i);
+    RIO_ASSERT(mLocationItem.size() == i + 1);
+}
+
+void CourseView::popBackItem_Location_()
+{
+    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    RIO_ASSERT(vec.size() == mLocationItem.size());
+
+    mLocationItem.pop_back();
+    vec.pop_back();
+
+    RIO_ASSERT(vec.size() == mLocationItem.size());
+}
+
 void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
 {
     switch (item_type)
@@ -1092,6 +1140,12 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
         break;
     case ITEM_TYPE_MAP_ACTOR:
         pushBackItem_MapActor_(*static_cast<const MapActorData*>(data));
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        pushBackItem_NextGoto_(*static_cast<const NextGoto*>(data));
+        break;
+    case ITEM_TYPE_LOCATION:
+        pushBackItem_Location_(*static_cast<const Location*>(data));
         break;
     }
 }
@@ -1112,6 +1166,12 @@ void CourseView::popBackItem(ItemType item_type, const void* extra)
         break;
     case ITEM_TYPE_MAP_ACTOR:
         popBackItem_MapActor_();
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        popBackItem_NextGoto_();
+        break;
+    case ITEM_TYPE_LOCATION:
+        popBackItem_Location_();
         break;
     }
 }
@@ -1275,6 +1335,125 @@ void CourseView::onCursorRelease_Paint_MapActor_()
     mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
 }
 
+void CourseView::onCursorPress_Paint_NextGoto_()
+{
+    clearSelection_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    pushBackItem_NextGoto_({ { u16(x), u16(y) } });
+}
+
+void CourseView::onCursorHold_Paint_NextGoto_()
+{
+    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    NextGoto& data = vec[vec.size() - 1];
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    data.offset.x = x;
+    data.offset.y = y;
+}
+
+void CourseView::onCursorRelease_Paint_NextGoto_()
+{
+    const std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    std::shared_ptr<NextGoto> p_data = std::make_shared<NextGoto>(vec[vec.size() - 1]);
+
+    popBackItem_NextGoto_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    p_data->offset.x = x;
+    p_data->offset.y = y;
+
+    ActionItemPushBack::Context context {
+        ITEM_TYPE_NEXT_GOTO,
+        std::static_pointer_cast<const void>(p_data)
+    };
+    ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+
+    mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+}
+
+void CourseView::onCursorPress_Paint_Location_()
+{
+    clearSelection_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    mCursorP1World.x = x;
+    mCursorP1World.y = y;
+
+    pushBackItem_Location_({ { u16(x), u16(y) }, { 8, 8 } });
+}
+
+void CourseView::onCursorHold_Paint_Location_()
+{
+    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    Location& data = vec[vec.size() - 1];
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    u16 x1 = std::min<u16>(x, mCursorP1World.x);
+    u16 y1 = std::min<u16>(y, mCursorP1World.y);
+
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = std::max<u16>(x2 - x1 + 8, 8);
+    u32 h = std::max<u16>(y2 - y1 + 8, 8);
+
+    data.offset.x = x1;
+    data.offset.y = y1;
+    data.size.x = w;
+    data.size.y = h;
+}
+
+void CourseView::onCursorRelease_Paint_Location_()
+{
+    const std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    std::shared_ptr<Location> p_data = std::make_shared<Location>(vec[vec.size() - 1]);
+
+    popBackItem_Location_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, (BG_MAX_UNIT_X - 1) * 16);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, (BG_MAX_UNIT_Y - 1) * 16);
+
+    u16 x1 = std::min<u16>(x, mCursorP1World.x);
+    u16 y1 = std::min<u16>(y, mCursorP1World.y);
+
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = std::max<u16>(x2 - x1 + 8, 8);
+    u32 h = std::max<u16>(y2 - y1 + 8, 8);
+
+    p_data->offset.x = x1;
+    p_data->offset.y = y1;
+    p_data->size.x = w;
+    p_data->size.y = h;
+
+    ActionItemPushBack::Context context {
+        ITEM_TYPE_LOCATION,
+        std::static_pointer_cast<const void>(p_data)
+    };
+    ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+
+    mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+}
+
 void CourseView::onCursorPress_R_()
 {
     switch (mPaintNext.type)
@@ -1292,6 +1471,14 @@ void CourseView::onCursorPress_R_()
         mPaintCurrent.map_actor_id = mPaintNext.map_actor_id;
         onCursorPress_Paint_MapActor_();
         break;
+    case ITEM_TYPE_NEXT_GOTO:
+        mPaintCurrent.type = ITEM_TYPE_NEXT_GOTO;
+        onCursorPress_Paint_NextGoto_();
+        break;
+    case ITEM_TYPE_LOCATION:
+        mPaintCurrent.type = ITEM_TYPE_LOCATION;
+        onCursorPress_Paint_Location_();
+        break;
     }
 }
 
@@ -1306,6 +1493,12 @@ void CourseView::onCursorHold_R_()
         break;
     case ITEM_TYPE_MAP_ACTOR:
         onCursorHold_Paint_MapActor_();
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        onCursorHold_Paint_NextGoto_();
+        break;
+    case ITEM_TYPE_LOCATION:
+        onCursorHold_Paint_Location_();
         break;
     }
 }
@@ -1322,6 +1515,14 @@ void CourseView::onCursorRelease_R_()
         break;
     case ITEM_TYPE_MAP_ACTOR:
         onCursorRelease_Paint_MapActor_();
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        onCursorRelease_Paint_NextGoto_();
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        break;
+    case ITEM_TYPE_LOCATION:
+        onCursorRelease_Paint_Location_();
         mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
         break;
     }

@@ -471,6 +471,12 @@ void MainWindow::calc_()
         else
             mpCourseView->setPaintType_MapActor(mMapActorSelectedID);
         break;
+    case ITEM_TYPE_NEXT_GOTO:
+        mpCourseView->setPaintType_NextGoto();
+        break;
+    case ITEM_TYPE_LOCATION:
+        mpCourseView->setPaintType_Location();
+        break;
     }
 
     mpCourseView->update();
