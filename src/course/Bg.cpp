@@ -142,9 +142,9 @@ void Bg::processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj
     }
 }
 
-void Bg::processBgCourseData(const CourseDataFile& cd_file)
+void Bg::processBgCourseData(const CourseDataFile& cd_file, u8 layer)
 {
-    clearBgCourseData();
+    clearBgCourseData(layer);
 
     const BgUnitFile* files[CD_FILE_ENV_MAX_NUM] = {
         getUnitFile(cd_file.getEnvironment(0)),
@@ -153,31 +153,28 @@ void Bg::processBgCourseData(const CourseDataFile& cd_file)
         getUnitFile(cd_file.getEnvironment(3))
     };
 
-    for (u8 layer = 0; layer < 3; layer++)
+    const auto& bg_data = cd_file.getBgData(layer);
+
+    for (u32 i = 0; i < bg_data.size(); i++)
     {
-        const auto& bg_data = cd_file.getBgData(layer);
+        const BgCourseData& obj_instance = bg_data[i];
+        if (obj_instance.type == 0x7fff)
+            continue;
 
-        for (u32 i = 0; i < bg_data.size(); i++)
-        {
-            const BgCourseData& obj_instance = bg_data[i];
-            if (obj_instance.type == 0x7fff)
-                continue;
+        u16 idx = obj_instance.type & 0x0fff;
+        u16 env = obj_instance.type >> 12;
+        RIO_ASSERT(env < CD_FILE_ENV_MAX_NUM);
 
-            u16 idx = obj_instance.type & 0x0fff;
-            u16 env = obj_instance.type >> 12;
-            RIO_ASSERT(env < CD_FILE_ENV_MAX_NUM);
+        // TODO: BgUnitFile cache for faster access
+        const BgUnitFile* file = files[env];
+        RIO_ASSERT(file);
 
-            // TODO: BgUnitFile cache for faster access
-            const BgUnitFile* file = files[env];
-            RIO_ASSERT(file);
-
-            const BgUnitObj& bg_unit_obj = file->getObj(idx);
-            processBgUnitObj_(bg_unit_obj, obj_instance, i, layer);
-        }
+        const BgUnitObj& bg_unit_obj = file->getObj(idx);
+        processBgUnitObj_(bg_unit_obj, obj_instance, i, layer);
     }
 }
 
-void Bg::clearBgCourseData()
+void Bg::clearBgCourseData(u8 layer)
 {
-    rio::MemUtil::set(mUnitMtx, 0, sizeof(UnitMtx));
+    rio::MemUtil::set(mUnitMtx[layer], 0, sizeof(mUnitMtx[layer]));
 }

@@ -64,8 +64,22 @@ public:
     }
 
 public:
-    void processBgCourseData(const CourseDataFile& cd_file);
-    void clearBgCourseData();
+    void processBgCourseData(const CourseDataFile& cd_file, u8 layer);
+    void clearBgCourseData(u8 layer);
+
+    void processBgCourseData(const CourseDataFile& cd_file)
+    {
+        processBgCourseData(cd_file, LAYER_0);
+        processBgCourseData(cd_file, LAYER_1);
+        processBgCourseData(cd_file, LAYER_2);
+    }
+
+    void clearBgCourseData()
+    {
+        clearBgCourseData(LAYER_0);
+        clearBgCourseData(LAYER_1);
+        clearBgCourseData(LAYER_2);
+    }
 
 private:
     void processBgUnitObj_(const BgUnitObj& bg_unit_obj, const BgCourseData& obj_instance, u32 obj_index, u8 layer);

@@ -765,7 +765,6 @@ void CourseView::processKeyboardInput()
 
 void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit)
 {
-    bool bg_selected = false;
     bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
         false, false, false
     };
@@ -778,7 +777,6 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
             break;
         case ITEM_TYPE_BG_UNIT_OBJ:
             {
-                bg_selected = true;
                 u8 layer = item_id.getIndex() >> 22;
                 mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF].move(dx, dy, commit);
                 layers_changed[layer] = true;
@@ -796,12 +794,13 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
         }
     }
 
-    if (bg_selected)
+    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
     {
-        Bg::instance()->processBgCourseData(*mpCourseDataFile);
-        for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
-            if (layers_changed[layer])
-                BgRenderer::instance()->createVertexBuffer(layer);
+        if (layers_changed[layer])
+        {
+            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
+            BgRenderer::instance()->createVertexBuffer(layer);
+        }
     }
 }
 
@@ -815,11 +814,13 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         break;
     case ITEM_TYPE_BG_UNIT_OBJ:
         {
-            BgUnitItem& object_item = mBgUnitItem[item_id.getIndex() >> 22][item_id.getIndex() & 0x003FFFFF];
+            u8 layer = item_id.getIndex() >> 22;
+
+            BgUnitItem& object_item = mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF];
             object_item.getBgCourseData() = *static_cast<const BgCourseData*>(data);
 
-            Bg::instance()->processBgCourseData(*mpCourseDataFile);
-            BgRenderer::instance()->createVertexBuffer(item_id.getIndex() >> 22);
+            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
+            BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:
@@ -1008,16 +1009,30 @@ void CourseView::onCursorRelease_L_()
 
 void CourseView::pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer)
 {
-    mBgUnitItem[layer].emplace_back(
-        mpCourseDataFile->getBgData(layer).emplace_back(data),
-        layer << 22 | mBgUnitItem[layer].size()
-    );
+    RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
+
+    std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+    std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
+    RIO_ASSERT(data_vec.size() == item_vec.size());
+    u32 i = item_vec.size();
+
+    data_vec.push_back(data);
+    RIO_ASSERT(data_vec.size() == i + 1);
+
+    item_vec.emplace_back(data_vec[i], layer << 22 | i);
+    RIO_ASSERT(item_vec.size() == i + 1);
 }
 
 void CourseView::popBackItem_BgUnitObj_(u8 layer)
 {
-    mBgUnitItem[layer].pop_back();
-    mpCourseDataFile->getBgData(layer).pop_back();
+    std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+    std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
+    RIO_ASSERT(data_vec.size() == item_vec.size());
+
+    item_vec.pop_back();
+    data_vec.pop_back();
+
+    RIO_ASSERT(data_vec.size() == item_vec.size());
 }
 
 void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
@@ -1030,7 +1045,7 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
         {
             u8 layer = *static_cast<const u8*>(extra);
             pushBackItem_BgUnitObj_(*static_cast<const BgCourseData*>(data), layer);
-            Bg::instance()->processBgCourseData(*mpCourseDataFile);
+            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
@@ -1047,7 +1062,7 @@ void CourseView::popBackItem(ItemType item_type, const void* extra)
         {
             u8 layer = *static_cast<const u8*>(extra);
             popBackItem_BgUnitObj_(layer);
-            Bg::instance()->processBgCourseData(*mpCourseDataFile);
+            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
@@ -1070,7 +1085,7 @@ void CourseView::onCursorPress_Paint_BgUnitObj_()
 
     pushBackItem_BgUnitObj_({ mPaintCurrent.bg_unit_obj_type, { u16(x), u16(y) }, { 1, 1 } }, mPaintCurrent.layer);
 
-    Bg::instance()->processBgCourseData(*mpCourseDataFile);
+    Bg::instance()->processBgCourseData(*mpCourseDataFile, mPaintCurrent.layer);
     BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
 }
 
@@ -1092,7 +1107,7 @@ void CourseView::onCursorHold_Paint_BgUnitObj_()
     data.size.x = w;
     data.size.y = h;
 
-    Bg::instance()->processBgCourseData(*mpCourseDataFile);
+    Bg::instance()->processBgCourseData(*mpCourseDataFile, mPaintCurrent.layer);
     BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
 }
 
@@ -1119,6 +1134,8 @@ void CourseView::onCursorRelease_Paint_BgUnitObj_()
         std::static_pointer_cast<const void>(std::make_shared<u8>(mPaintCurrent.layer))
     };
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+
+    mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
 }
 
 void CourseView::onCursorPress_R_()
