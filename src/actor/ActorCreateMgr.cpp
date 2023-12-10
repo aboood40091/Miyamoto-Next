@@ -782,91 +782,91 @@ void ActorCreateMgr::initialize()
 
     // -------------------------------------------------------------
 
-    addActorFactory(0, &Kuribo::create);
+    setActorFactory(0, &Kuribo::create);
 
-    addActorFactory(19, &Nokonoko::create);
+    setActorFactory(19, &Nokonoko::create);
 
-    addActorFactory(31, &GoalPole::create);
+    setActorFactory(31, &GoalPole::create);
 
-    addActorFactory(45, &CollectionCoin::create);
+    setActorFactory(45, &CollectionCoin::create);
 
-    addActorFactory(47, &CollectionCoin::create);
+    setActorFactory(47, &CollectionCoin::create);
 
-    addActorFactory(55, &Nokonoko::create);
+    setActorFactory(55, &Nokonoko::create);
 
-    addActorFactory(59, &ActorBlockHatena::create);
-    addActorFactory(60, &ActorBlockRenga::create);
+    setActorFactory(59, &ActorBlockHatena::create);
+    setActorFactory(60, &ActorBlockRenga::create);
 
-    addActorFactory(65, &ActorCoin::create);
-    addActorFactory(66, &ActorCoin::create);
+    setActorFactory(65, &ActorCoin::create);
+    setActorFactory(66, &ActorCoin::create);
 
-    addActorFactory(139, &ObjDokanActorUp::create);
-    addActorFactory(140, &ObjDokanActorDown::create);
-    addActorFactory(141, &ObjDokanActorLeft::create);
-    addActorFactory(142, &ObjDokanActorRight::create);
+    setActorFactory(139, &ObjDokanActorUp::create);
+    setActorFactory(140, &ObjDokanActorDown::create);
+    setActorFactory(141, &ObjDokanActorLeft::create);
+    setActorFactory(142, &ObjDokanActorRight::create);
 
-    addActorFactory(147, &ActorBlockHatena::create);
-    addActorFactory(148, &ActorBlockRenga::create);
-    addActorFactory(149, &ActorCoin::create);
+    setActorFactory(147, &ActorBlockHatena::create);
+    setActorFactory(148, &ActorBlockRenga::create);
+    setActorFactory(149, &ActorCoin::create);
 
-    addActorFactory(205, &ActorBlockHatena::create);
+    setActorFactory(205, &ActorBlockHatena::create);
 
-    addActorFactory(233, &ActorBlockHatena::create);
-    addActorFactory(234, &ActorBlockRenga::create);
+    setActorFactory(233, &ActorBlockHatena::create);
+    setActorFactory(234, &ActorBlockRenga::create);
 
-    addActorFactory(279, &ActorCoin::create);
+    setActorFactory(279, &ActorCoin::create);
 
-    addActorFactory(325, &ActorCoin::create);
+    setActorFactory(325, &ActorCoin::create);
 
-    addActorFactory(328, &ActorCoin::create);
+    setActorFactory(328, &ActorCoin::create);
 
-    addActorFactory(397, &ActorBlockHatena::create);
-    addActorFactory(398, &ActorBlockRenga::create);
+    setActorFactory(397, &ActorBlockHatena::create);
+    setActorFactory(398, &ActorBlockRenga::create);
 
-    addActorFactory(404, &ObjDokanActorUpNextGoto::create);
+    setActorFactory(404, &ObjDokanActorUpNextGoto::create);
 
-    addActorFactory(422, &ActorBlockBigRenga::create);
+    setActorFactory(422, &ActorBlockBigRenga::create);
 
-    addActorFactory(437, &Kuribo::create);
-    addActorFactory(438, &Kuribo::create);
+    setActorFactory(437, &Kuribo::create);
+    setActorFactory(438, &Kuribo::create);
 
-    addActorFactory(475, &ActorBlockBigHatena::create);
-    addActorFactory(476, &Nokonoko::create);
+    setActorFactory(475, &ActorBlockBigHatena::create);
+    setActorFactory(476, &Nokonoko::create);
 
-    addActorFactory(480, &CollectionCoin::create);
+    setActorFactory(480, &CollectionCoin::create);
 
-    addActorFactory(496, &ActorCoin::create);
+    setActorFactory(496, &ActorCoin::create);
 
-    addActorFactory(503, &GoalPole::create);
+    setActorFactory(503, &GoalPole::create);
 
-    addActorFactory(509, &ObjDokanActorRightNextGoto::create);
-    addActorFactory(510, &ObjDokanActorLeftNextGoto::create);
-    addActorFactory(511, &ObjDokanActorDownNextGoto::create);
+    setActorFactory(509, &ObjDokanActorRightNextGoto::create);
+    setActorFactory(510, &ObjDokanActorLeftNextGoto::create);
+    setActorFactory(511, &ObjDokanActorDownNextGoto::create);
 
-    addActorFactory(513, &DokanJoint::create);
+    setActorFactory(513, &DokanJoint::create);
 
-    addActorFactory(525, &ActorBlockHatena::create);
-    addActorFactory(526, &ActorBlockRenga::create);
+    setActorFactory(525, &ActorBlockHatena::create);
+    setActorFactory(526, &ActorBlockRenga::create);
 
-    addActorFactory(575, &ObjDokanActorLeft::create);
-    addActorFactory(576, &ObjDokanActorRight::create);
-    addActorFactory(577, &ObjDokanActorUp::create);
-    addActorFactory(578, &ObjDokanActorDown::create);
+    setActorFactory(575, &ObjDokanActorLeft::create);
+    setActorFactory(576, &ObjDokanActorRight::create);
+    setActorFactory(577, &ObjDokanActorUp::create);
+    setActorFactory(578, &ObjDokanActorDown::create);
 
-    addActorFactory(595, &Kuribo::create);
+    setActorFactory(595, &Kuribo::create);
 
-    addActorFactory(630, &GoalPole::create);
-    addActorFactory(631, &GoalPole::create);
+    setActorFactory(630, &GoalPole::create);
+    setActorFactory(631, &GoalPole::create);
 
-    addActorFactory(663, &ActorCoin::create);
+    setActorFactory(663, &ActorCoin::create);
 
-    addActorFactory(683, &ActorBlockHatena::create);
+    setActorFactory(683, &ActorBlockHatena::create);
 
-    addActorFactory(692, &ActorBlockRenga::create);
+    setActorFactory(692, &ActorBlockRenga::create);
 
-    addActorFactory(701, &ActorBlockRenga::create);
+    setActorFactory(701, &ActorBlockRenga::create);
 
-    addActorFactory(704, &ActorBlockRenga::create);
+    setActorFactory(704, &ActorBlockRenga::create);
 }
 
 ActorCreateMgr::~ActorCreateMgr()
@@ -900,7 +900,7 @@ const std::u8string& ActorCreateMgr::getName(u16 map_actor_id) const
     return empty;
 }
 
-void ActorCreateMgr::addActorFactory(u16 map_actor_id, ActorFactory factory)
+void ActorCreateMgr::setActorFactory(u16 map_actor_id, ActorFactory factory)
 {
     RIO_ASSERT(map_actor_id < mMaxID);
     mActorFactoryMap[map_actor_id] = factory;

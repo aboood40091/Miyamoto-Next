@@ -32,7 +32,7 @@ public:
     void setName(u16 map_actor_id, const std::u8string& name);
     const std::u8string& getName(u16 map_actor_id) const;
 
-    void addActorFactory(u16 map_actor_id, ActorFactory factory);
+    void setActorFactory(u16 map_actor_id, ActorFactory factory);
     std::unique_ptr<MapActorItem> create(const MapActorData& map_actor_data, u32 index) const;
 
 private:
