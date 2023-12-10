@@ -20,6 +20,7 @@ class   BgUnitItem;
 class   AreaItem;
 class   CourseDataFile;
 class   LocationItem;
+struct  MapActorData;
 class   MapActorItem;
 class   NextGotoItem;
 
@@ -103,8 +104,14 @@ private:
     struct PaintContext
     {
         ItemType    type;
+
+        // BgUnitItem
         u8          layer;
         u16         bg_unit_obj_type;
+
+        // MapActorItem
+        u16         map_actor_id;
+
         // ...
 
         PaintContext()
@@ -224,6 +231,12 @@ public:
         mPaintNext.bg_unit_obj_type = bg_unit_obj_type;
     }
 
+    void setPaintType_MapActor(u16 map_actor_id)
+    {
+        mPaintNext.type = ITEM_TYPE_MAP_ACTOR;
+        mPaintNext.map_actor_id = map_actor_id;
+    }
+
     const std::vector< std::unique_ptr<MapActorItem> >& getMapActorItem() const
     {
         return mMapActorItemPtr;
@@ -281,9 +294,16 @@ private:
     void pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer);
     void popBackItem_BgUnitObj_(u8 layer);
 
+    void pushBackItem_MapActor_(const MapActorData& data);
+    void popBackItem_MapActor_();
+
     void onCursorPress_Paint_BgUnitObj_();
     void onCursorHold_Paint_BgUnitObj_();
     void onCursorRelease_Paint_BgUnitObj_();
+
+    void onCursorPress_Paint_MapActor_();
+    void onCursorHold_Paint_MapActor_();
+    void onCursorRelease_Paint_MapActor_();
 
     void setItemSelection_(const ItemID& item_id, bool is_selected);
     void clearSelection_();

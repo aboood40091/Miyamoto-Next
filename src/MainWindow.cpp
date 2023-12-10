@@ -60,7 +60,9 @@ MainWindow::MainWindow()
     , mCourseViewFocused(false)
     , mCourseViewCameraMoved(false)
     , mPaintType(ITEM_TYPE_MAX_NUM)
+    , mEnvSelectedObj(u16(-1))
     , mEnvPaintLayer(LAYER_1)
+    , mMapActorSelectedID(u16(-1))
     , mMetricsLocation(0)
 {
 }
@@ -463,6 +465,12 @@ void MainWindow::calc_()
         else
             mpCourseView->setPaintType_BgUnitObj(mEnvPaintLayer, mEnvSelectedObj);
         break;
+    case ITEM_TYPE_MAP_ACTOR:
+        if (mMapActorSelectedID >= ActorCreateMgr::instance()->getMaxID())
+            mpCourseView->setPaintType_None();
+        else
+            mpCourseView->setPaintType_MapActor(mMapActorSelectedID);
+        break;
     }
 
     mpCourseView->update();
@@ -801,8 +809,6 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginListBox("##ActorAddList", ImVec2(-1, -1)))
                 {
-                    static int selected = -1;
-
                     for (int n = 0; n < ActorCreateMgr::instance()->getMaxID(); n++)
                     {
                         const std::u8string& name = ActorCreateMgr::instance()->getName(n);
@@ -811,8 +817,8 @@ void MainWindow::drawPaletteUI_()
                                 ? std::to_string(n)
                                 : std::format("{0:d}: {1:s}", n, (const char*)name.c_str());
 
-                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), selected == n))
-                            selected = n;
+                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), mMapActorSelectedID == n))
+                            mMapActorSelectedID = n;
                     }
                     ImGui::EndListBox();
                 }

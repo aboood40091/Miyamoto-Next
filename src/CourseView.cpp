@@ -1052,6 +1052,30 @@ void CourseView::popBackItem_BgUnitObj_(u8 layer)
     RIO_ASSERT(data_vec.size() == item_vec.size());
 }
 
+void CourseView::pushBackItem_MapActor_(const MapActorData& data)
+{
+    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
+    u32 i = mMapActorItemPtr.size();
+
+    vec.push_back(data);
+    RIO_ASSERT(vec.size() == i + 1);
+
+    mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(vec[i], i));
+    RIO_ASSERT(mMapActorItemPtr.size() == i + 1);
+}
+
+void CourseView::popBackItem_MapActor_()
+{
+    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
+
+    mMapActorItemPtr.pop_back();
+    vec.pop_back();
+
+    RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
+}
+
 void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
 {
     switch (item_type)
@@ -1065,6 +1089,9 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
             Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        pushBackItem_MapActor_(*static_cast<const MapActorData*>(data));
         break;
     }
 }
@@ -1082,6 +1109,9 @@ void CourseView::popBackItem(ItemType item_type, const void* extra)
             Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        popBackItem_MapActor_();
         break;
     }
 }
@@ -1155,6 +1185,77 @@ void CourseView::onCursorRelease_Paint_BgUnitObj_()
     mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
 }
 
+void CourseView::onCursorPress_Paint_MapActor_()
+{
+    clearSelection_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x =  p.x / 8;
+    s32 y = -p.y / 8;
+
+    if (x < 0 || x >= BG_MAX_UNIT_X || y < 0 || y >= BG_MAX_UNIT_Y)
+    {
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        return;
+    }
+
+    x *= 8;
+    y *= 8;
+
+    MapActorData map_actor_data = { 0 };
+
+    const auto& it = ActorCreateMgr::instance()->getActorFactory(mPaintCurrent.map_actor_id);
+    if (it != nullptr && it->second != nullptr)
+        map_actor_data = *it->second;
+
+    map_actor_data.id = mPaintCurrent.map_actor_id;
+    map_actor_data.offset.x = x;
+    map_actor_data.offset.y = y;
+
+    pushBackItem_MapActor_(map_actor_data);
+}
+
+void CourseView::onCursorHold_Paint_MapActor_()
+{
+    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    MapActorData& data = vec[vec.size() - 1];
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>( p.x / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+
+    if (x == data.offset.x && y == data.offset.y)
+        return;
+
+    data.offset.x = x;
+    data.offset.y = y;
+
+    mMapActorItemPtr[vec.size() - 1]->onDataChange(data, MapActorItem::DATA_CHANGE_FLAG_OFFSET);
+}
+
+void CourseView::onCursorRelease_Paint_MapActor_()
+{
+    const std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    std::shared_ptr<MapActorData> p_data = std::make_shared<MapActorData>(vec[vec.size() - 1]);
+
+    popBackItem_MapActor_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>( p.x / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+
+    p_data->offset.x = x;
+    p_data->offset.y = y;
+
+    ActionItemPushBack::Context context {
+        ITEM_TYPE_MAP_ACTOR,
+        std::static_pointer_cast<const void>(p_data)
+    };
+    ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+
+    mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+}
+
 void CourseView::onCursorPress_R_()
 {
     switch (mPaintNext.type)
@@ -1166,6 +1267,11 @@ void CourseView::onCursorPress_R_()
         mPaintCurrent.layer = mPaintNext.layer;
         mPaintCurrent.bg_unit_obj_type = mPaintNext.bg_unit_obj_type;
         onCursorPress_Paint_BgUnitObj_();
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        mPaintCurrent.type = ITEM_TYPE_MAP_ACTOR;
+        mPaintCurrent.map_actor_id = mPaintNext.map_actor_id;
+        onCursorPress_Paint_MapActor_();
         break;
     }
 }
@@ -1179,6 +1285,9 @@ void CourseView::onCursorHold_R_()
     case ITEM_TYPE_BG_UNIT_OBJ:
         onCursorHold_Paint_BgUnitObj_();
         break;
+    case ITEM_TYPE_MAP_ACTOR:
+        onCursorHold_Paint_MapActor_();
+        break;
     }
 }
 
@@ -1190,6 +1299,10 @@ void CourseView::onCursorRelease_R_()
         break;
     case ITEM_TYPE_BG_UNIT_OBJ:
         onCursorRelease_Paint_BgUnitObj_();
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        onCursorRelease_Paint_MapActor_();
         mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
         break;
     }

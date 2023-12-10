@@ -83,6 +83,7 @@ private:
     ItemType                mPaintType;
     u16                     mEnvSelectedObj;
     s32                     mEnvPaintLayer;
+    u16                     mMapActorSelectedID;
     s32                     mMetricsLocation;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
