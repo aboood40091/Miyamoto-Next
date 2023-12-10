@@ -2,6 +2,7 @@
 #include <Globals.h>
 #include <MainWindow.h>
 #include <action/ActionMgr.h>
+#include <actor/ActorCreateMgr.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
@@ -40,6 +41,8 @@
 #include <rio.h>
 
 #include <imgui_internal.h>
+
+#include <format>
 
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
@@ -596,8 +599,7 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
     const int num_objects = obj_textures.size();
     for (int n = 0; n < num_objects; n++)
     {
-        char buf[32];
-        sprintf(buf, "##Object %d", n);
+        const std::string& label = std::format("##Env {0:d} Object {1:d}", s32(env), n);
 
         ImVec2 self_box_size;
         ImVec2 icon_size;
@@ -638,7 +640,7 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
         ImGui::SetCursorPos(cursor_pos);
 
         u16 type = env << 12 | n;
-        if (ImGui::Selectable(buf, selected == type, 0, self_box_size))
+        if (ImGui::Selectable(label.c_str(), selected == type, 0, self_box_size))
             selected = type;
 
         if (obj_tex)
@@ -677,9 +679,8 @@ void MainWindow::drawPaletteUI_()
 
             for (int n = 0; n < IM_ARRAYSIZE(events); n++)
             {
-                char buf[32];
-                sprintf(buf, "Event %d", n + 1);
-                ImGui::Checkbox(buf, &events[n]);
+                const std::string& label = std::format("Event {0:d}", n + 1);
+                ImGui::Checkbox(label.c_str(), &events[n]);
             }
             ImGui::EndListBox();
         }
@@ -777,12 +778,17 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginListBox("##ActorSearchList", ImVec2(-1, -1)))
                 {
-                    static const char* items[] = { "0: Goomba", "1: Koopa", "2: Flag Pole", "3: Checkpoint", "4: Koopa Paratroopa", "5: Bowser" };
                     static int selected = -1;
 
-                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    for (int n = 0; n < ActorCreateMgr::instance()->getMaxID(); n++)
                     {
-                        if (filter.PassFilter(items[n]) && ImGui::Selectable(items[n], selected == n))
+                        const std::u8string& name = ActorCreateMgr::instance()->getName(n);
+                        const std::string& str =
+                            name.empty()
+                                ? std::to_string(n)
+                                : std::format("{0:d}: {1:s}", n, (const char*)name.c_str());
+
+                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), selected == n))
                             selected = n;
                     }
                     ImGui::EndListBox();
@@ -883,9 +889,8 @@ void MainWindow::drawPaletteUI_()
 
                     for (int n = 0; n < num_objects; n++)
                     {
-                        char buf[32];
-                        sprintf(buf, "Object %d", n);
-                        if (ImGui::Selectable(buf, selected == n, 0, box_size))
+                        const std::string& label = std::format("Object {0:d}", n);
+                        if (ImGui::Selectable(label.c_str(), selected == n, 0, box_size))
                             selected = n;
 
                         float last_box_x = ImGui::GetItemRectMax().x;
@@ -943,7 +948,7 @@ void MainWindow::setupUiStyle_()
     ImGuiStyle& style = ImGui::GetStyle();
 
     //Fonts
-    io.Fonts->AddFontFromFileTTF(rio::FileDeviceMgr::instance()->getDefaultFileDevice()->getNativePath("fonts/Roboto-Regular.ttf").c_str(), 18);
+    io.Fonts->AddFontFromFileTTF(rio::FileDeviceMgr::instance()->getDefaultFileDevice()->getNativePath("fonts/Noto_Sans_JP/NotoSansJP-Medium.ttf").c_str(), 20, nullptr, io.Fonts->GetGlyphRangesJapanese());
 
     // Colors
     ImVec4* colors = style.Colors;

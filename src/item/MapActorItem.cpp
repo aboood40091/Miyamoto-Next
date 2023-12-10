@@ -1,5 +1,6 @@
 #include <action/ActionItemDataChange.h>
 #include <action/ActionMgr.h>
+#include <actor/ActorCreateMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <item/MapActorItem.h>
 
@@ -54,7 +55,11 @@ void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
 
 void MapActorItem::drawSelectionUI()
 {
-    ImGui::Text("Actor (Id %d)", mMapActorData.id);
+    const std::u8string& name = ActorCreateMgr::instance()->getName(mMapActorData.id);
+    if (name.empty())
+        ImGui::Text("Map Actor %d", mMapActorData.id);
+    else
+        ImGui::Text("Map Actor %d (%s)", mMapActorData.id, (char*)(name.c_str()));
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.

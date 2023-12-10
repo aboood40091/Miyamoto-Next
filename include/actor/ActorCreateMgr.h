@@ -24,9 +24,19 @@ private:
     ActorCreateMgr& operator=(const ActorCreateMgr&);
 
 public:
-    void addActorFactory(u16 id, ActorFactory factory);
-    std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data, u32 index);
+    void initialize();
+
+    void setMaxID(u16 max_num);
+    u16 getMaxID() const;
+
+    void setName(u16 map_actor_id, const std::u8string& name);
+    const std::u8string& getName(u16 map_actor_id) const;
+
+    void addActorFactory(u16 map_actor_id, ActorFactory factory);
+    std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data, u32 index) const;
 
 private:
+    u16                                     mMaxID;
+    std::unordered_map<u16, std::u8string>  mMapActorNameMap;
     std::unordered_map<u16, ActorFactory>   mActorFactoryMap;
 };
