@@ -23,16 +23,6 @@ public:
         return static_cast<RenderObjLayer*>(mLayerBgPrepare.ptr);
     }
 
-    CourseView* getCourseView()
-    {
-        return mpCourseView;
-    }
-
-    const CourseView* getCourseView() const
-    {
-        return mpCourseView;
-    }
-
     void setCurrentCourseDataFile(u32 id);
 
 private:

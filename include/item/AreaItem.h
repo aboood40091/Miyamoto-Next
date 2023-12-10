@@ -5,10 +5,9 @@
 class AreaItem
 {
 public:
-    AreaItem(AreaData& area);
+    explicit AreaItem(u32 index);
 
-    AreaData& getAreaData() { return mAreaData; }
-    const AreaData& getAreaData() const { return mAreaData; }
+    void setIndex(u32 index) { mIndex = index; }
 
     void drawOpa();
     void drawXlu();
@@ -20,5 +19,5 @@ private:
     }
 
 private:
-    AreaData& mAreaData;
+    u32 mIndex;
 };

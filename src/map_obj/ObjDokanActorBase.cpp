@@ -7,10 +7,10 @@ ObjDokanActorBase::ObjDokanActorBase(MapActorData& map_actor_data, u32 index, Ob
     , cGroup(group)
     , cPositionOffset { position_offset_x, position_offset_y }
 {
-    updatePositionXY_();
-    updatePositionZ_();
+    updatePositionXY_(map_actor_data);
+    updatePositionZ_(map_actor_data);
 
-    if (updateParam_())
+    if (updateParam_(map_actor_data))
         mObjDokan.move(mPosition);
 
     setModelItemID_();
@@ -26,12 +26,12 @@ void ObjDokanActorBase::setModelSelection_()
     mObjDokan.setModelSelection(mIsSelected);
 }
 
-bool ObjDokanActorBase::updateParam_()
+bool ObjDokanActorBase::updateParam_(const MapActorData& map_actor_data)
 {
-    s32 length = mMapActorData.settings[0] & 0xF;
-    ObjDokan::Color color = ObjDokan::Color(mMapActorData.settings[0] >> 4 & 3);
-    ObjDokan::Type type = ObjDokan::Type(mMapActorData.settings[0] >> 16 & 3);
-    bool enable_draw_a = cCB || cGroup || !(mMapActorData.settings[0] >> 29 & 1);
+    s32 length = map_actor_data.settings[0] & 0xF;
+    ObjDokan::Color color = ObjDokan::Color(map_actor_data.settings[0] >> 4 & 3);
+    ObjDokan::Type type = ObjDokan::Type(map_actor_data.settings[0] >> 16 & 3);
+    bool enable_draw_a = cCB || cGroup || !(map_actor_data.settings[0] >> 29 & 1);
 
     if (cCB)
     {
@@ -47,24 +47,24 @@ bool ObjDokanActorBase::updateParam_()
     return mObjDokan.initialize(type, (length + 1) * 16, enable_draw_a, color);
 }
 
-void ObjDokanActorBase::onDataChange(DataChangeFlag flag)
+void ObjDokanActorBase::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     bool position_changed = false;
 
     if (flag & DATA_CHANGE_FLAG_LAYER)
     {
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
         position_changed = mObjDokan.isCreated() || position_changed;
     }
 
     if (flag & DATA_CHANGE_FLAG_OFFSET)
     {
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
         position_changed = mObjDokan.isCreated() || position_changed;
     }
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
-        position_changed = updateParam_() || position_changed;
+        position_changed = updateParam_(map_actor_data) || position_changed;
 
     if (position_changed)
         mObjDokan.move(mPosition);

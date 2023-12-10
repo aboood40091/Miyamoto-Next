@@ -14,7 +14,7 @@ public:
     GoalPole(MapActorData& map_actor_data, u32 index);
     virtual ~GoalPole();
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void onSceneUpdate() override;
     void scheduleDraw() override;
 
@@ -24,10 +24,10 @@ private:
         return mpModelResource == nullptr;
     }
 
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x);
-        mPosition.y = -f32(mMapActorData.offset.y + 16);
+        mPosition.x =  f32(map_actor_data.offset.x);
+        mPosition.y = -f32(map_actor_data.offset.y + 16);
     }
 
     void setModelMtxRT_();

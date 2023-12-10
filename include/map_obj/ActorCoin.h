@@ -10,7 +10,7 @@ public:
     ActorCoin(MapActorData& map_actor_data, u32 index)
         : BlockCoinBase(map_actor_data, index)
     {
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
     }
 
 protected:
@@ -19,8 +19,8 @@ protected:
         return cUnitID_Coin;
     }
 
-    void updatePositionZ_() override
+    void updatePositionZ_(const MapActorData& map_actor_data) override
     {
-        mPosition.z = (mMapActorData.layer == LAYER_1 && !(mMapActorData.settings[0] >> 8 & 0xf)) ? 550.0f : -3000.0f;
+        mPosition.z = (map_actor_data.layer == LAYER_1 && !(map_actor_data.settings[0] >> 8 & 0xf)) ? 550.0f : -3000.0f;
     }
 };

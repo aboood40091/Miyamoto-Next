@@ -1,18 +1,21 @@
+#include <CourseView.h>
 #include <course/BgRenderer.h>
 #include <map_obj/BlockCoinBase.h>
 
-void BlockCoinBase::onDataChange(DataChangeFlag flag)
+void BlockCoinBase::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     if (flag & DATA_CHANGE_FLAG_OFFSET)
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
 
     if (flag & DATA_CHANGE_FLAG_LAYER)
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
 }
 
 void BlockCoinBase::scheduleDraw()
 {
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+
     BgRenderer::instance()->drawUnit(
-        mItemID, mPosition, getUnitID_(), mMapActorData.layer
+        mItemID, mPosition, getUnitID_(), map_actor_data.layer
     );
 }

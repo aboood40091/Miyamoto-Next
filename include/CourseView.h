@@ -114,9 +114,20 @@ private:
     };
 
 public:
+    static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos);
+    static void destroySingleton();
+    static CourseView* instance() { return sInstance; }
+
+private:
+    static CourseView* sInstance;
+
     CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos);
     ~CourseView();
 
+    CourseView(const CourseView&);
+    CourseView& operator=(const CourseView&);
+
+public:
     void setZoom(f32 zoom)
     {
         mBgZoom = zoom;

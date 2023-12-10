@@ -15,7 +15,7 @@ public:
     Nokonoko(MapActorData& map_actor_data, u32 index);
     virtual ~Nokonoko();
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void onSceneUpdate() override;
     void scheduleDraw() override;
 
@@ -25,15 +25,15 @@ private:
         return mpModelResource == nullptr;
     }
 
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x +  8);
-        mPosition.y = -f32(mMapActorData.offset.y + 16);
+        mPosition.x =  f32(map_actor_data.offset.x +  8);
+        mPosition.y = -f32(map_actor_data.offset.y + 16);
     }
 
-    void updatePositionZ_()
+    void updatePositionZ_(const MapActorData& map_actor_data)
     {
-        mPosition.z = mMapActorData.layer == LAYER_1 ? 1500.0f : -2500.0f;
+        mPosition.z = map_actor_data.layer == LAYER_1 ? 1500.0f : -2500.0f;
     }
 
     void setModelMtxRT_();

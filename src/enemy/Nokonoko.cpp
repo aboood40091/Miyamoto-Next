@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <Globals.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
@@ -76,7 +77,7 @@ Nokonoko::Nokonoko(MapActorData& map_actor_data, u32 index)
     mpModel->getSklAnim(0)->play(mpModelResource, "walkA");
     mpModel->getSklAnim(0)->getFrameCtrl().set(FrameCtrl::cMode_Repeat, 1.0f, 0.0f);
 
-    mIsAltColor = mMapActorData.settings[0] & 1;
+    mIsAltColor = map_actor_data.settings[0] & 1;
     updateColor_();
 
     /*
@@ -88,8 +89,8 @@ Nokonoko::Nokonoko(MapActorData& map_actor_data, u32 index)
     }
     */
 
-    updatePositionXY_();
-    updatePositionZ_();
+    updatePositionXY_(map_actor_data);
+    updatePositionZ_(map_actor_data);
 
     setModelMtxRT_();
 
@@ -185,13 +186,13 @@ void Nokonoko::updateColor_()
     mpShellModel->updateModel();
 }
 
-void Nokonoko::onDataChange(DataChangeFlag flag)
+void Nokonoko::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     bool position_changed = false;
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
     {
-        bool is_alt_color = mMapActorData.settings[0] & 1;
+        bool is_alt_color = map_actor_data.settings[0] & 1;
         if (mIsAltColor != is_alt_color)
         {
             mIsAltColor = is_alt_color;
@@ -201,13 +202,13 @@ void Nokonoko::onDataChange(DataChangeFlag flag)
 
     if (flag & DATA_CHANGE_FLAG_LAYER)
     {
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
         position_changed = true;
     }
 
     if (flag & DATA_CHANGE_FLAG_OFFSET && mpModelResource)
     {
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
         position_changed = true;
     }
 
@@ -246,7 +247,9 @@ void Nokonoko::scheduleDraw()
     if (mpModelResource == nullptr)
         return;
 
-    if (mMapActorData.settings[0] >> 4 & 1)
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+
+    if (map_actor_data.settings[0] >> 4 & 1)
         Renderer::instance()->drawModel(*mpShellModel);
 
     else

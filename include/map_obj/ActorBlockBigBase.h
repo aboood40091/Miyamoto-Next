@@ -11,12 +11,12 @@ public:
         , cUnitID(unit)
         , cSetCoin(set_coin)
     {
-        updatePositionXY_();
-        updatePositionZ_();
-        updateItemType_();
+        updatePositionXY_(map_actor_data);
+        updatePositionZ_(map_actor_data);
+        updateItemType_(map_actor_data);
     }
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void scheduleDraw() override;
 
     void drawOpa(const rio::lyr::DrawInfo& draw_info) override
@@ -26,18 +26,18 @@ public:
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
 
 private:
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x);
-        mPosition.y = -f32(mMapActorData.offset.y + 16);
+        mPosition.x =  f32(map_actor_data.offset.x);
+        mPosition.y = -f32(map_actor_data.offset.y + 16);
     }
 
-    void updatePositionZ_()
+    void updatePositionZ_(const MapActorData& map_actor_data)
     {
-        mPosition.z = mMapActorData.layer == LAYER_1 ? 500.0f : -3000.0f;
+        mPosition.z = map_actor_data.layer == LAYER_1 ? 500.0f : -3000.0f;
     }
 
-    void updateItemType_();
+    void updateItemType_(const MapActorData& map_actor_data);
 
 private:
     const UnitID        cUnitID;

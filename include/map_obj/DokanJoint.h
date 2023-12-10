@@ -14,7 +14,7 @@ public:
     DokanJoint(MapActorData& map_actor_data, u32 index);
     virtual ~DokanJoint();
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void scheduleDraw() override;
 
 private:
@@ -23,15 +23,15 @@ private:
         return mpModel == nullptr;
     }
 
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x + 16);
-        mPosition.y = -f32(mMapActorData.offset.y + 16);
+        mPosition.x =  f32(map_actor_data.offset.x + 16);
+        mPosition.y = -f32(map_actor_data.offset.y + 16);
     }
 
-    void updatePositionZ_()
+    void updatePositionZ_(const MapActorData& map_actor_data)
     {
-        switch (mMapActorData.layer)
+        switch (map_actor_data.layer)
         {
         case LAYER_0:
             mPosition.z = 3584.0f;

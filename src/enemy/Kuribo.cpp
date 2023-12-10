@@ -45,9 +45,9 @@ Kuribo::Kuribo(MapActorData& map_actor_data, u32 index)
 
     mpModel->getTexAnim(0)->play(model_res, "walk");
 
-    mIsLayer2 = mMapActorData.settings[0] >> 16 & 1;
+    mIsLayer2 = map_actor_data.settings[0] >> 16 & 1;
 
-    updatePositionXY_();
+    updatePositionXY_(map_actor_data);
     updatePositionZ_();
 
     setModelMtxRT_();
@@ -117,13 +117,13 @@ void Kuribo::setModelMtxRT_()
     mpModel->getModel()->setMtxRT(mtx);
 }
 
-void Kuribo::onDataChange(DataChangeFlag flag)
+void Kuribo::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     bool position_changed = false;
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
     {
-        bool is_layer2 = mMapActorData.settings[0] >> 16 & 1;
+        bool is_layer2 = map_actor_data.settings[0] >> 16 & 1;
         if (mIsLayer2 != is_layer2)
         {
             mIsLayer2 = is_layer2;
@@ -134,7 +134,7 @@ void Kuribo::onDataChange(DataChangeFlag flag)
 
     if (flag & DATA_CHANGE_FLAG_OFFSET)
     {
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
         position_changed = true;
     }
 

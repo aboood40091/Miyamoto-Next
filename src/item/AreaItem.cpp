@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <graphics/QuadRenderer.h>
 #include <item/AreaItem.h>
 
@@ -15,15 +16,17 @@ static const rio::Color4f sMaskColor{
      48 / 255.f
 };
 
-AreaItem::AreaItem(AreaData& area)
-    : mAreaData(area)
+AreaItem::AreaItem(u32 index)
+    : mIndex(index)
 {
 }
 
 void AreaItem::drawOpa()
 {
-    rio::Vector3f offs { f32(mAreaData.offset.x), -f32(mAreaData.offset.y + mAreaData.size.y), getZPos_() + 10 };
-    rio::Vector2f size { f32(mAreaData.size.x), f32(mAreaData.size.y) };
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile()->getAreaData()[mIndex];
+
+    rio::Vector3f offs { f32(area_data.offset.x), -f32(area_data.offset.y + area_data.size.y), getZPos_() + 10 };
+    rio::Vector2f size { f32(area_data.size.x), f32(area_data.size.y) };
 
     QuadRenderer::instance()->drawBox(
         QuadRenderer::Arg(sColor)
@@ -33,11 +36,13 @@ void AreaItem::drawOpa()
 
 void AreaItem::drawXlu()
 {
-    if (!(mAreaData.mask & 0x20))
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile()->getAreaData()[mIndex];
+
+    if (!(area_data.mask & 0x20))
         return;
 
-    rio::Vector3f offs { f32(mAreaData.offset.x), -f32(mAreaData.offset.y + mAreaData.size.y), getZPos_() };
-    rio::Vector2f size { f32(mAreaData.size.x), f32(mAreaData.size.y) };
+    rio::Vector3f offs { f32(area_data.offset.x), -f32(area_data.offset.y + area_data.size.y), getZPos_() };
+    rio::Vector2f size { f32(area_data.size.x), f32(area_data.size.y) };
 
     QuadRenderer::instance()->drawQuad(
         QuadRenderer::Arg(sMaskColor)

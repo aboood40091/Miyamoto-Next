@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <Globals.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
@@ -88,13 +89,13 @@ GoalPole::GoalPole(MapActorData& map_actor_data, u32 index)
         Model::cBoundingMode_Disable
     );
 
-    updatePositionXY_();
+    updatePositionXY_(map_actor_data);
     setModelMtxRT_();
 
-    mFrame = (mMapActorData.settings[0] >> 28) +
+    mFrame = (map_actor_data.settings[0] >> 28) +
         (cIsKaiga
             ? 0
-            : ((mMapActorData.settings[0] & 0xf) * 2));
+            : ((map_actor_data.settings[0] & 0xf) * 2));
 
     updateFrame_();
 
@@ -204,20 +205,20 @@ void GoalPole::updateFrame_()
     mpBaseModel->updateModel();
 }
 
-void GoalPole::onDataChange(DataChangeFlag flag)
+void GoalPole::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     if (flag & DATA_CHANGE_FLAG_OFFSET)
     {
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
         setModelMtxRT_();
     }
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_0)
     {
-        s32 frame = (mMapActorData.settings[0] >> 28) +
+        s32 frame = (map_actor_data.settings[0] >> 28) +
             (cIsKaiga
                 ? 0
-                : ((mMapActorData.settings[0] & 0xf) * 2));
+                : ((map_actor_data.settings[0] & 0xf) * 2));
         if (mFrame != frame)
         {
             mFrame = frame;
@@ -240,9 +241,11 @@ void GoalPole::scheduleDraw()
     if (mpModelResource == nullptr)
         return;
 
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+
     Renderer::instance()->drawModel(*mpBaseModel);
     Renderer::instance()->drawModel(*mpGoalFlagModel);
 
-    if (!(mMapActorData.settings[0] >> 4 & 1))
+    if (!(map_actor_data.settings[0] >> 4 & 1))
         Renderer::instance()->drawModel(*mpTorideStdModel);
 }

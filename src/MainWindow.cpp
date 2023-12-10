@@ -244,7 +244,8 @@ void MainWindow::prepare_()
     mCourseViewPos.x = 0.0f;
     mCourseViewPos.y = 0.0f;
 
-    mpCourseView = new CourseView(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos);
+    CourseView::createSingleton(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos);
+    mpCourseView = CourseView::instance();
 
   //RIO_LOG("Created CourseView\n");
 
@@ -262,8 +263,8 @@ void MainWindow::exit_()
 {
     CoinOrigin::destroySingleton();
 
-    delete mpCourseView;
     mpCourseView = nullptr;
+    CourseView::destroySingleton();
 
     Renderer::destroySingleton();
 
@@ -802,11 +803,12 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginListBox("##ActorList", ImVec2(-1, -1)))
                 {
-                    const std::vector< std::unique_ptr<MapActorItem> >& items = mpCourseView->getMapActorItem();
-                    for (u32 i = 0; i < items.size(); i++)
+                    const std::vector< std::unique_ptr<MapActorItem> >& item_vec = mpCourseView->getMapActorItem();
+                    const std::vector<MapActorData>& data_vec = mpCourseView->getCourseDataFile()->getMapActorData();
+                    for (u32 i = 0; i < item_vec.size(); i++)
                     {
-                        const MapActorItem& map_actor_item = *(items[i]);
-                        const MapActorData& map_actor_data = map_actor_item.getMapActorData();
+                        const MapActorItem& map_actor_item = *(item_vec[i]);
+                        const MapActorData& map_actor_data = data_vec[i];
                         const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.id);
                         const std::string& str =
                             name.empty()

@@ -31,6 +31,26 @@
 
 #include <unordered_set>
 
+CourseView* CourseView::sInstance = nullptr;
+
+bool CourseView::createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos)
+{
+    if (sInstance)
+        return false;
+
+    sInstance = new CourseView(width, height, window_pos);
+    return true;
+}
+
+void CourseView::destroySingleton()
+{
+    if (!sInstance)
+        return;
+
+    delete sInstance;
+    sInstance = nullptr;
+}
+
 CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     : mDrawCallback3D(*this)
     , mDrawCallbackDV(*this)
@@ -517,8 +537,12 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
             mLocationItem.emplace_back(vec[i], i);
     }
 
-    for (AreaData& area : mpCourseDataFile->getAreaData())
-        mAreaItem.emplace_back(area);
+    {
+        std::vector<AreaData>& vec = mpCourseDataFile->getAreaData();
+        size_t num = vec.size();
+        for (u32 i = 0; i < num; i++)
+            mAreaItem.emplace_back(i);
+    }
 
     const NextGoto* start_next_goto = nullptr;
   //if (!start_next_goto)
@@ -816,8 +840,7 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         {
             u8 layer = item_id.getIndex() >> 22;
 
-            BgUnitItem& object_item = mBgUnitItem[layer][item_id.getIndex() & 0x003FFFFF];
-            object_item.getBgCourseData() = *static_cast<const BgCourseData*>(data);
+            mpCourseDataFile->getBgData(layer)[item_id.getIndex() & 0x003FFFFF] = *static_cast<const BgCourseData*>(data);
 
             Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
             BgRenderer::instance()->createVertexBuffer(layer);
@@ -825,22 +848,16 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         break;
     case ITEM_TYPE_MAP_ACTOR:
         {
-            std::unique_ptr<MapActorItem>& actor_item = mMapActorItemPtr[item_id.getIndex()];
-            actor_item->getMapActorData() = *static_cast<const MapActorData*>(data);
-            actor_item->onDataChange((MapActorItem::DataChangeFlag)data_change_flag);
+            const MapActorData& map_actor_data = *static_cast<const MapActorData*>(data);
+            mpCourseDataFile->getMapActorData()[item_id.getIndex()] = map_actor_data;
+            mMapActorItemPtr[item_id.getIndex()]->onDataChange(map_actor_data, (MapActorItem::DataChangeFlag)data_change_flag);
         }
         break;
     case ITEM_TYPE_NEXT_GOTO:
-        {
-            NextGotoItem& entrance_item = mNextGotoItem[item_id.getIndex()];
-            entrance_item.getNextGoto() = *static_cast<const NextGoto*>(data);
-        }
+        mpCourseDataFile->getNextGoto()[item_id.getIndex()] = *static_cast<const NextGoto*>(data);
         break;
     case ITEM_TYPE_LOCATION:
-        {
-            LocationItem& location_item = mLocationItem[item_id.getIndex()];
-            location_item.getLocation() = *static_cast<const Location*>(data);
-        }
+        mpCourseDataFile->getLocation()[item_id.getIndex()] = *static_cast<const Location*>(data);
         break;
     }
 }
@@ -1525,13 +1542,16 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
     if (mCourseView.mpCourseDataFile != nullptr)
     {
-        for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
-            if (p_item->getMapActorData().layer != LAYER_1)
-                p_item->drawOpa(draw_info);
+        std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
+        const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
 
-        for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
-            if (p_item->getMapActorData().layer == LAYER_1)
-                p_item->drawOpa(draw_info);
+        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+            if (map_actor_data_vec[i].layer != LAYER_1)
+                map_actor_item_vec[i]->drawOpa(draw_info);
+
+        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+            if (map_actor_data_vec[i].layer == LAYER_1)
+                map_actor_item_vec[i]->drawOpa(draw_info);
 
         for (NextGotoItem& item : mCourseView.mNextGotoItem)
             item.drawOpa();
@@ -1569,15 +1589,18 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
         bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
 
-        for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
-            if (p_item->getMapActorData().layer != LAYER_1)
-                p_item->drawXlu(draw_info);
+        std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
+        const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
+
+        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+            if (map_actor_data_vec[i].layer != LAYER_1)
+                map_actor_item_vec[i]->drawXlu(draw_info);
 
         bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
 
-        for (std::unique_ptr<MapActorItem>& p_item : mCourseView.mMapActorItemPtr)
-            if (p_item->getMapActorData().layer == LAYER_1)
-                p_item->drawXlu(draw_info);
+        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+            if (map_actor_data_vec[i].layer == LAYER_1)
+                map_actor_item_vec[i]->drawXlu(draw_info);
 
         for (NextGotoItem& item : mCourseView.mNextGotoItem)
             item.drawXlu();

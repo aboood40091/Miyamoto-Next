@@ -8,7 +8,7 @@ class ObjDokanActorBase : public MapActorItem
 public:
     ObjDokanActorBase(MapActorData& map_actor_data, u32 index, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y);
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
 
     void onSceneUpdate() override
     {
@@ -28,15 +28,15 @@ protected:
         return !mObjDokan.isCreated();
     }
 
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x) + cPositionOffset.x;
-        mPosition.y = -f32(mMapActorData.offset.y) + cPositionOffset.y;
+        mPosition.x =  f32(map_actor_data.offset.x) + cPositionOffset.x;
+        mPosition.y = -f32(map_actor_data.offset.y) + cPositionOffset.y;
     }
 
-    void updatePositionZ_()
+    void updatePositionZ_(const MapActorData& map_actor_data)
     {
-        switch (mMapActorData.layer)
+        switch (map_actor_data.layer)
         {
         case LAYER_0:
             mPosition.z = 3520;
@@ -50,7 +50,7 @@ protected:
         }
     }
 
-    bool updateParam_();
+    bool updateParam_(const MapActorData& map_actor_data);
 
     void setModelItemID_();
     void setModelSelection_();

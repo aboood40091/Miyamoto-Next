@@ -1,5 +1,4 @@
 #include <CourseView.h>
-#include <MainWindow.h>
 #include <action/ActionItemSelectionMove.h>
 
 #include <rio.h>
@@ -14,13 +13,11 @@ ActionItemSelectionMove::ActionItemSelectionMove(const void* context)
 
 bool ActionItemSelectionMove::apply() const
 {
-    CourseView* p_view = static_cast<MainWindow*>(rio::sRootTask)->getCourseView();
-    p_view->moveItems(mSelectedItems, m_dx, m_dy, true);
+    CourseView::instance()->moveItems(mSelectedItems, m_dx, m_dy, true);
     return true;
 }
 
 void ActionItemSelectionMove::unapply() const
 {
-    CourseView* p_view = static_cast<MainWindow*>(rio::sRootTask)->getCourseView();
-    p_view->moveItems(mSelectedItems, -m_dx, -m_dy, true);
+    CourseView::instance()->moveItems(mSelectedItems, -m_dx, -m_dy, true);
 }

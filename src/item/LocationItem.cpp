@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <action/ActionItemDataChange.h>
 #include <action/ActionMgr.h>
 #include <graphics/QuadRenderer.h>
@@ -14,14 +15,28 @@ static const rio::Color4f sColor{
 
 LocationItem::LocationItem(Location& location, u32 index)
     : ItemBase(ITEM_TYPE_LOCATION, index, location.offset.x, location.offset.y)
-    , mLocation(location)
 {
+}
+
+void LocationItem::move(s16 dx, s16 dy, bool commit)
+{
+    Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+
+    location.offset.x = mBasePosition.x + dx;
+    location.offset.y = mBasePosition.y + dy;
+    if (commit)
+    {
+        mBasePosition.x = location.offset.x;
+        mBasePosition.y = location.offset.y;
+    }
 }
 
 void LocationItem::drawOpa()
 {
-    rio::Vector3f offs { f32(mLocation.offset.x), -f32(mLocation.offset.y + mLocation.size.y), getZPos_() + 10 };
-    rio::Vector2f size { f32(mLocation.size.x), f32(mLocation.size.y) };
+    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+
+    rio::Vector3f offs { f32(location.offset.x), -f32(location.offset.y + location.size.y), getZPos_() + 10 };
+    rio::Vector2f size { f32(location.size.x), f32(location.size.y) };
 
     QuadRenderer::instance()->drawBox(
         QuadRenderer::Arg(rio::Color4f::cBlack)
@@ -33,8 +48,10 @@ void LocationItem::drawOpa()
 
 void LocationItem::drawXlu()
 {
-    rio::Vector3f offs { f32(mLocation.offset.x), -f32(mLocation.offset.y + mLocation.size.y), getZPos_() };
-    rio::Vector2f size { f32(mLocation.size.x), f32(mLocation.size.y) };
+    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+
+    rio::Vector3f offs { f32(location.offset.x), -f32(location.offset.y + location.size.y), getZPos_() };
+    rio::Vector2f size { f32(location.size.x), f32(location.size.y) };
 
     QuadRenderer::instance()->drawQuad(
         QuadRenderer::Arg(sColor)
@@ -44,8 +61,16 @@ void LocationItem::drawXlu()
     );
 }
 
+void LocationItem::onSelectionChange_()
+{
+    if (mIsSelected)
+        mSelectionData = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+}
+
 void LocationItem::drawSelectionUI()
 {
+    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+
     ImGui::Text("Location");
     ImGui::Separator();
 
@@ -59,18 +84,18 @@ void LocationItem::drawSelectionUI()
     if (ImGui::Button("Apply"))
     {
         const bool anything_modified =
-            mSelectionData.id       != mLocation.id ||
-            mSelectionData.size.x   != mLocation.size.x ||
-            mSelectionData.size.y   != mLocation.size.y;
+            mSelectionData.id       != location.id ||
+            mSelectionData.size.x   != location.size.x ||
+            mSelectionData.size.y   != location.size.y;
 
         if (anything_modified)
         {
-            mSelectionData.offset = mLocation.offset; // Copy over stuff not modified by the selection ui.
+            mSelectionData.offset = location.offset; // Copy over stuff not modified by the selection ui.
 
             ActionItemDataChange::Context context {
                 mItemID,
                 std::static_pointer_cast<const void>(
-                    std::make_shared<const Location>(mLocation)
+                    std::make_shared<const Location>(location)
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const Location>(mSelectionData)
@@ -83,11 +108,5 @@ void LocationItem::drawSelectionUI()
     ImGui::SameLine();
 
     if (ImGui::Button("Discard"))
-        mSelectionData = mLocation;
-}
-
-void LocationItem::onSelectionChange_()
-{
-    if (mIsSelected)
-        mSelectionData = mLocation;
+        mSelectionData = location;
 }

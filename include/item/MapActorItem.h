@@ -50,24 +50,10 @@ public:
     MapActorItem& operator=(const MapActorItem&) = delete;
     MapActorItem& operator=(MapActorItem&&) = delete;
 
-    MapActorData& getMapActorData() { return mMapActorData; }
-    const MapActorData& getMapActorData() const { return mMapActorData; }
-
-    void move(s16 dx, s16 dy, bool commit) override
-    {
-        mMapActorData.offset.x = mBasePosition.x + dx;
-        mMapActorData.offset.y = mBasePosition.y + dy;
-        if (commit)
-        {
-            mBasePosition.x = mMapActorData.offset.x;
-            mBasePosition.y = mMapActorData.offset.y;
-        }
-        onDataChange(DATA_CHANGE_FLAG_OFFSET);
-    }
-
+    void move(s16 dx, s16 dy, bool commit) override;
     void drawSelectionUI() override;
 
-    virtual void onDataChange(DataChangeFlag flag)
+    virtual void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
     {
     }
 
@@ -91,7 +77,6 @@ protected:
     void onSelectionChange_() override;
 
 protected:
-    MapActorData&   mMapActorData;
     MapActorData    mSelectionData;
 };
 

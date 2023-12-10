@@ -1,19 +1,20 @@
+#include <CourseView.h>
 #include <Globals.h>
 #include <course/BgRenderer.h>
 #include <course/BgTexMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <map_obj/ActorBlockBigBase.h>
 
-void ActorBlockBigBase::updateItemType_()
+void ActorBlockBigBase::updateItemType_(const MapActorData& map_actor_data)
 {
     mItemType = BgTexMgr::ITEM_MAX;
 
-    if (mMapActorData.settings[1] >> 28 & 1)
+    if (map_actor_data.settings[1] >> 28 & 1)
         mItemType = BgTexMgr::ITEM_ACORN;
 
     else
     {
-        switch (mMapActorData.settings[1] & 0xF)
+        switch (map_actor_data.settings[1] & 0xF)
         {
         default:
             break;
@@ -65,43 +66,45 @@ void ActorBlockBigBase::updateItemType_()
     }
 }
 
-void ActorBlockBigBase::onDataChange(DataChangeFlag flag)
+void ActorBlockBigBase::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     if (flag & DATA_CHANGE_FLAG_OFFSET)
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
 
     if (flag & DATA_CHANGE_FLAG_LAYER)
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_1)
-        updateItemType_();
+        updateItemType_(map_actor_data);
 }
 
 void ActorBlockBigBase::scheduleDraw()
 {
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+
     BgRenderer::instance()->drawUnit(
         mItemID,
         mPosition,
         cUnitID,
-        mMapActorData.layer
+        map_actor_data.layer
     );
     BgRenderer::instance()->drawUnit(
         mItemID,
         { mPosition.x + 16, mPosition.y, mPosition.z },
         UnitID(s32(cUnitID) + 1),
-        mMapActorData.layer
+        map_actor_data.layer
     );
     BgRenderer::instance()->drawUnit(
         mItemID,
         { mPosition.x, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16),
-        mMapActorData.layer
+        map_actor_data.layer
     );
     BgRenderer::instance()->drawUnit(
         mItemID,
         { mPosition.x + 16, mPosition.y - 16, mPosition.z },
         UnitID(s32(cUnitID) + 16 + 1),
-        mMapActorData.layer
+        map_actor_data.layer
     );
 }
 

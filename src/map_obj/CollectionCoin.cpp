@@ -27,8 +27,8 @@ CollectionCoin::CollectionCoin(MapActorData& map_actor_data, u32 index)
         Model::cBoundingMode_Disable
     );
 
-    updatePositionXY_();
-    updatePositionZ_();
+    updatePositionXY_(map_actor_data);
+    updatePositionZ_(map_actor_data);
 
     setModelItemID_();
 }
@@ -55,13 +55,13 @@ void CollectionCoin::setModelSelection_()
         mpModel->setSelection(mIsSelected);
 }
 
-void CollectionCoin::onDataChange(DataChangeFlag flag)
+void CollectionCoin::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     if (flag & DATA_CHANGE_FLAG_OFFSET)
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
 
     if ((flag & DATA_CHANGE_FLAG_LAYER) || (flag & DATA_CHANGE_FLAG_SETTINGS_0))
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
 }
 
 void CollectionCoin::onSceneUpdate()

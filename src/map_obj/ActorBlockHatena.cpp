@@ -2,16 +2,16 @@
 #include <graphics/QuadRenderer.h>
 #include <map_obj/ActorBlockHatena.h>
 
-void ActorBlockHatena::updateType_()
+void ActorBlockHatena::updateType_(const MapActorData& map_actor_data)
 {
-    if (mMapActorData.settings[1] >> 28 & 1)
+    if (map_actor_data.settings[1] >> 28 & 1)
     {
         mUnitID = cUnitID_QBlockAcorn;
         mItemType = BgTexMgr::ITEM_MAX;
     }
     else
     {
-        switch (mMapActorData.settings[1] & 0xF)
+        switch (map_actor_data.settings[1] & 0xF)
         {
         default:
             mUnitID = cUnitID_QBlock;
@@ -74,12 +74,12 @@ void ActorBlockHatena::updateType_()
     }
 }
 
-void ActorBlockHatena::onDataChange(DataChangeFlag flag)
+void ActorBlockHatena::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
-    BlockCoinBase::onDataChange(flag);
+    BlockCoinBase::onDataChange( map_actor_data, flag);
 
     if (flag & DATA_CHANGE_FLAG_SETTINGS_1)
-        updateType_();
+        updateType_(map_actor_data);
 }
 
 void ActorBlockHatena::drawXlu(const rio::lyr::DrawInfo& draw_info)

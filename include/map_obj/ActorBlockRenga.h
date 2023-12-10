@@ -11,11 +11,11 @@ public:
     ActorBlockRenga(MapActorData& map_actor_data, u32 index)
         : BlockCoinBase(map_actor_data, index)
     {
-        updatePositionZ_();
-        updateType_();
+        updatePositionZ_(map_actor_data);
+        updateType_(map_actor_data);
     }
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
 
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
 
@@ -25,12 +25,12 @@ private:
         return mUnitID;
     }
 
-    void updatePositionZ_() override
+    void updatePositionZ_(const MapActorData& map_actor_data) override
     {
-        mPosition.z = (mMapActorData.layer == LAYER_1 && !(mMapActorData.settings[0] >> 8 & 1)) ? 500.0f : -3000.0f;
+        mPosition.z = (map_actor_data.layer == LAYER_1 && !(map_actor_data.settings[0] >> 8 & 1)) ? 500.0f : -3000.0f;
     }
 
-    void updateType_();
+    void updateType_(const MapActorData& map_actor_data);
 
 private:
     UnitID              mUnitID;

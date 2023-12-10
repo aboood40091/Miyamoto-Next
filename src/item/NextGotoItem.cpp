@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <action/ActionItemDataChange.h>
 #include <action/ActionMgr.h>
 #include <graphics/QuadRenderer.h>
@@ -14,13 +15,27 @@ static const rio::Color4f sColor{
 
 NextGotoItem::NextGotoItem(NextGoto& next_goto, u32 index)
     : ItemBase(ITEM_TYPE_NEXT_GOTO, index, next_goto.offset.x, next_goto.offset.y)
-    , mNextGoto(next_goto)
 {
+}
+
+void NextGotoItem::move(s16 dx, s16 dy, bool commit)
+{
+    NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+
+    next_goto.offset.x = mBasePosition.x + dx;
+    next_goto.offset.y = mBasePosition.y + dy;
+    if (commit)
+    {
+        mBasePosition.x = next_goto.offset.x;
+        mBasePosition.y = next_goto.offset.y;
+    }
 }
 
 void NextGotoItem::drawOpa()
 {
-    rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() + 10 };
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+
+    rio::Vector3f offs { f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8), getZPos_() + 10 };
     rio::Vector2f size { 16.0f, 16.0f };
 
     QuadRenderer::instance()->drawBox(
@@ -34,7 +49,9 @@ void NextGotoItem::drawOpa()
 
 void NextGotoItem::drawXlu()
 {
-    rio::Vector3f offs { f32(mNextGoto.offset.x + 8), -f32(mNextGoto.offset.y + 8), getZPos_() };
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+
+    rio::Vector3f offs { f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8), getZPos_() };
     rio::Vector2f size { 16.0f, 16.0f };
 
     QuadRenderer::instance()->drawQuad(
@@ -46,8 +63,16 @@ void NextGotoItem::drawXlu()
     );
 }
 
+void NextGotoItem::onSelectionChange_()
+{
+    if (mIsSelected)
+        mSelectionData = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+}
+
 void NextGotoItem::drawSelectionUI()
 {
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+
     ImGui::Text("Entrance");
     ImGui::Separator();
 
@@ -73,30 +98,30 @@ void NextGotoItem::drawSelectionUI()
     if (ImGui::Button("Apply"))
     {
         const bool anything_modified =
-            mSelectionData.id                       != mNextGoto.id ||
-            mSelectionData.area                     != mNextGoto.area ||
-            mSelectionData.type                     != mNextGoto.type ||
-            mSelectionData.destination.next_goto    != mNextGoto.destination.next_goto ||
-            mSelectionData.destination.file         != mNextGoto.destination.file ||
-            mSelectionData.camera_offset.x          != mNextGoto.camera_offset.x ||
-            mSelectionData.camera_offset.y          != mNextGoto.camera_offset.y ||
-            mSelectionData.mp_spawn_flag            != mNextGoto.mp_spawn_flag ||
-            mSelectionData.mp_inner_gap             != mNextGoto.mp_inner_gap ||
-            mSelectionData.flag                     != mNextGoto.flag ||
-            mSelectionData.chibi_yoshi_next_goto    != mNextGoto.chibi_yoshi_next_goto ||
-            mSelectionData.coin_edit_priority       != mNextGoto.coin_edit_priority ||
-            mSelectionData.rail.info                != mNextGoto.rail.info ||
-            mSelectionData.rail.point               != mNextGoto.rail.point ||
-            mSelectionData.wipe_type                != mNextGoto.wipe_type;
+            mSelectionData.id                       != next_goto.id ||
+            mSelectionData.area                     != next_goto.area ||
+            mSelectionData.type                     != next_goto.type ||
+            mSelectionData.destination.next_goto    != next_goto.destination.next_goto ||
+            mSelectionData.destination.file         != next_goto.destination.file ||
+            mSelectionData.camera_offset.x          != next_goto.camera_offset.x ||
+            mSelectionData.camera_offset.y          != next_goto.camera_offset.y ||
+            mSelectionData.mp_spawn_flag            != next_goto.mp_spawn_flag ||
+            mSelectionData.mp_inner_gap             != next_goto.mp_inner_gap ||
+            mSelectionData.flag                     != next_goto.flag ||
+            mSelectionData.chibi_yoshi_next_goto    != next_goto.chibi_yoshi_next_goto ||
+            mSelectionData.coin_edit_priority       != next_goto.coin_edit_priority ||
+            mSelectionData.rail.info                != next_goto.rail.info ||
+            mSelectionData.rail.point               != next_goto.rail.point ||
+            mSelectionData.wipe_type                != next_goto.wipe_type;
 
         if (anything_modified)
         {
-            mSelectionData.offset = mNextGoto.offset; // Copy over stuff not modified by the selection ui.
+            mSelectionData.offset = next_goto.offset; // Copy over stuff not modified by the selection ui.
 
             ActionItemDataChange::Context context {
                 mItemID,
                 std::static_pointer_cast<const void>(
-                    std::make_shared<const NextGoto>(mNextGoto)
+                    std::make_shared<const NextGoto>(next_goto)
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const NextGoto>(mSelectionData)
@@ -109,11 +134,5 @@ void NextGotoItem::drawSelectionUI()
     ImGui::SameLine();
 
     if (ImGui::Button("Discard"))
-        mSelectionData = mNextGoto;
-}
-
-void NextGotoItem::onSelectionChange_()
-{
-    if (mIsSelected)
-        mSelectionData = mNextGoto;
+        mSelectionData = next_goto;
 }

@@ -27,8 +27,8 @@ DokanJoint::DokanJoint(MapActorData& map_actor_data, u32 index)
         Model::cBoundingMode_Disable
     );
 
-    updatePositionXY_();
-    updatePositionZ_();
+    updatePositionXY_(map_actor_data);
+    updatePositionZ_(map_actor_data);
     setModelMtxRT_();
 
     setModelItemID_();
@@ -66,19 +66,19 @@ void DokanJoint::setModelMtxRT_()
     mpModel->updateModel();
 }
 
-void DokanJoint::onDataChange(DataChangeFlag flag)
+void DokanJoint::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
 {
     bool position_changed = false;
 
     if (flag & DATA_CHANGE_FLAG_LAYER)
     {
-        updatePositionZ_();
+        updatePositionZ_(map_actor_data);
         position_changed = true;
     }
 
     if (flag & DATA_CHANGE_FLAG_OFFSET)
     {
-        updatePositionXY_();
+        updatePositionXY_(map_actor_data);
         position_changed = true;
     }
 

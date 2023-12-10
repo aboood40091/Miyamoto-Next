@@ -14,7 +14,7 @@ public:
     CollectionCoin(MapActorData& map_actor_data, u32 index);
     virtual ~CollectionCoin();
 
-    void onDataChange(DataChangeFlag flag) override;
+    void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void onSceneUpdate() override;
     void scheduleDraw() override;
 
@@ -24,18 +24,18 @@ private:
         return mpModel == nullptr;
     }
 
-    void updatePositionXY_()
+    void updatePositionXY_(const MapActorData& map_actor_data)
     {
-        mPosition.x =  f32(mMapActorData.offset.x + 16);
-        mPosition.y = -f32(mMapActorData.offset.y + 16);
+        mPosition.x =  f32(map_actor_data.offset.x + 16);
+        mPosition.y = -f32(map_actor_data.offset.y + 16);
     }
 
-    void updatePositionZ_()
+    void updatePositionZ_(const MapActorData& map_actor_data)
     {
         mPosition.z = -3000;
-        if (mMapActorData.layer == LAYER_1)
+        if (map_actor_data.layer == LAYER_1)
         {
-            switch (mMapActorData.settings[0] >> 8 & 0xF)
+            switch (map_actor_data.settings[0] >> 8 & 0xF)
             {
             default:
                 mPosition.z = 550;

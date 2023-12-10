@@ -1,5 +1,4 @@
 #include <CourseView.h>
-#include <MainWindow.h>
 #include <action/ActionItemDataChange.h>
 #include <action/ActionMgr.h>
 #include <course/Bg.h>
@@ -13,7 +12,6 @@
 
 BgUnitItem::BgUnitItem(BgCourseData& data, u32 index)
     : ItemBase(ITEM_TYPE_BG_UNIT_OBJ, index, data.offset.x, data.offset.y)
-    , mBgCourseData(data)
 {
 }
 
@@ -22,22 +20,24 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
     dx /= 16;
     dy /= 16;
 
+    BgCourseData& data = CourseView::instance()->getCourseDataFile()->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+
     if (dx == 0 && dy == 0)
     {
-        if (mBgCourseData.offset.x == mBasePosition.x && mBgCourseData.offset.y == mBasePosition.y)
+        if (data.offset.x == mBasePosition.x && data.offset.y == mBasePosition.y)
             return;
 
-        mBgCourseData.offset.x = mBasePosition.x;
-        mBgCourseData.offset.y = mBasePosition.y;
+        data.offset.x = mBasePosition.x;
+        data.offset.y = mBasePosition.y;
     }
     else
     {
-        mBgCourseData.offset.x = mBasePosition.x + dx;
-        mBgCourseData.offset.y = mBasePosition.y + dy;
+        data.offset.x = mBasePosition.x + dx;
+        data.offset.y = mBasePosition.y + dy;
         if (commit)
         {
-            mBasePosition.x = mBgCourseData.offset.x;
-            mBasePosition.y = mBgCourseData.offset.y;
+            mBasePosition.x = data.offset.x;
+            mBasePosition.y = data.offset.y;
         }
     }
 }
@@ -45,13 +45,15 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
 void BgUnitItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = mBgCourseData;
+        mSelectionData = CourseView::instance()->getCourseDataFile()->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 }
 
 void BgUnitItem::drawSelectionUI()
 {
-    const CourseDataFile* p_cd_file = static_cast<MainWindow*>(rio::sRootTask)->getCourseView()->getCourseDataFile();
+    const CourseDataFile* p_cd_file = CourseView::instance()->getCourseDataFile();
     RIO_ASSERT(p_cd_file != nullptr);
+
+    const BgCourseData& data = p_cd_file->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 
     ImGui::Text("Object");
     ImGui::Separator();
@@ -83,19 +85,19 @@ void BgUnitItem::drawSelectionUI()
     if (ImGui::Button("Apply"))
     {
         const bool anything_modified =
-            mSelectionData.type != mBgCourseData.type ||
-            mSelectionData.size.x != mBgCourseData.size.x ||
-            mSelectionData.size.y != mBgCourseData.size.y ||
-            mSelectionData.flag != mBgCourseData.flag;
+            mSelectionData.type != data.type ||
+            mSelectionData.size.x != data.size.x ||
+            mSelectionData.size.y != data.size.y ||
+            mSelectionData.flag != data.flag;
 
         if (anything_modified)
         {
-            mSelectionData.offset = mBgCourseData.offset; // Copy over stuff not modified by the selection ui.
+            mSelectionData.offset = data.offset; // Copy over stuff not modified by the selection ui.
 
             ActionItemDataChange::Context context {
                 mItemID,
                 std::static_pointer_cast<const void>(
-                    std::make_shared<const BgCourseData>(mBgCourseData)
+                    std::make_shared<const BgCourseData>(data)
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const BgCourseData>(mSelectionData)
@@ -110,5 +112,5 @@ void BgUnitItem::drawSelectionUI()
     ImGui::SameLine();
 
     if (ImGui::Button("Discard"))
-        mSelectionData = mBgCourseData;
+        mSelectionData = data;
 }
