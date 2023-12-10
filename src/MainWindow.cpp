@@ -775,9 +775,9 @@ void MainWindow::drawPaletteUI_()
                     mPaintType = ITEM_TYPE_MAP_ACTOR;
 
                 static ImGuiTextFilter filter;
-                filter.Draw("##ActorSearch", -1);
+                filter.Draw("##ActorAddSearch", -1);
 
-                if (ImGui::BeginListBox("##ActorSearchList", ImVec2(-1, -1)))
+                if (ImGui::BeginListBox("##ActorAddList", ImVec2(-1, -1)))
                 {
                     static int selected = -1;
 
@@ -801,7 +801,10 @@ void MainWindow::drawPaletteUI_()
                 if (focused)
                     mPaintType = ITEM_TYPE_MAX_NUM;
 
-                if (ImGui::BeginListBox("##ActorList", ImVec2(-1, -1)))
+                static ImGuiTextFilter filter;
+                filter.Draw("##ActorCurrentSearch", -1);
+
+                if (ImGui::BeginListBox("##ActorCurrentList", ImVec2(-1, -1)))
                 {
                     const std::vector< std::unique_ptr<MapActorItem> >& item_vec = mpCourseView->getMapActorItem();
                     const std::vector<MapActorData>& data_vec = mpCourseView->getCourseDataFile()->getMapActorData();
@@ -815,7 +818,7 @@ void MainWindow::drawPaletteUI_()
                                 ? std::format("{0:d}: ({1:d}, {2:d})", map_actor_data.id, map_actor_data.offset.x, map_actor_data.offset.y)
                                 : std::format("{0:d}: {1:s} ({2:d}, {3:d})", map_actor_data.id, (const char*)name.c_str(), map_actor_data.offset.x, map_actor_data.offset.y);
 
-                        if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {
                             mpCourseView->setCameraCenterWorldPos({ f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8) });
                             mpCourseView->selectItem(map_actor_item.getItemID());
