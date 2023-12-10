@@ -73,7 +73,7 @@ void NextGotoItem::drawSelectionUI()
 {
     const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
 
-    ImGui::Text("Entrance");
+    ImGui::Text("NextGoto");
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.
@@ -87,7 +87,7 @@ void NextGotoItem::drawSelectionUI()
     ImGui::InputScalar("MP Spawn Flag", ImGuiDataType_U8, &mSelectionData.mp_spawn_flag);
     ImGui::InputScalar("MP Inner Gap", ImGuiDataType_U8, &mSelectionData.mp_inner_gap);
     ImGui::InputScalar("Flags", ImGuiDataType_U16, &mSelectionData.flag, nullptr, nullptr, "%04X");
-    ImGui::InputScalar("Baby Yoshi Entrance", ImGuiDataType_U8, &mSelectionData.chibi_yoshi_next_goto, &single_step);
+    ImGui::InputScalar("Baby Yoshi NextGoto", ImGuiDataType_U8, &mSelectionData.chibi_yoshi_next_goto, &single_step);
     ImGui::InputScalar("Coin Edit Priority", ImGuiDataType_U8, &mSelectionData.coin_edit_priority, &single_step);
     ImGui::InputScalar("Path Info", ImGuiDataType_U8, &mSelectionData.rail.info, &single_step);
     ImGui::InputScalar("Path Node", ImGuiDataType_U8, &mSelectionData.rail.point, &single_step);

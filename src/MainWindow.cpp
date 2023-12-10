@@ -749,7 +749,7 @@ void MainWindow::drawPaletteUI_()
                 const LocationItem& location_item = item_vec[i];
                 const Location& location_data = data_vec[i];
 
-                const std::string str = std::format("Location {0:d} ({1:d}, {2:d})", location_data.id, location_data.offset.x, location_data.offset.y);
+                const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", location_data.id, location_data.offset.x, location_data.offset.y);
 
                 if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
@@ -762,15 +762,15 @@ void MainWindow::drawPaletteUI_()
     }
     ImGui::End();
 
-    if (ImGui::Begin("Entrances"))
+    if (ImGui::Begin("NextGoto"))
     {
         if (ImGui::IsWindowFocused())
             mPaintType = ITEM_TYPE_NEXT_GOTO;
 
         static ImGuiTextFilter filter;
-        filter.Draw("##EntranceSearch", -1);
+        filter.Draw("##NextGotoSearch", -1);
 
-        if (ImGui::BeginListBox("##EntranceList", ImVec2(-1, -1)))
+        if (ImGui::BeginListBox("##NextGotoList", ImVec2(-1, -1)))
         {
             const std::vector<NextGotoItem>& item_vec = mpCourseView->getNextGotoItem();
             const std::vector<NextGoto>& data_vec = mpCourseView->getCourseDataFile()->getNextGoto();
@@ -780,7 +780,7 @@ void MainWindow::drawPaletteUI_()
                 const NextGotoItem& entrance_item = item_vec[i];
                 const NextGoto& entrance_data = data_vec[i];
 
-                const std::string str = std::format("Entrance {0:d} ({1:d}, {2:d})", entrance_data.id, entrance_data.offset.x, entrance_data.offset.y);
+                const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", entrance_data.id, entrance_data.offset.x, entrance_data.offset.y);
 
                 if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
