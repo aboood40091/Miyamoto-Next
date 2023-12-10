@@ -201,8 +201,8 @@ void GoalPole::updateFrame_()
     SetFrame(mpTorideStdModel->getTexAnim(0), mpModelResource, "toride_std", frame);
     if (!cIsKaiga)
         SetFrame(mpTorideStdModel->getVisAnim(0), mpModelResource, "toride_std", frame);
-    mpBaseModel->updateAnimations();
-    mpBaseModel->updateModel();
+    mpTorideStdModel->updateAnimations();
+    mpTorideStdModel->updateModel();
 }
 
 void GoalPole::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
