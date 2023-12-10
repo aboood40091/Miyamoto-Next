@@ -339,6 +339,7 @@ private:
     CursorReleaseFlag           mCursorForceReleaseFlag;
     bool                        mSelectionChange;
     rio::Vector2f               mCursorP1;
+    rio::Vector2i               mCursorP1World;
     std::vector<ItemID>         mSelectedItems;
     std::array<std::vector<BgUnitItem>, CD_FILE_LAYER_MAX_NUM>
                                 mBgUnitItem;

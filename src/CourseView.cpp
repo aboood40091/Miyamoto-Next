@@ -1130,6 +1130,9 @@ void CourseView::onCursorPress_Paint_BgUnitObj_()
         return;
     }
 
+    mCursorP1World.x = x;
+    mCursorP1World.y = y;
+
     pushBackItem_BgUnitObj_({ mPaintCurrent.bg_unit_obj_type, { u16(x), u16(y) }, { 1, 1 } }, mPaintCurrent.layer);
 
     Bg::instance()->processBgCourseData(*mpCourseDataFile, mPaintCurrent.layer);
@@ -1143,14 +1146,22 @@ void CourseView::onCursorHold_Paint_BgUnitObj_()
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
     s32 x = std::clamp<s32>( p.x / 16, 0, BG_MAX_UNIT_X - 1);
-    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_X - 1);
+    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_Y - 1);
 
-    u32 w = std::max<s32>(x - data.offset.x, 0) + 1;
-    u32 h = std::max<s32>(y - data.offset.y, 0) + 1;
+    u16 x1 = std::min<u16>(x, mCursorP1World.x);
+    u16 y1 = std::min<u16>(y, mCursorP1World.y);
 
-    if (w == data.size.x && h == data.size.y)
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = x2 - x1 + 1;
+    u32 h = y2 - y1 + 1;
+
+    if (x1 == data.offset.x && y1 == data.offset.y && w == data.size.x && h == data.size.y)
         return;
 
+    data.offset.x = x1;
+    data.offset.y = y1;
     data.size.x = w;
     data.size.y = h;
 
@@ -1167,11 +1178,19 @@ void CourseView::onCursorRelease_Paint_BgUnitObj_()
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
     s32 x = std::clamp<s32>( p.x / 16, 0, BG_MAX_UNIT_X - 1);
-    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_X - 1);
+    s32 y = std::clamp<s32>(-p.y / 16, 0, BG_MAX_UNIT_Y - 1);
 
-    u32 w = std::max<s32>(x - p_data->offset.x, 0) + 1;
-    u32 h = std::max<s32>(y - p_data->offset.y, 0) + 1;
+    u16 x1 = std::min<u16>(x, mCursorP1World.x);
+    u16 y1 = std::min<u16>(y, mCursorP1World.y);
 
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = x2 - x1 + 1;
+    u32 h = y2 - y1 + 1;
+
+    p_data->offset.x = x1;
+    p_data->offset.y = y1;
     p_data->size.x = w;
     p_data->size.y = h;
 
@@ -1222,7 +1241,7 @@ void CourseView::onCursorHold_Paint_MapActor_()
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
     s32 x = std::clamp<s32>( p.x / 8, 0, BG_MAX_UNIT_X - 1) * 8;
-    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_Y - 1) * 8;
 
     if (x == data.offset.x && y == data.offset.y)
         return;
@@ -1242,7 +1261,7 @@ void CourseView::onCursorRelease_Paint_MapActor_()
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
     s32 x = std::clamp<s32>( p.x / 8, 0, BG_MAX_UNIT_X - 1) * 8;
-    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_X - 1) * 8;
+    s32 y = std::clamp<s32>(-p.y / 8, 0, BG_MAX_UNIT_Y - 1) * 8;
 
     p_data->offset.x = x;
     p_data->offset.y = y;
