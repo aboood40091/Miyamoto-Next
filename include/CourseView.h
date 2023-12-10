@@ -229,6 +229,16 @@ public:
         return mMapActorItemPtr;
     }
 
+    const std::vector<LocationItem>& getLocationItem() const
+    {
+        return mLocationItem;
+    }
+
+    const std::vector<NextGotoItem>& getNextGotoItem() const
+    {
+        return mNextGotoItem;
+    }
+
     void setCameraCenterWorldPos(const rio::BaseVec2f& center_pos);
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);

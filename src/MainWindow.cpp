@@ -728,15 +728,26 @@ void MainWindow::drawPaletteUI_()
         if (ImGui::IsWindowFocused())
             mPaintType = ITEM_TYPE_LOCATION;
 
+        static ImGuiTextFilter filter;
+        filter.Draw("##LocationSearch", -1);
+
         if (ImGui::BeginListBox("##LocationList", ImVec2(-1, -1)))
         {
-            static const char* items[] = { "0: Location 0 (at 234, 2384)", "1: Location 9 (at 84, 865)" };
-            static int selected = -1;
+            const std::vector<LocationItem>& item_vec = mpCourseView->getLocationItem();
+            const std::vector<Location>& data_vec = mpCourseView->getCourseDataFile()->getLocation();
 
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (u32 i = 0; i < item_vec.size(); i++)
             {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
+                const LocationItem& location_item = item_vec[i];
+                const Location& location_data = data_vec[i];
+
+                const std::string str = std::format("Location {0:d} ({1:d}, {2:d})", location_data.id, location_data.offset.x, location_data.offset.y);
+
+                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    mpCourseView->setCameraCenterWorldPos({ f32(location_data.offset.x + 8), -f32(location_data.offset.y + 8) });
+                    mpCourseView->selectItem(location_item.getItemID());
+                }
             }
             ImGui::EndListBox();
         }
@@ -748,15 +759,26 @@ void MainWindow::drawPaletteUI_()
         if (ImGui::IsWindowFocused())
             mPaintType = ITEM_TYPE_NEXT_GOTO;
 
+        static ImGuiTextFilter filter;
+        filter.Draw("##EntranceSearch", -1);
+
         if (ImGui::BeginListBox("##EntranceList", ImVec2(-1, -1)))
         {
-            static const char* items[] = { "0: (0) Normal (enterable)", "1: (1) Pipe Facing Up (enterable)", "2: (2) Pipe Facing Up (cannot be entered)", "3: (3) Checkpoint", "4: (4) Normal (enterable)", "5: (5) Falling (Fast) (enterable)" };
-            static int selected = -1;
+            const std::vector<NextGotoItem>& item_vec = mpCourseView->getNextGotoItem();
+            const std::vector<NextGoto>& data_vec = mpCourseView->getCourseDataFile()->getNextGoto();
 
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (u32 i = 0; i < item_vec.size(); i++)
             {
-                if (ImGui::Selectable(items[n], selected == n))
-                    selected = n;
+                const NextGotoItem& entrance_item = item_vec[i];
+                const NextGoto& entrance_data = data_vec[i];
+
+                const std::string str = std::format("Entrance {0:d} ({1:d}, {2:d})", entrance_data.id, entrance_data.offset.x, entrance_data.offset.y);
+
+                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    mpCourseView->setCameraCenterWorldPos({ f32(entrance_data.offset.x + 8), -f32(entrance_data.offset.y + 8) });
+                    mpCourseView->selectItem(entrance_item.getItemID());
+                }
             }
             ImGui::EndListBox();
         }
