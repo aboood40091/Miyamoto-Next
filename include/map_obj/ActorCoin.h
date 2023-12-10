@@ -4,7 +4,7 @@
 
 class ActorCoin : public BlockCoinBase
 {
-    MAP_ACTOR_ITEM_CREATE(ActorCoin)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ActorCoin)
 
 public:
     ActorCoin(const MapActorData& map_actor_data, u32 index)

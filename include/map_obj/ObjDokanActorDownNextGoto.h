@@ -4,7 +4,7 @@
 
 class ObjDokanActorDownNextGoto : public ObjDokanActorBase
 {
-    MAP_ACTOR_ITEM_CREATE(ObjDokanActorDownNextGoto)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ObjDokanActorDownNextGoto)
 
 public:
     ObjDokanActorDownNextGoto(const MapActorData& map_actor_data, u32 index)

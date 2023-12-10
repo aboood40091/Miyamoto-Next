@@ -4,7 +4,7 @@
 
 class ActorBlockBigRenga : public ActorBlockBigBase
 {
-    MAP_ACTOR_ITEM_CREATE(ActorBlockBigRenga)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ActorBlockBigRenga)
 
 public:
     ActorBlockBigRenga(const MapActorData& map_actor_data, u32 index)

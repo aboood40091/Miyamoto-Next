@@ -782,91 +782,91 @@ void ActorCreateMgr::initialize()
 
     // -------------------------------------------------------------
 
-    setActorFactory(0, &Kuribo::create);
+    setActorFactory<Kuribo>(0);
 
-    setActorFactory(19, &Nokonoko::create);
+    setActorFactory<Nokonoko>(19);
 
-    setActorFactory(31, &GoalPole::create);
+    setActorFactory<GoalPole>(31);
 
-    setActorFactory(45, &CollectionCoin::create);
+    setActorFactory<CollectionCoin>(45);
 
-    setActorFactory(47, &CollectionCoin::create);
+    setActorFactory<CollectionCoin>(47);
 
-    setActorFactory(55, &Nokonoko::create);
+    setActorFactory<Nokonoko>(55);
 
-    setActorFactory(59, &ActorBlockHatena::create);
-    setActorFactory(60, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockHatena>(59);
+    setActorFactory<ActorBlockRenga>(60);
 
-    setActorFactory(65, &ActorCoin::create);
-    setActorFactory(66, &ActorCoin::create);
+    setActorFactory<ActorCoin>(65);
+    setActorFactory<ActorCoin>(66);
 
-    setActorFactory(139, &ObjDokanActorUp::create);
-    setActorFactory(140, &ObjDokanActorDown::create);
-    setActorFactory(141, &ObjDokanActorLeft::create);
-    setActorFactory(142, &ObjDokanActorRight::create);
+    setActorFactory<ObjDokanActorUp>(139);
+    setActorFactory<ObjDokanActorDown>(140);
+    setActorFactory<ObjDokanActorLeft>(141);
+    setActorFactory<ObjDokanActorRight>(142);
 
-    setActorFactory(147, &ActorBlockHatena::create);
-    setActorFactory(148, &ActorBlockRenga::create);
-    setActorFactory(149, &ActorCoin::create);
+    setActorFactory<ActorBlockHatena>(147);
+    setActorFactory<ActorBlockRenga>(148);
+    setActorFactory<ActorCoin>(149);
 
-    setActorFactory(205, &ActorBlockHatena::create);
+    setActorFactory<ActorBlockHatena>(205);
 
-    setActorFactory(233, &ActorBlockHatena::create);
-    setActorFactory(234, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockHatena>(233);
+    setActorFactory<ActorBlockRenga>(234);
 
-    setActorFactory(279, &ActorCoin::create);
+    setActorFactory<ActorCoin>(279);
 
-    setActorFactory(325, &ActorCoin::create);
+    setActorFactory<ActorCoin>(325);
 
-    setActorFactory(328, &ActorCoin::create);
+    setActorFactory<ActorCoin>(328);
 
-    setActorFactory(397, &ActorBlockHatena::create);
-    setActorFactory(398, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockHatena>(397);
+    setActorFactory<ActorBlockRenga>(398);
 
-    setActorFactory(404, &ObjDokanActorUpNextGoto::create);
+    setActorFactory<ObjDokanActorUpNextGoto>(404);
 
-    setActorFactory(422, &ActorBlockBigRenga::create);
+    setActorFactory<ActorBlockBigRenga>(422);
 
-    setActorFactory(437, &Kuribo::create);
-    setActorFactory(438, &Kuribo::create);
+    setActorFactory<Kuribo>(437);
+    setActorFactory<Kuribo>(438);
 
-    setActorFactory(475, &ActorBlockBigHatena::create);
-    setActorFactory(476, &Nokonoko::create);
+    setActorFactory<ActorBlockBigHatena>(475);
+    setActorFactory<Nokonoko>(476);
 
-    setActorFactory(480, &CollectionCoin::create);
+    setActorFactory<CollectionCoin>(480);
 
-    setActorFactory(496, &ActorCoin::create);
+    setActorFactory<ActorCoin>(496);
 
-    setActorFactory(503, &GoalPole::create);
+    setActorFactory<GoalPole>(503);
 
-    setActorFactory(509, &ObjDokanActorRightNextGoto::create);
-    setActorFactory(510, &ObjDokanActorLeftNextGoto::create);
-    setActorFactory(511, &ObjDokanActorDownNextGoto::create);
+    setActorFactory<ObjDokanActorRightNextGoto>(509);
+    setActorFactory<ObjDokanActorLeftNextGoto>(510);
+    setActorFactory<ObjDokanActorDownNextGoto>(511);
 
-    setActorFactory(513, &DokanJoint::create);
+    setActorFactory<DokanJoint>(513);
 
-    setActorFactory(525, &ActorBlockHatena::create);
-    setActorFactory(526, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockHatena>(525);
+    setActorFactory<ActorBlockRenga>(526);
 
-    setActorFactory(575, &ObjDokanActorLeft::create);
-    setActorFactory(576, &ObjDokanActorRight::create);
-    setActorFactory(577, &ObjDokanActorUp::create);
-    setActorFactory(578, &ObjDokanActorDown::create);
+    setActorFactory<ObjDokanActorLeft>(575);
+    setActorFactory<ObjDokanActorRight>(576);
+    setActorFactory<ObjDokanActorUp>(577);
+    setActorFactory<ObjDokanActorDown>(578);
 
-    setActorFactory(595, &Kuribo::create);
+    setActorFactory<Kuribo>(595);
 
-    setActorFactory(630, &GoalPole::create);
-    setActorFactory(631, &GoalPole::create);
+    setActorFactory<GoalPole>(630);
+    setActorFactory<GoalPole>(631);
 
-    setActorFactory(663, &ActorCoin::create);
+    setActorFactory<ActorCoin>(663);
 
-    setActorFactory(683, &ActorBlockHatena::create);
+    setActorFactory<ActorBlockHatena>(683);
 
-    setActorFactory(692, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockRenga>(692);
 
-    setActorFactory(701, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockRenga>(701);
 
-    setActorFactory(704, &ActorBlockRenga::create);
+    setActorFactory<ActorBlockRenga>(704);
 }
 
 ActorCreateMgr::~ActorCreateMgr()
@@ -900,17 +900,26 @@ const std::u8string& ActorCreateMgr::getName(u16 map_actor_id) const
     return empty;
 }
 
-void ActorCreateMgr::setActorFactory(u16 map_actor_id, ActorFactory factory)
+void ActorCreateMgr::setActorFactory(u16 map_actor_id, ActorFactory factory, const MapActorData* default_data)
 {
     RIO_ASSERT(map_actor_id < mMaxID);
-    mActorFactoryMap[map_actor_id] = factory;
+    mActorFactoryMap[map_actor_id] = std::pair { factory, default_data };
+}
+
+const std::pair<ActorFactory, const MapActorData*>* ActorCreateMgr::getActorFactory(u16 map_actor_id) const
+{
+    const auto& itr = mActorFactoryMap.find(map_actor_id);
+    if (itr != mActorFactoryMap.end())
+        return &itr->second;
+
+    return nullptr;
 }
 
 std::unique_ptr<MapActorItem> ActorCreateMgr::create(const MapActorData& map_actor_data, u32 index) const
 {
     const auto& itr = mActorFactoryMap.find(map_actor_data.id);
     if (itr != mActorFactoryMap.end())
-        return (*itr->second)(map_actor_data, index);
+        return (*itr->second.first)(map_actor_data, index);
 
     return std::make_unique<MapActorItem>(map_actor_data, index);
 }

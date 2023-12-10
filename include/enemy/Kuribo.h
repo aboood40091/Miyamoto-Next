@@ -8,7 +8,7 @@ class BasicModel;
 
 class Kuribo : public MapActorItem
 {
-    MAP_ACTOR_ITEM_CREATE(Kuribo)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(Kuribo)
 
 public:
     Kuribo(const MapActorData& map_actor_data, u32 index);

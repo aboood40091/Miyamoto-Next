@@ -8,7 +8,7 @@ class BasicModel;
 
 class GoalPole : public MapActorItem
 {
-    MAP_ACTOR_ITEM_CREATE(GoalPole)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(GoalPole)
 
 public:
     GoalPole(const MapActorData& map_actor_data, u32 index);

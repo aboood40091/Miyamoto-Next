@@ -4,7 +4,7 @@
 
 class ObjDokanActorDown : public ObjDokanActorBase
 {
-    MAP_ACTOR_ITEM_CREATE(ObjDokanActorDown)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ObjDokanActorDown)
 
 public:
     ObjDokanActorDown(const MapActorData& map_actor_data, u32 index)

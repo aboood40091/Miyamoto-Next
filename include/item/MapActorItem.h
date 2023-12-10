@@ -86,3 +86,12 @@ protected:
         {                                                                                           \
             return std::make_unique<CLASS>(map_actor_data, index);                                  \
         }
+
+#define MAP_ACTOR_ITEM_CREATE_DEFAULT(CLASS)                                                        \
+        MAP_ACTOR_ITEM_CREATE(CLASS)                                                                \
+                                                                                                    \
+    public:                                                                                         \
+        static const MapActorData* getDefaultData(u16 map_actor_id)                                 \
+        {                                                                                           \
+            return nullptr;                                                                         \
+        }

@@ -9,7 +9,7 @@ class ModelResource;
 
 class Nokonoko : public MapActorItem
 {
-    MAP_ACTOR_ITEM_CREATE(Nokonoko)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(Nokonoko)
 
 public:
     Nokonoko(const MapActorData& map_actor_data, u32 index);

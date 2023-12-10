@@ -5,7 +5,7 @@
 
 class ActorBlockHatena : public BlockCoinBase
 {
-    MAP_ACTOR_ITEM_CREATE(ActorBlockHatena)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ActorBlockHatena)
 
 public:
     ActorBlockHatena(const MapActorData& map_actor_data, u32 index)

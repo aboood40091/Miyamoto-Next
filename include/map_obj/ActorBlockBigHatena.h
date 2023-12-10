@@ -4,7 +4,7 @@
 
 class ActorBlockBigHatena : public ActorBlockBigBase
 {
-    MAP_ACTOR_ITEM_CREATE(ActorBlockBigHatena)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ActorBlockBigHatena)
 
 public:
     ActorBlockBigHatena(const MapActorData& map_actor_data, u32 index)

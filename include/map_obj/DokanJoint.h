@@ -8,7 +8,7 @@ class ModelG3d;
 
 class DokanJoint : public MapActorItem
 {
-    MAP_ACTOR_ITEM_CREATE(DokanJoint)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(DokanJoint)
 
 public:
     DokanJoint(const MapActorData& map_actor_data, u32 index);

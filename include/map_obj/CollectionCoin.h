@@ -8,7 +8,7 @@ class ModelG3d;
 
 class CollectionCoin : public MapActorItem
 {
-    MAP_ACTOR_ITEM_CREATE(CollectionCoin)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(CollectionCoin)
 
 public:
     CollectionCoin(const MapActorData& map_actor_data, u32 index);

@@ -5,7 +5,7 @@
 
 class ActorBlockRenga : public BlockCoinBase
 {
-    MAP_ACTOR_ITEM_CREATE(ActorBlockRenga)
+    MAP_ACTOR_ITEM_CREATE_DEFAULT(ActorBlockRenga)
 
 public:
     ActorBlockRenga(const MapActorData& map_actor_data, u32 index)
