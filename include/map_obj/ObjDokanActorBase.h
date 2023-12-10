@@ -6,7 +6,7 @@
 class ObjDokanActorBase : public MapActorItem
 {
 public:
-    ObjDokanActorBase(MapActorData& map_actor_data, u32 index, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y);
+    ObjDokanActorBase(const MapActorData& map_actor_data, u32 index, ObjDokan::Direction dir, bool cb, bool group, f32 position_offset_x, f32 position_offset_y);
 
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
 

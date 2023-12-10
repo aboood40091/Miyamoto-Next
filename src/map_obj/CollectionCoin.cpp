@@ -8,7 +8,7 @@
 
 static const std::string cResName = "star_coin";
 
-CollectionCoin::CollectionCoin(MapActorData& map_actor_data, u32 index)
+CollectionCoin::CollectionCoin(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {

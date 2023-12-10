@@ -11,7 +11,7 @@ class DokanJoint : public MapActorItem
     MAP_ACTOR_ITEM_CREATE(DokanJoint)
 
 public:
-    DokanJoint(MapActorData& map_actor_data, u32 index);
+    DokanJoint(const MapActorData& map_actor_data, u32 index);
     virtual ~DokanJoint();
 
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;

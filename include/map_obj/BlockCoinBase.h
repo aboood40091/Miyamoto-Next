@@ -8,7 +8,7 @@
 class BlockCoinBase : public MapActorItem
 {
 public:
-    BlockCoinBase(MapActorData& map_actor_data, u32 index)
+    BlockCoinBase(const MapActorData& map_actor_data, u32 index)
         : MapActorItem(map_actor_data, index)
     {
         updatePositionXY_(map_actor_data);

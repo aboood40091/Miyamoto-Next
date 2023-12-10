@@ -13,7 +13,7 @@ static const rio::Color4f sColor{
      70 / 255.f
 };
 
-LocationItem::LocationItem(Location& location, u32 index)
+LocationItem::LocationItem(const Location& location, u32 index)
     : ItemBase(ITEM_TYPE_LOCATION, index, location.offset.x, location.offset.y)
 {
 }

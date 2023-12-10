@@ -6,7 +6,7 @@
 class NextGotoItem : public ItemBase
 {
 public:
-    NextGotoItem(NextGoto& next_goto, u32 index);
+    NextGotoItem(const NextGoto& next_goto, u32 index);
 
     void move(s16 dx, s16 dy, bool commit) override;
     void drawSelectionUI() override;

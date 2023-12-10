@@ -11,7 +11,7 @@ class Kuribo : public MapActorItem
     MAP_ACTOR_ITEM_CREATE(Kuribo)
 
 public:
-    Kuribo(MapActorData& map_actor_data, u32 index);
+    Kuribo(const MapActorData& map_actor_data, u32 index);
     virtual ~Kuribo();
 
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;

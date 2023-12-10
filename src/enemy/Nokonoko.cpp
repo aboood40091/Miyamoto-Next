@@ -29,7 +29,7 @@ static inline void SetColor(TexturePatternAnimation* tex_anim, const ModelResour
     tex_anim->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
 }
 
-Nokonoko::Nokonoko(MapActorData& map_actor_data, u32 index)
+Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
     , cIsBig(map_actor_data.id == 476)
     , mpModelResource(nullptr)

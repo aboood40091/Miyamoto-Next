@@ -5,7 +5,7 @@
 #include <memory>
 #include <unordered_map>
 
-using ActorFactory = std::unique_ptr<MapActorItem> (*)(MapActorData&, u32);
+using ActorFactory = std::unique_ptr<MapActorItem> (*)(const MapActorData&, u32);
 
 class ActorCreateMgr
 {
@@ -33,7 +33,7 @@ public:
     const std::u8string& getName(u16 map_actor_id) const;
 
     void addActorFactory(u16 map_actor_id, ActorFactory factory);
-    std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data, u32 index) const;
+    std::unique_ptr<MapActorItem> create(const MapActorData& map_actor_data, u32 index) const;
 
 private:
     u16                                     mMaxID;

@@ -6,7 +6,7 @@
 class LocationItem : public ItemBase
 {
 public:
-    LocationItem(Location& location, u32 index);
+    LocationItem(const Location& location, u32 index);
 
     void move(s16 dx, s16 dy, bool commit) override;
     void drawSelectionUI() override;

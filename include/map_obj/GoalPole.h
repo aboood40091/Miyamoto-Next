@@ -11,7 +11,7 @@ class GoalPole : public MapActorItem
     MAP_ACTOR_ITEM_CREATE(GoalPole)
 
 public:
-    GoalPole(MapActorData& map_actor_data, u32 index);
+    GoalPole(const MapActorData& map_actor_data, u32 index);
     virtual ~GoalPole();
 
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;

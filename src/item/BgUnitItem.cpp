@@ -10,7 +10,7 @@
 
 #include <imgui.h>
 
-BgUnitItem::BgUnitItem(BgCourseData& data, u32 index)
+BgUnitItem::BgUnitItem(const BgCourseData& data, u32 index)
     : ItemBase(ITEM_TYPE_BG_UNIT_OBJ, index, data.offset.x, data.offset.y)
 {
 }

@@ -13,7 +13,7 @@ static const rio::Color4f sColor{
     120 / 255.f
 };
 
-NextGotoItem::NextGotoItem(NextGoto& next_goto, u32 index)
+NextGotoItem::NextGotoItem(const NextGoto& next_goto, u32 index)
     : ItemBase(ITEM_TYPE_NEXT_GOTO, index, next_goto.offset.x, next_goto.offset.y)
 {
 }

@@ -7,7 +7,7 @@
 
 static const std::string cResName = "obj_dokan_joint";
 
-DokanJoint::DokanJoint(MapActorData& map_actor_data, u32 index)
+DokanJoint::DokanJoint(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {

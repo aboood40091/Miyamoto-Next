@@ -14,7 +14,7 @@ static const rio::Color4f sColor{
     120 / 255.f
 };
 
-MapActorItem::MapActorItem(MapActorData& map_actor_data, u32 index)
+MapActorItem::MapActorItem(const MapActorData& map_actor_data, u32 index)
     : ItemBase(ITEM_TYPE_MAP_ACTOR, index, map_actor_data.offset.x, map_actor_data.offset.y)
 {
 }

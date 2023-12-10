@@ -906,7 +906,7 @@ void ActorCreateMgr::addActorFactory(u16 map_actor_id, ActorFactory factory)
     mActorFactoryMap[map_actor_id] = factory;
 }
 
-std::unique_ptr<MapActorItem> ActorCreateMgr::create(MapActorData& map_actor_data, u32 index) const
+std::unique_ptr<MapActorItem> ActorCreateMgr::create(const MapActorData& map_actor_data, u32 index) const
 {
     const auto& itr = mActorFactoryMap.find(map_actor_data.id);
     if (itr != mActorFactoryMap.end())

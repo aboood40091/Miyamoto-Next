@@ -42,7 +42,7 @@ public:
     }
 
 public:
-    MapActorItem(MapActorData& map_actor_data, u32 index);
+    MapActorItem(const MapActorData& map_actor_data, u32 index);
     virtual ~MapActorItem() {}
 
     MapActorItem(const MapActorItem&) = delete;
@@ -80,9 +80,9 @@ protected:
     MapActorData    mSelectionData;
 };
 
-#define MAP_ACTOR_ITEM_CREATE(CLASS)                                                            \
-    public:                                                                                     \
-        static std::unique_ptr<MapActorItem> create(MapActorData& map_actor_data, u32 index)    \
-        {                                                                                       \
-            return std::make_unique<CLASS>(map_actor_data, index);                              \
+#define MAP_ACTOR_ITEM_CREATE(CLASS)                                                                \
+    public:                                                                                         \
+        static std::unique_ptr<MapActorItem> create(const MapActorData& map_actor_data, u32 index)  \
+        {                                                                                           \
+            return std::make_unique<CLASS>(map_actor_data, index);                                  \
         }

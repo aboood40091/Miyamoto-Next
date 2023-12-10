@@ -6,7 +6,7 @@
 class ActorBlockBigBase : public MapActorItem
 {
 public:
-    ActorBlockBigBase(MapActorData& map_actor_data, u32 index, UnitID unit, bool set_coin)
+    ActorBlockBigBase(const MapActorData& map_actor_data, u32 index, UnitID unit, bool set_coin)
         : MapActorItem(map_actor_data, index)
         , cUnitID(unit)
         , cSetCoin(set_coin)
