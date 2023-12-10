@@ -97,6 +97,8 @@ GoalPole::GoalPole(MapActorData& map_actor_data, u32 index)
             : ((mMapActorData.settings[0] & 0xf) * 2));
 
     updateFrame_();
+
+    setModelItemID_();
 }
 
 GoalPole::~GoalPole()
