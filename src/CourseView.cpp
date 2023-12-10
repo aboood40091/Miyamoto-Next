@@ -317,6 +317,15 @@ void CourseView::clearItemIDTexture_()
 #endif // RIO_IS_WIN
 }
 
+void CourseView::setCameraCenterWorldPos(const rio::BaseVec2f& center_pos)
+{
+    const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
+    const f32 screen_world_w_half = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half * mAspect;
+
+    mCamera.pos().x = center_pos.x - screen_world_w_half;
+    mCamera.pos().y = center_pos.y + screen_world_h_half;
+}
+
 rio::BaseVec2f CourseView::viewToWorldPos(const rio::BaseVec2f& pos) const
 {
     const rio::Vector2f& pos_view = static_cast<const rio::Vector2f&>(pos);
@@ -538,8 +547,6 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
         }
     }
 
-    rio::BaseVec2f& camera_pos = mCamera.pos();
-
     const char* dv_name = nullptr;
 
     u8 area;
@@ -596,15 +603,17 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
         dv_name = "Nohara";
     }
 
+    rio::BaseVec2f center_pos;
+
     if (start_next_goto)
     {
-        camera_pos.x =   f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) ;
-        camera_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y));
+        center_pos.x =   f32(start_next_goto->offset.x + 8 + start_next_goto->camera_offset.x) ;
+        center_pos.y = -(f32(start_next_goto->offset.y + 8 + start_next_goto->camera_offset.y));
     }
     else
     {
-        camera_pos.x = 0.0f;
-        camera_pos.y = 0.0f;
+        center_pos.x = 0.0f;
+        center_pos.y = 0.0f;
     }
 
     RIO_ASSERT(dv_name != nullptr);
@@ -615,7 +624,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
     const f32 screen_world_w_half = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half * mAspect;
 
-    const rio::BaseVec2f center_pos = camera_pos;
+    rio::BaseVec2f& camera_pos = mCamera.pos();
     camera_pos.x = center_pos.x - screen_world_w_half;
     camera_pos.y = center_pos.y + screen_world_h_half;
 
@@ -956,12 +965,7 @@ void CourseView::onCursorPress_L_()
     if (id_under_mouse.isValid())
     {
         if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
-        {
-            clearSelection_();
-            mSelectedItems.push_back(id_under_mouse);
-            mSelectionChange = true;
-            setItemSelection_(id_under_mouse, true);
-        }
+            selectItem(id_under_mouse);
 
         mCursorAction = CURSOR_ACTION_MOVE_ITEM;
     }
@@ -1412,6 +1416,14 @@ void CourseView::clearSelection_()
 
     mSelectedItems.clear();
     mSelectionChange = true;
+}
+
+void CourseView::selectItem(const ItemID& item_id)
+{
+    clearSelection_();
+    mSelectedItems.push_back(item_id);
+    mSelectionChange = true;
+    setItemSelection_(item_id, true);
 }
 
 void CourseView::onSelectionChange_()

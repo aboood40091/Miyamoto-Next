@@ -213,6 +213,13 @@ public:
         mPaintNext.bg_unit_obj_type = bg_unit_obj_type;
     }
 
+    const std::vector< std::unique_ptr<MapActorItem> >& getMapActorItem() const
+    {
+        return mMapActorItemPtr;
+    }
+
+    void setCameraCenterWorldPos(const rio::BaseVec2f& center_pos);
+
     void updateCursorPos(const rio::BaseVec2f& window_pos);
     bool processMouseInput(bool focused, bool hovered);
     void processKeyboardInput();
@@ -227,6 +234,8 @@ public:
 
     void pushBackItem(ItemType item_type, const void* data, const void* extra);
     void popBackItem(ItemType item_type, const void* extra);
+
+    void selectItem(const ItemID& item_id);
 
 private:
     void createRenderBuffer_(s32 width, s32 height);

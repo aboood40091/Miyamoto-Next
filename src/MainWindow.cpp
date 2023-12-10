@@ -797,15 +797,27 @@ void MainWindow::drawPaletteUI_()
             }
             if (ImGui::BeginTabItem("Current"))
             {
+                if (focused)
+                    mPaintType = ITEM_TYPE_MAX_NUM;
+
                 if (ImGui::BeginListBox("##ActorList", ImVec2(-1, -1)))
                 {
-                    static const char* items[] = { "0: Goomba (at 3654, 365)", "1: Koopa Troopa (at 247,234)" };
-                    static int selected = -1;
-
-                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    const std::vector< std::unique_ptr<MapActorItem> >& items = mpCourseView->getMapActorItem();
+                    for (u32 i = 0; i < items.size(); i++)
                     {
-                        if (ImGui::Selectable(items[n], selected == n))
-                            selected = n;
+                        const MapActorItem& map_actor_item = *(items[i]);
+                        const MapActorData& map_actor_data = map_actor_item.getMapActorData();
+                        const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.id);
+                        const std::string& str =
+                            name.empty()
+                                ? std::format("{0:d}: ({1:d}, {2:d})", map_actor_data.id, map_actor_data.offset.x, map_actor_data.offset.y)
+                                : std::format("{0:d}: {1:s} ({2:d}, {3:d})", map_actor_data.id, (const char*)name.c_str(), map_actor_data.offset.x, map_actor_data.offset.y);
+
+                        if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        {
+                            mpCourseView->setCameraCenterWorldPos({ f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8) });
+                            mpCourseView->selectItem(map_actor_item.getItemID());
+                        }
                     }
                     ImGui::EndListBox();
                 }
@@ -818,7 +830,8 @@ void MainWindow::drawPaletteUI_()
 
     if (ImGui::Begin("Environment"))
     {
-        bool focused = ImGui::IsWindowFocused();
+        if (ImGui::IsWindowFocused())
+            mPaintType = ITEM_TYPE_BG_UNIT_OBJ;
 
         ImGui::RadioButton("Layer 0", &mEnvPaintLayer, LAYER_0); ImGui::SameLine();
         ImGui::RadioButton("Layer 1", &mEnvPaintLayer, LAYER_1); ImGui::SameLine();
@@ -828,9 +841,6 @@ void MainWindow::drawPaletteUI_()
         {
             if (ImGui::BeginTabItem("Embedded"))
             {
-                if (focused)
-                    mPaintType = ITEM_TYPE_BG_UNIT_OBJ;
-
                 if (ImGui::BeginChild("EmbeddedScrollable"))
                 {
                     const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();

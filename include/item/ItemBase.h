@@ -14,6 +14,11 @@ protected:
     }
 
 public:
+    const ItemID& getItemID() const
+    {
+        return mItemID;
+    }
+
     void setIndex(u32 index)
     {
         mItemID.setIndex(index);
