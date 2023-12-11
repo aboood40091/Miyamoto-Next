@@ -138,8 +138,8 @@ void ImGuiUtil::render()
 
 #if RIO_IS_CAFE
     // Render keyboard overlay
-    rio::Graphics::setViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y, 0.0f, 1.0f);
-    rio::Graphics::setScissor(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    rio::Graphics::setViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y, 0.0f, 1.0f, io.DisplaySize.y);
+    rio::Graphics::setScissor(0, 0, io.DisplaySize.x, io.DisplaySize.y, io.DisplaySize.y);
     ImGui_ImplWiiU_DrawKeyboardOverlay();
 #else
     // Update and Render additional Platform Windows

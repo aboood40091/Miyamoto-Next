@@ -163,7 +163,7 @@ void MainWindow::prepare_()
         rio::FileDevice::LoadArg arg;
         arg.path =
 #if RIO_IS_CAFE
-            getContentPath() + "/CAFE/agl_resource_cafe.sarc";
+            Globals::getContentPath() + "/CAFE/agl_resource_cafe.sarc";
 #else
             "agl_resource_cafe_dev.sarc";
 #endif
