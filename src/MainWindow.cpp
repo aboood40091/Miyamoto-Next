@@ -987,6 +987,14 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Selection"))
+        {
+            if (ImGui::MenuItem("Delete", "Delete / Backspace", false, mpCourseView->hasSelection()))
+                mpCourseView->deleteSelection();
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 }

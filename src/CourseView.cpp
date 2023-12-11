@@ -1,5 +1,6 @@
 #include <CourseView.h>
 #include <Globals.h>
+#include <action/ActionItemDelete.h>
 #include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
 #include <action/ActionMgr.h>
@@ -52,7 +53,9 @@ void CourseView::destroySingleton()
 }
 
 CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
-    : mDrawCallback3D(*this)
+    : mIsFocused(false)
+    , mIsHovered(false)
+    , mDrawCallback3D(*this)
     , mDrawCallbackDV(*this)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
@@ -693,6 +696,9 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 bool CourseView::processMouseInput(bool focused, bool hovered)
 {
     static const rio::BaseVec2f zero { 0.0f, 0.0f };
+
+    mIsFocused = focused;
+    mIsHovered = hovered;
 
     bool press = false;
 
@@ -1575,6 +1581,17 @@ void CourseView::onCursorRelease_R_()
     }
 }
 
+void CourseView::onCursorReleasedCompletely_()
+{
+    if (!mIsFocused)
+        return;
+
+    if (hasSelection() &&
+        (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
+         ImGui::IsKeyPressed(ImGuiKey_Backspace)))
+         deleteSelection();
+}
+
 void CourseView::update()
 {
     mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
@@ -1618,8 +1635,6 @@ void CourseView::update()
 
     switch (mCursorState)
     {
-    default:
-        break;
     case CURSOR_STATE_PRESS:
         switch (mCursorButtonCurrent)
         {
@@ -1645,6 +1660,10 @@ void CourseView::update()
             onCursorHold_R_();
             break;
         }
+        break;
+  //case CURSOR_STATE_RELEASE:
+    default:
+        onCursorReleasedCompletely_();
         break;
     }
 
@@ -1797,6 +1816,203 @@ void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
 {
     if (mDrawDV)
         DistantViewMgr::instance()->applyDepthOfField();
+}
+
+void CourseView::insertItem(const ItemID& item_id, const void* data)
+{
+    clearSelection();
+
+    switch (item_id.getType())
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            u8 layer = item_id.getIndex() >> 22;
+            u32 i = item_id.getIndex() & 0x003FFFFF;
+            const BgCourseData& data_ = *static_cast<const BgCourseData*>(data);
+
+            std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+            std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
+            RIO_ASSERT(data_vec.size() == item_vec.size());
+
+            data_vec.insert(data_vec.begin() + i, data_);
+            item_vec.emplace(item_vec.begin() + i, data_, layer << 22 | i);
+            RIO_ASSERT(data_vec.size() == item_vec.size());
+
+            for (u32 j = i + 1; j < item_vec.size(); j++)
+                item_vec[j].setIndex(layer << 22 | j);
+        }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        {
+            u32 i = item_id.getIndex();
+            const MapActorData& data_ = *static_cast<const MapActorData*>(data);
+
+            std::vector<MapActorData>& data_vec = mpCourseDataFile->getMapActorData();
+            RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
+
+            data_vec.insert(data_vec.begin() + i, data_);
+            mMapActorItemPtr.emplace(mMapActorItemPtr.begin() + i, ActorCreateMgr::instance()->create(data_, i));
+            RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
+
+            for (u32 j = i + 1; j < mMapActorItemPtr.size(); j++)
+                mMapActorItemPtr[j]->setIndex(j);
+        }
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        {
+            u32 i = item_id.getIndex();
+            const NextGoto& data_ = *static_cast<const NextGoto*>(data);
+
+            std::vector<NextGoto>& data_vec = mpCourseDataFile->getNextGoto();
+            RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
+
+            data_vec.insert(data_vec.begin() + i, data_);
+            mNextGotoItem.emplace(mNextGotoItem.begin() + i, data_, i);
+            RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
+
+            for (u32 j = i + 1; j < mNextGotoItem.size(); j++)
+                mNextGotoItem[j].setIndex(j);
+        }
+        break;
+    case ITEM_TYPE_LOCATION:
+        {
+            u32 i = item_id.getIndex();
+            const Location& data_ = *static_cast<const Location*>(data);
+
+            std::vector<Location>& data_vec = mpCourseDataFile->getLocation();
+            RIO_ASSERT(data_vec.size() == mLocationItem.size());
+
+            data_vec.insert(data_vec.begin() + i, data_);
+            mLocationItem.emplace(mLocationItem.begin() + i, data_, i);
+            RIO_ASSERT(data_vec.size() == mLocationItem.size());
+
+            for (u32 j = i + 1; j < mLocationItem.size(); j++)
+                mLocationItem[j].setIndex(j);
+        }
+        break;
+    }
+}
+
+void CourseView::eraseItem(const ItemID& item_id)
+{
+    clearSelection();
+
+    switch (item_id.getType())
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            u8 layer = item_id.getIndex() >> 22;
+            u32 i = item_id.getIndex() & 0x003FFFFF;
+
+            std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+            std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
+            RIO_ASSERT(data_vec.size() == item_vec.size());
+
+            item_vec.erase(item_vec.begin() + i);
+            data_vec.erase(data_vec.begin() + i);
+            RIO_ASSERT(data_vec.size() == item_vec.size());
+
+            for (u32 j = i; j < item_vec.size(); j++)
+                item_vec[j].setIndex(layer << 22 | j);
+        }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        {
+            u32 i = item_id.getIndex();
+
+            std::vector<MapActorData>& data_vec = mpCourseDataFile->getMapActorData();
+            RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
+
+            mMapActorItemPtr.erase(mMapActorItemPtr.begin() + i);
+            data_vec.erase(data_vec.begin() + i);
+            RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
+
+            for (u32 j = i; j < mMapActorItemPtr.size(); j++)
+                mMapActorItemPtr[j]->setIndex(j);
+        }
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        {
+            u32 i = item_id.getIndex();
+
+            std::vector<NextGoto>& data_vec = mpCourseDataFile->getNextGoto();
+            RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
+
+            mNextGotoItem.erase(mNextGotoItem.begin() + i);
+            data_vec.erase(data_vec.begin() + i);
+            RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
+
+            for (u32 j = i; j < mNextGotoItem.size(); j++)
+                mNextGotoItem[j].setIndex(j);
+        }
+        break;
+    case ITEM_TYPE_LOCATION:
+        {
+            u32 i = item_id.getIndex();
+
+            std::vector<Location>& data_vec = mpCourseDataFile->getLocation();
+            RIO_ASSERT(data_vec.size() == mLocationItem.size());
+
+            mLocationItem.erase(mLocationItem.begin() + i);
+            data_vec.erase(data_vec.begin() + i);
+            RIO_ASSERT(data_vec.size() == mLocationItem.size());
+
+            for (u32 j = i; j < mLocationItem.size(); j++)
+                mLocationItem[j].setIndex(j);
+        }
+        break;
+    }
+}
+
+void CourseView::deleteSelection()
+{
+    if (mSelectedItems.empty())
+        return;
+
+    ActionItemDelete::Context context;
+    for (const ItemID& item_id : mSelectedItems)
+    {
+        std::shared_ptr<const void> data;
+        switch (item_id.getType())
+        {
+        default:
+            break;
+        case ITEM_TYPE_BG_UNIT_OBJ:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<BgCourseData>(
+                    mpCourseDataFile->getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
+                )
+            );
+            break;
+        case ITEM_TYPE_MAP_ACTOR:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<MapActorData>(
+                    mpCourseDataFile->getMapActorData()[item_id.getIndex()]
+                )
+            );
+            break;
+        case ITEM_TYPE_NEXT_GOTO:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<NextGoto>(
+                    mpCourseDataFile->getNextGoto()[item_id.getIndex()]
+                )
+            );
+            break;
+        case ITEM_TYPE_LOCATION:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<Location>(
+                    mpCourseDataFile->getLocation()[item_id.getIndex()]
+                )
+            );
+            break;
+        }
+        context.items.emplace_back(item_id, data);
+    }
+    ActionMgr::instance()->pushAction<ActionItemDelete>(&context);
 }
 
 void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)

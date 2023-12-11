@@ -212,10 +212,16 @@ public:
         return mpCourseDataFile;
     }
 
+    bool hasSelection() const
+    {
+        return !mSelectedItems.empty();
+    }
+
     void clearSelection()
     {
+        onCursorRelease_L_();
+        onCursorRelease_R_();
         clearSelection_();
-        mCursorAction = CURSOR_ACTION_NONE;
     }
 
     void setPaintType_None()
@@ -281,6 +287,11 @@ public:
     void pushBackItem(ItemType item_type, const void* data, const void* extra);
     void popBackItem(ItemType item_type, const void* extra);
 
+    void insertItem(const ItemID& item_id, const void* data);
+    void eraseItem(const ItemID& item_id);
+
+    void deleteSelection();
+
     void selectItem(const ItemID& item_id);
 
 private:
@@ -331,6 +342,8 @@ private:
     void onCursorHold_Paint_Location_();
     void onCursorRelease_Paint_Location_();
 
+    void onCursorReleasedCompletely_();
+
     void setItemSelection_(const ItemID& item_id, bool is_selected);
     void clearSelection_();
     void onSelectionChange_();
@@ -340,6 +353,8 @@ private:
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
 
 private:
+    bool                        mIsFocused,
+                                mIsHovered;
     rio::Vector2f               mSize;
     f32                         mAspect;
     OrthoCamera                 mCamera;
