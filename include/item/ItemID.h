@@ -55,7 +55,7 @@ public:
     void setIndex(u32 index)
     {
         RIO_ASSERT(isValid());
-        mValue &= 0x00FFFFFF;
+        mValue &= ~0x00FFFFFF;
         mValue |= index;
     }
 
