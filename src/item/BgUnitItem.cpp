@@ -55,7 +55,7 @@ void BgUnitItem::drawSelectionUI()
 
     const BgCourseData& data = p_cd_file->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 
-    ImGui::Text("Object");
+    ImGui::Text("Bg Unit Object");
     ImGui::Separator();
 
     const u16 single_step = 1; //Needed for +/- buttons to appear.
