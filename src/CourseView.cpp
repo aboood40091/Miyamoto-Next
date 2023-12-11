@@ -1342,7 +1342,30 @@ void CourseView::onCursorPress_Paint_NextGoto_()
         return;
     }
 
-    pushBackItem_NextGoto_({ { u16(x), u16(y) } });
+    u8 id = 0;
+    while (true)
+    {
+        bool conflict = false;
+
+        for (const NextGoto& next_goto : mpCourseDataFile->getNextGoto())
+        {
+            if (next_goto.id == id)
+            {
+                conflict = true;
+                break;
+            }
+        }
+
+        if (!conflict)
+            break;
+
+        if (id == 0xff) // bruh
+            break;
+
+        id++;
+    }
+
+    pushBackItem_NextGoto_({ .offset = { u16(x), u16(y) }, .id = id });
 }
 
 void CourseView::onCursorHold_Paint_NextGoto_()
@@ -1393,10 +1416,33 @@ void CourseView::onCursorPress_Paint_Location_()
         return;
     }
 
+    u8 id = 0;
+    while (true)
+    {
+        bool conflict = false;
+
+        for (const Location& location : mpCourseDataFile->getLocation())
+        {
+            if (location.id == id)
+            {
+                conflict = true;
+                break;
+            }
+        }
+
+        if (!conflict)
+            break;
+
+        if (id == 0xff) // bruh
+            break;
+
+        id++;
+    }
+
     mCursorP1World.x = x;
     mCursorP1World.y = y;
 
-    pushBackItem_Location_({ { u16(x), u16(y) }, { 8, 8 } });
+    pushBackItem_Location_({ { u16(x), u16(y) }, { 8, 8 }, id });
 }
 
 void CourseView::onCursorHold_Paint_Location_()
