@@ -696,7 +696,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
     bool press = false;
 
-    if (hovered && mCursorButtonCurrent == CURSOR_BUTTON_NONE)
+    if (focused && hovered && mCursorButtonCurrent == CURSOR_BUTTON_NONE)
     {
         bool press_l = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
         bool press_r = ImGui::IsMouseClicked(ImGuiMouseButton_Right);
@@ -738,7 +738,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             mCursorState = CURSOR_STATE_RELEASE;
     }
 
-    if (focused && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
+    if (focused && hovered && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
     {
         if (!press)
         {
