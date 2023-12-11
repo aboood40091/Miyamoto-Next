@@ -991,6 +991,10 @@ void MainWindow::drawMainMenuBarUI_()
         {
             if (ImGui::MenuItem("Delete", "Delete / Backspace", false, mpCourseView->hasSelection()))
                 mpCourseView->deleteSelection();
+            if (ImGui::MenuItem("Copy", nullptr, false, mpCourseView->hasSelection()))
+                mpCourseView->copySelection();
+            if (ImGui::MenuItem("Paste", nullptr, false, mpCourseView->hasClipboard()))
+                mpCourseView->pasteClipboard();
 
             ImGui::EndMenu();
         }

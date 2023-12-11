@@ -1140,8 +1140,6 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
         {
             u8 layer = *static_cast<const u8*>(extra);
             pushBackItem_BgUnitObj_(*static_cast<const BgCourseData*>(data), layer);
-            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
-            BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:
@@ -1166,8 +1164,6 @@ void CourseView::popBackItem(ItemType item_type, const void* extra)
         {
             u8 layer = *static_cast<const u8*>(extra);
             popBackItem_BgUnitObj_(layer);
-            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
-            BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:
@@ -1260,11 +1256,11 @@ void CourseView::onCursorRelease_Paint_BgUnitObj_()
     p_data->size.x = w;
     p_data->size.y = h;
 
-    ActionItemPushBack::Context context {
+    ActionItemPushBack::Context context {{{
         ITEM_TYPE_BG_UNIT_OBJ,
         std::static_pointer_cast<const void>(p_data),
         std::static_pointer_cast<const void>(std::make_shared<u8>(mPaintCurrent.layer))
-    };
+    }}};
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
@@ -1327,10 +1323,10 @@ void CourseView::onCursorRelease_Paint_MapActor_()
     p_data->offset.x = x;
     p_data->offset.y = y;
 
-    ActionItemPushBack::Context context {
+    ActionItemPushBack::Context context {{{
         ITEM_TYPE_MAP_ACTOR,
         std::static_pointer_cast<const void>(p_data)
-    };
+    }}};
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
@@ -1401,10 +1397,10 @@ void CourseView::onCursorRelease_Paint_NextGoto_()
     p_data->offset.x = x;
     p_data->offset.y = y;
 
-    ActionItemPushBack::Context context {
+    ActionItemPushBack::Context context {{{
         ITEM_TYPE_NEXT_GOTO,
         std::static_pointer_cast<const void>(p_data)
-    };
+    }}};
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
@@ -1500,10 +1496,10 @@ void CourseView::onCursorRelease_Paint_Location_()
     p_data->size.x = w;
     p_data->size.y = h;
 
-    ActionItemPushBack::Context context {
+    ActionItemPushBack::Context context {{{
         ITEM_TYPE_LOCATION,
         std::static_pointer_cast<const void>(p_data)
-    };
+    }}};
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
@@ -2013,6 +2009,69 @@ void CourseView::deleteSelection()
         context.items.emplace_back(item_id, data);
     }
     ActionMgr::instance()->pushAction<ActionItemDelete>(&context);
+}
+
+void CourseView::copySelection()
+{
+    std::shared_ptr<ActionItemPushBack::Context> context = std::make_shared<ActionItemPushBack::Context>();
+
+    for (const ItemID& item_id : mSelectedItems)
+    {
+        std::shared_ptr<const void> data;
+        std::shared_ptr<const void> extra;
+        switch (item_id.getType())
+        {
+        default:
+            break;
+        case ITEM_TYPE_BG_UNIT_OBJ:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<BgCourseData>(
+                    mpCourseDataFile->getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
+                )
+            );
+            extra = std::static_pointer_cast<const void>(
+                std::make_shared<u8>(item_id.getIndex() >> 22)
+            );
+            break;
+        case ITEM_TYPE_MAP_ACTOR:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<MapActorData>(
+                    mpCourseDataFile->getMapActorData()[item_id.getIndex()]
+                )
+            );
+            break;
+        case ITEM_TYPE_NEXT_GOTO:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<NextGoto>(
+                    mpCourseDataFile->getNextGoto()[item_id.getIndex()]
+                )
+            );
+            break;
+        case ITEM_TYPE_LOCATION:
+            data = std::static_pointer_cast<const void>(
+                std::make_shared<Location>(
+                    mpCourseDataFile->getLocation()[item_id.getIndex()]
+                )
+            );
+            break;
+        }
+        context->items.emplace_back(item_id.getType(), data, extra);
+    }
+
+    mClipboard.type = CLIPBOARD_TYPE_ITEMS;
+    mClipboard.data = std::static_pointer_cast<const void>(context);
+}
+
+void CourseView::pasteClipboard()
+{
+    switch (mClipboard.type)
+    {
+    default:
+        break;
+    case CLIPBOARD_TYPE_ITEMS:
+        ActionMgr::instance()->pushAction<ActionItemPushBack>(mClipboard.data.get());
+        break;
+    }
 }
 
 void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)

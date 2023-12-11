@@ -122,6 +122,24 @@ private:
         }
     };
 
+    enum ClipboardType
+    {
+        CLIPBOARD_TYPE_NONE = 0,
+        CLIPBOARD_TYPE_ITEMS
+    };
+
+    struct Clipboard
+    {
+        ClipboardType               type;
+        std::shared_ptr<const void> data;
+
+        Clipboard()
+            : type(CLIPBOARD_TYPE_NONE)
+            , data(nullptr)
+        {
+        }
+    };
+
 public:
     static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos);
     static void destroySingleton();
@@ -224,6 +242,11 @@ public:
         clearSelection_();
     }
 
+    bool hasClipboard() const
+    {
+        return mClipboard.type != CLIPBOARD_TYPE_NONE;
+    }
+
     void setPaintType_None()
     {
         mPaintNext.type = ITEM_TYPE_MAX_NUM;
@@ -291,6 +314,8 @@ public:
     void eraseItem(const ItemID& item_id);
 
     void deleteSelection();
+    void copySelection();
+    void pasteClipboard();
 
     void selectItem(const ItemID& item_id);
 
@@ -381,6 +406,7 @@ private:
     bool                        mSelectionChange;
     rio::Vector2f               mCursorP1;
     rio::Vector2i               mCursorP1World;
+    Clipboard                   mClipboard;
     std::vector<ItemID>         mSelectedItems;
     std::array<std::vector<BgUnitItem>, CD_FILE_LAYER_MAX_NUM>
                                 mBgUnitItem;

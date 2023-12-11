@@ -3,16 +3,23 @@
 #include <action/IAction.h>
 #include <item/ItemType.h>
 
+#include <vector>
+
 class ActionItemPushBack : public IAction
 {
     ACTION_CREATE(ActionItemPushBack)
 
 public:
-    struct Context
+    struct Item
     {
         ItemType                    item_type;
         std::shared_ptr<const void> data;
         std::shared_ptr<const void> extra;
+    };
+
+    struct Context
+    {
+        std::vector<Item>   items;
 
         ~Context();
     };
@@ -24,7 +31,5 @@ public:
     void unapply() const override;
 
 private:
-    ItemType                    mItemType;
-    std::shared_ptr<const void> mData;
-    std::shared_ptr<const void> mExtra;
+    std::vector<Item>   mItems;
 };
