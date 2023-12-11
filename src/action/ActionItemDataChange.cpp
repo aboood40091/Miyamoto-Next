@@ -1,8 +1,6 @@
 #include <CourseView.h>
 #include <action/ActionItemDataChange.h>
 
-#include <rio.h>
-
 ActionItemDataChange::ActionItemDataChange(const void* context)
     : IAction(context)
     , mItemID(static_cast<const Context*>(context)->item_id)

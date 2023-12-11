@@ -1,7 +1,7 @@
 #pragma once
 
 #include <action/IAction.h>
-#include <item/ItemID.h>
+#include <item/ItemType.h>
 
 class ActionItemPushBack : public IAction
 {

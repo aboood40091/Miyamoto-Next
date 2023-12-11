@@ -1,8 +1,6 @@
 #include <CourseView.h>
 #include <action/ActionItemSelectionMove.h>
 
-#include <rio.h>
-
 ActionItemSelectionMove::ActionItemSelectionMove(const void* context)
     : IAction(context)
     , mSelectedItems(static_cast<const Context*>(context)->selected_items)

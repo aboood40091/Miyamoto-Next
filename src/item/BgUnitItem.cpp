@@ -6,8 +6,6 @@
 #include <course/BgUnitFile.h>
 #include <item/BgUnitItem.h>
 
-#include <rio.h>
-
 #include <imgui.h>
 
 BgUnitItem::BgUnitItem(const BgCourseData& data, u32 index)

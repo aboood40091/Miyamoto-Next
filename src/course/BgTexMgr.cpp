@@ -9,8 +9,6 @@
 #include <misc/rio_MemUtil.h>
 #include <utility/aglDevTools.h>
 
-#include <rio.h>
-
 static const s32 cTexWidthI = 2048;
 static const f32 cTexWidth = cTexWidthI;
 static const s32 cTexHeightI = 512;
