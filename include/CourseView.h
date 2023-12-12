@@ -247,6 +247,12 @@ public:
         return mClipboard.type != CLIPBOARD_TYPE_NONE;
     }
 
+    void clearClipboard()
+    {
+        mClipboard.type = CLIPBOARD_TYPE_NONE;
+        mClipboard.data = nullptr;
+    }
+
     void setPaintType_None()
     {
         mPaintNext.type = ITEM_TYPE_MAX_NUM;

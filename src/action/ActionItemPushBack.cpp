@@ -11,18 +11,27 @@ ActionItemPushBack::ActionItemPushBack(const void* context)
 
 bool ActionItemPushBack::apply() const
 {
-    bool pushed_any_object = false;
+    bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
+        false, false, false
+    };
 
     for (const Item& item : mItems)
     {
-        pushed_any_object |= item.item_type == ITEM_TYPE_BG_UNIT_OBJ;
         CourseView::instance()->pushBackItem(item.item_type, item.data.get(), item.extra.get());
+        if (item.item_type == ITEM_TYPE_BG_UNIT_OBJ)
+        {
+            u8 layer = *static_cast<const u8*>(item.extra.get());
+            layers_changed[layer] = true;
+        }
     }
 
-    if (pushed_any_object)
+    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
     {
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile());
-        BgRenderer::instance()->createVertexBuffer();
+        if (!layers_changed[layer])
+            continue;
+
+        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile(), layer);
+        BgRenderer::instance()->createVertexBuffer(layer);
     }
 
     return true;
@@ -30,18 +39,27 @@ bool ActionItemPushBack::apply() const
 
 void ActionItemPushBack::unapply() const
 {
-    bool popped_any_object = false;
+    bool layers_changed[CD_FILE_LAYER_MAX_NUM] = {
+        false, false, false
+    };
 
     for (const Item& item : mItems)
     {
-        popped_any_object |= item.item_type == ITEM_TYPE_BG_UNIT_OBJ;
         CourseView::instance()->popBackItem(item.item_type, item.extra.get());
+        if (item.item_type == ITEM_TYPE_BG_UNIT_OBJ)
+        {
+            u8 layer = *static_cast<const u8*>(item.extra.get());
+            layers_changed[layer] = true;
+        }
     }
 
-    if (popped_any_object)
+    for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
     {
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile());
-        BgRenderer::instance()->createVertexBuffer();
+        if (!layers_changed[layer])
+            continue;
+
+        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile(), layer);
+        BgRenderer::instance()->createVertexBuffer(layer);
     }
 }
 
