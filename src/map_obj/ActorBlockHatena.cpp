@@ -84,6 +84,9 @@ void ActorBlockHatena::onDataChange(const MapActorData& map_actor_data, DataChan
 
 void ActorBlockHatena::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
+    if (drawBox())
+        return MapActorItem::drawXlu(draw_info);
+
     if (mItemType == BgTexMgr::ITEM_MAX)
         return;
 

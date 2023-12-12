@@ -88,6 +88,9 @@ void ActorBlockRenga::onDataChange(const MapActorData& map_actor_data, DataChang
 
 void ActorBlockRenga::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
+    if (drawBox())
+        return MapActorItem::drawXlu(draw_info);
+
     if (mItemType == BgTexMgr::ITEM_MAX)
         return;
 

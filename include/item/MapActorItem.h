@@ -53,6 +53,8 @@ public:
     void move(s16 dx, s16 dy, bool commit) override;
     void drawSelectionUI() override;
 
+    bool drawBox() const;
+
     virtual void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
     {
     }
@@ -68,10 +70,15 @@ public:
     virtual void drawOpa(const rio::lyr::DrawInfo& draw_info);
     virtual void drawXlu(const rio::lyr::DrawInfo& draw_info);
 
+    virtual bool hasGraphics() const
+    {
+        return false;
+    }
+
 protected:
     virtual bool drawBox_() const
     {
-        return true;
+        return !hasGraphics();
     }
 
     void onSelectionChange_() override;

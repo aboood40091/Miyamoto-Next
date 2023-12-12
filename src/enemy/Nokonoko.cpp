@@ -244,7 +244,7 @@ void Nokonoko::onSceneUpdate()
 
 void Nokonoko::scheduleDraw()
 {
-    if (mpModelResource == nullptr)
+    if (drawBox())
         return;
 
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];

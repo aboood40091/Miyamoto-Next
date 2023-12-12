@@ -153,7 +153,7 @@ void Kuribo::onSceneUpdate()
 
 void Kuribo::scheduleDraw()
 {
-    if (mpModel == nullptr)
+    if (drawBox())
         return;
 
     Renderer::instance()->drawModel(*mpModel);

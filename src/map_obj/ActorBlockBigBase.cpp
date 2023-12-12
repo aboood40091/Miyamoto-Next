@@ -80,6 +80,9 @@ void ActorBlockBigBase::onDataChange(const MapActorData& map_actor_data, DataCha
 
 void ActorBlockBigBase::scheduleDraw()
 {
+    if (drawBox())
+        return;
+
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
 
     BgRenderer::instance()->drawUnit(
@@ -110,6 +113,9 @@ void ActorBlockBigBase::scheduleDraw()
 
 void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
+    if (drawBox())
+        return MapActorItem::drawXlu(draw_info);
+
     if (mItemType == BgTexMgr::ITEM_MAX)
         return;
 

@@ -18,16 +18,18 @@ public:
 
     void scheduleDraw() override
     {
-        if (mObjDokan.isCreated())
-            mObjDokan.scheduleDraw();
+        if (drawBox())
+            return;
+
+        mObjDokan.scheduleDraw();
+    }
+
+    bool hasGraphics() const override
+    {
+        return mObjDokan.isCreated();
     }
 
 protected:
-    bool drawBox_() const override
-    {
-        return !mObjDokan.isCreated();
-    }
-
     void updatePositionXY_(const MapActorData& map_actor_data)
     {
         mPosition.x =  f32(map_actor_data.offset.x) + cPositionOffset.x;

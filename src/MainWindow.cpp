@@ -995,6 +995,23 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("View"))
+        {
+            ImGui::MenuItem("Toggle Layer 0 Visibility",    "Ctrl+1", mpCourseView->getLayerVisibility(LAYER_0));
+            ImGui::MenuItem("Toggle Layer 1 Visibility",    "Ctrl+2", mpCourseView->getLayerVisibility(LAYER_1));
+            ImGui::MenuItem("Toggle Layer 2 Visibility",    "Ctrl+3", mpCourseView->getLayerVisibility(LAYER_2));
+            ImGui::Separator();
+            ImGui::MenuItem("Toggle Actor Visibility",      "Ctrl+4", mpCourseView->getActorVisibility());
+            ImGui::MenuItem("Toggle Actor Graphics",        "Ctrl+5", mpCourseView->getActorGraphicsEnable(), *mpCourseView->getActorVisibility());
+            ImGui::Separator();
+            ImGui::MenuItem("Toggle NextGoto Visibility",   "Ctrl+6", mpCourseView->getNextGotoVisibility());
+            ImGui::Separator();
+            ImGui::MenuItem("Toggle Location Visibility",   "Ctrl+7", mpCourseView->getLocationVisibility());
+            // Ctrl+8 is reserved for paths and Ctrl+9 is reserved for comments
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 }

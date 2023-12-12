@@ -17,12 +17,12 @@ public:
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void scheduleDraw() override;
 
-private:
-    bool drawBox_() const override
+    bool hasGraphics() const override
     {
-        return mpModel == nullptr;
+        return mpModel != nullptr;
     }
 
+private:
     void updatePositionXY_(const MapActorData& map_actor_data)
     {
         mPosition.x =  f32(map_actor_data.offset.x + 16);

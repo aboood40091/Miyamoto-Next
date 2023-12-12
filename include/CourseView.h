@@ -305,6 +305,31 @@ public:
         return mNextGotoItem;
     }
 
+    bool* getLayerVisibility(u8 layer)
+    {
+        return &(mLayerShown[layer]);
+    }
+
+    bool* getActorVisibility()
+    {
+        return &mActorShown;
+    }
+
+    bool* getActorGraphicsEnable()
+    {
+        return &mActorGraphicsShown;
+    }
+
+    bool* getNextGotoVisibility()
+    {
+        return &mNextGotoShown;
+    }
+
+    bool* getLocationVisibility()
+    {
+        return &mLocationShown;
+    }
+
     void setCameraCenterWorldPos(const rio::BaseVec2f& center_pos);
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);
@@ -444,8 +469,12 @@ private:
     rio::RenderTargetColor      mItemIDTarget;
     rio::RenderBuffer           mRenderBuffer;
     agl::RenderBuffer           mRenderBufferDV;
-    bool                        mDrawDV;
-    bool                        mLayerShown[CD_FILE_LAYER_MAX_NUM];
+    bool                        mDrawDV,
+                                mLayerShown[CD_FILE_LAYER_MAX_NUM],
+                                mActorShown,
+                                mActorGraphicsShown,
+                                mNextGotoShown,
+                                mLocationShown;
 
     enum RenderTargetColorType
     {

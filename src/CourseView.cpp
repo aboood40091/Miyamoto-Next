@@ -122,6 +122,10 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     mLayerShown[LAYER_0] = true;
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
+    mActorShown = true;
+    mActorGraphicsShown = true;
+    mNextGotoShown = true;
+    mLocationShown = true;
 
     updateCursorPos(window_pos);
 
@@ -783,16 +787,8 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
 void CourseView::processKeyboardInput()
 {
-    /*
-    if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_X))
-        mLayerShown[LAYER_0] = !mLayerShown[LAYER_0];
-
-    if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_Y))
-        mLayerShown[LAYER_1] = !mLayerShown[LAYER_1];
-
-    if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_B))
-        mLayerShown[LAYER_2] = !mLayerShown[LAYER_2];
-    */
+    // For processing keyboard inputs irrespective of the current mouse action
+    RIO_ASSERT(mIsFocused);
 }
 
 void CourseView::undo()
@@ -1600,38 +1596,72 @@ void CourseView::onCursorReleasedCompletely_()
     if (!mIsFocused)
         return;
 
-    if (ActionMgr::instance()->canUndo() &&
-        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-         !(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
-         ImGui::IsKeyPressed(ImGuiKey_Z)))
-        undo();
-
-    else if (ActionMgr::instance()->canRedo() &&
-        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-         (((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
-           ImGui::IsKeyPressed(ImGuiKey_Z)) ||
-          ImGui::IsKeyPressed(ImGuiKey_Y))))
-        redo();
-
-    else if (hasSelection() &&
-        (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
-         ImGui::IsKeyPressed(ImGuiKey_Backspace)))
-        deleteSelection();
-
-    else if (hasSelection() &&
-        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-         ImGui::IsKeyPressed(ImGuiKey_C)))
-        copySelection();
-
-    else if (hasSelection() &&
-        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-         ImGui::IsKeyPressed(ImGuiKey_X)))
-        cutSelection();
-
-    else if (hasClipboard() &&
-        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
-         ImGui::IsKeyPressed(ImGuiKey_V)))
-        pasteClipboard();
+    if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+    {
+        if (!(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
+            ImGui::IsKeyPressed(ImGuiKey_Z))
+        {
+            if (ActionMgr::instance()->canUndo())
+                undo();
+        }
+        else if (((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
+                  ImGui::IsKeyPressed(ImGuiKey_Z)) ||
+                 ImGui::IsKeyPressed(ImGuiKey_Y))
+        {
+            if (ActionMgr::instance()->canRedo())
+                redo();
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_C))
+        {
+            if (hasSelection())
+                copySelection();
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_X))
+        {
+            if (hasSelection())
+                cutSelection();
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_V))
+        {
+            if (hasClipboard())
+                pasteClipboard();
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_1))
+        {
+            mLayerShown[LAYER_0] ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_2))
+        {
+            mLayerShown[LAYER_1] ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_3))
+        {
+            mLayerShown[LAYER_2] ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_4))
+        {
+            mActorShown ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_5))
+        {
+            if (mActorShown)
+                mActorGraphicsShown ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_6))
+        {
+            mNextGotoShown ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_7))
+        {
+            mLocationShown ^= 1;
+        }
+    }
+    else if (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
+             ImGui::IsKeyPressed(ImGuiKey_Backspace))
+    {
+        if (hasSelection())
+            deleteSelection();
+    }
 }
 
 void CourseView::update()
@@ -1837,12 +1867,16 @@ void CourseView::gather()
     if (mDrawDV)
         DistantViewMgr::instance()->draw(getDistantViewLayer());
 
-    Renderer::instance()->setLayer(get3DLayer());
+    if (mActorShown && mActorGraphicsShown)
     {
-        for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
-            p_item->scheduleDraw();
+        Renderer::instance()->setLayer(get3DLayer());
+        {
+            for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
+                if (p_item->hasGraphics())
+                    p_item->scheduleDraw();
+        }
+        Renderer::instance()->resetLayer();
     }
-    Renderer::instance()->resetLayer();
 
     mRenderMgrDV.calc();
     mRenderMgr3D.calc();
@@ -2241,22 +2275,27 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
     if (mCourseView.mpCourseDataFile != nullptr)
     {
-        std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
-        const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
+        if (mCourseView.mActorShown)
+        {
+            std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
+            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
 
-        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
-            if (map_actor_data_vec[i].layer != LAYER_1)
-                map_actor_item_vec[i]->drawOpa(draw_info);
+            for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+                if (map_actor_data_vec[i].layer != LAYER_1)
+                    map_actor_item_vec[i]->drawOpa(draw_info);
 
-        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
-            if (map_actor_data_vec[i].layer == LAYER_1)
-                map_actor_item_vec[i]->drawOpa(draw_info);
+            for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+                if (map_actor_data_vec[i].layer == LAYER_1)
+                    map_actor_item_vec[i]->drawOpa(draw_info);
+        }
 
-        for (NextGotoItem& item : mCourseView.mNextGotoItem)
-            item.drawOpa();
+        if (mCourseView.mNextGotoShown)
+            for (NextGotoItem& item : mCourseView.mNextGotoItem)
+                item.drawOpa();
 
-        for (LocationItem& item : mCourseView.mLocationItem)
-            item.drawOpa();
+        if (mCourseView.mLocationShown)
+            for (LocationItem& item : mCourseView.mLocationItem)
+                item.drawOpa();
 
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawOpa();
@@ -2288,24 +2327,33 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
         bg_renderer.render(LAYER_2, cd_file, layer_shown[LAYER_2]);
 
-        std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
-        const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
+        if (mCourseView.mActorShown)
+        {
+            std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
+            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
 
-        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
-            if (map_actor_data_vec[i].layer != LAYER_1)
-                map_actor_item_vec[i]->drawXlu(draw_info);
+            for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+                if (map_actor_data_vec[i].layer != LAYER_1)
+                    map_actor_item_vec[i]->drawXlu(draw_info);
 
-        bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
+            bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
 
-        for (u32 i = 0; i < map_actor_item_vec.size(); i++)
-            if (map_actor_data_vec[i].layer == LAYER_1)
-                map_actor_item_vec[i]->drawXlu(draw_info);
+            for (u32 i = 0; i < map_actor_item_vec.size(); i++)
+                if (map_actor_data_vec[i].layer == LAYER_1)
+                    map_actor_item_vec[i]->drawXlu(draw_info);
+        }
+        else
+        {
+            bg_renderer.render(LAYER_1, cd_file, layer_shown[LAYER_1]);
+        }
 
-        for (NextGotoItem& item : mCourseView.mNextGotoItem)
-            item.drawXlu();
+        if (mCourseView.mNextGotoShown)
+            for (NextGotoItem& item : mCourseView.mNextGotoItem)
+                item.drawXlu();
 
-        for (LocationItem& item : mCourseView.mLocationItem)
-            item.drawXlu();
+        if (mCourseView.mLocationShown)
+            for (LocationItem& item : mCourseView.mLocationItem)
+                item.drawXlu();
 
         bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
 

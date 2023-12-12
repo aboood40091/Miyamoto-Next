@@ -19,11 +19,12 @@ public:
     void onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag) override;
     void scheduleDraw() override;
 
-    void drawOpa(const rio::lyr::DrawInfo& draw_info) override
-    {
-    }
-
     void drawXlu(const rio::lyr::DrawInfo& draw_info) override;
+
+    bool hasGraphics() const override
+    {
+        return true;
+    }
 
 private:
     void updatePositionXY_(const MapActorData& map_actor_data)

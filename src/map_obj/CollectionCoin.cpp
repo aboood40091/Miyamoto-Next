@@ -81,7 +81,7 @@ void CollectionCoin::onSceneUpdate()
 
 void CollectionCoin::scheduleDraw()
 {
-    if (mpModel == nullptr)
+    if (drawBox())
         return;
 
     Renderer::instance()->drawModel(mpModel, true, false);

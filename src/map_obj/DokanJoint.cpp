@@ -88,7 +88,7 @@ void DokanJoint::onDataChange(const MapActorData& map_actor_data, DataChangeFlag
 
 void DokanJoint::scheduleDraw()
 {
-    if (mpModel == nullptr)
+    if (drawBox())
         return;
 
     Renderer::instance()->drawModel(mpModel);

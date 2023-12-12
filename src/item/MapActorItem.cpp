@@ -33,9 +33,14 @@ void MapActorItem::move(s16 dx, s16 dy, bool commit)
     onDataChange(map_actor_data, DATA_CHANGE_FLAG_OFFSET);
 }
 
+bool MapActorItem::drawBox() const
+{
+    return drawBox_() || !*CourseView::instance()->getActorGraphicsEnable();
+}
+
 void MapActorItem::drawOpa(const rio::lyr::DrawInfo& draw_info)
 {
-    if (!drawBox_())
+    if (!drawBox())
         return;
 
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
@@ -54,7 +59,7 @@ void MapActorItem::drawOpa(const rio::lyr::DrawInfo& draw_info)
 
 void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
 {
-    if (!drawBox_())
+    if (!drawBox())
         return;
 
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
