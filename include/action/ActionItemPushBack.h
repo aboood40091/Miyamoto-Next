@@ -27,6 +27,9 @@ public:
     struct Context
     {
         std::vector<Item>   items;
+        bool                transform = false;
+        u16                 center_unit_x,
+                            center_unit_y;
 
         ~Context();
     };
@@ -39,4 +42,7 @@ public:
 
 private:
     std::vector<Item>   mItems;
+    bool                mTransform;
+    u16                 mCenterUnitX,
+                        mCenterUnitY;
 };

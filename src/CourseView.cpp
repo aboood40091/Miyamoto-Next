@@ -1167,6 +1167,47 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
     }
 }
 
+void CourseView::pushBackItemWithTransform(s32 dx, s32 dy, ItemType item_type, const void* data, const void* extra)
+{
+    switch (item_type)
+    {
+    default:
+        break;
+    case ITEM_TYPE_BG_UNIT_OBJ:
+        {
+            BgCourseData data_(*static_cast<const BgCourseData*>(data));
+            data_.offset.x = std::clamp<s32>(data_.offset.x + dx, 0, BG_MAX_UNIT_X - 1);
+            data_.offset.y = std::clamp<s32>(data_.offset.y + dy, 0, BG_MAX_UNIT_Y - 1);
+            pushBackItem_BgUnitObj_(data_, *static_cast<const u8*>(extra));
+        }
+        break;
+    case ITEM_TYPE_MAP_ACTOR:
+        {
+            MapActorData data_(*static_cast<const MapActorData*>(data));
+            data_.offset.x = std::clamp<s32>(data_.offset.x + dx * 16, 0, BG_MAX_X - 1);
+            data_.offset.y = std::clamp<s32>(data_.offset.y + dy * 16, 0, BG_MAX_Y - 1);
+            pushBackItem_MapActor_(data_);
+        }
+        break;
+    case ITEM_TYPE_NEXT_GOTO:
+        {
+            NextGoto data_(*static_cast<const NextGoto*>(data));
+            data_.offset.x = std::clamp<s32>(data_.offset.x + dx * 16, 0, BG_MAX_X - 1);
+            data_.offset.y = std::clamp<s32>(data_.offset.y + dy * 16, 0, BG_MAX_Y - 1);
+            pushBackItem_NextGoto_(data_);
+        }
+        break;
+    case ITEM_TYPE_LOCATION:
+        {
+            Location data_(*static_cast<const Location*>(data));
+            data_.offset.x = std::clamp<s32>(data_.offset.x + dx * 16, 0, BG_MAX_X - 1);
+            data_.offset.y = std::clamp<s32>(data_.offset.y + dy * 16, 0, BG_MAX_Y - 1);
+            pushBackItem_Location_(data_);
+        }
+        break;
+    }
+}
+
 void CourseView::popBackItem(ItemType item_type, const void* extra)
 {
     switch (item_type)
@@ -2096,7 +2137,15 @@ void CourseView::copySelection()
     if (mSelectedItems.empty())
         return;
 
+    const rio::BaseVec2f& center_pos = getCenterWorldPos();
+    s32 center_unit_x =  center_pos.x / 16;
+    s32 center_unit_y = -center_pos.y / 16;
+
     std::shared_ptr<ActionItemPushBack::Context> context = std::make_shared<ActionItemPushBack::Context>();
+    context->transform = true;
+    context->center_unit_x = center_unit_x;
+    context->center_unit_y = center_unit_y;
+
     for (const ItemID& item_id : mSelectedItems)
     {
         switch (item_id.getType())
@@ -2147,6 +2196,7 @@ void CourseView::pasteClipboard()
     default:
         break;
     case CLIPBOARD_TYPE_ITEMS:
+        clearSelection();
         ActionMgr::instance()->pushAction<ActionItemPushBack>(mClipboard.data.get());
         break;
     }

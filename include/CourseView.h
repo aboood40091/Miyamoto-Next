@@ -202,6 +202,16 @@ public:
         return viewToWorldPos(mCursorPos);
     }
 
+    rio::BaseVec2f getCenterPos() const
+    {
+        return mSize * 0.5f;
+    }
+
+    rio::BaseVec2f getCenterWorldPos() const
+    {
+        return viewToWorldPos(mSize * 0.5f);
+    }
+
     const rio::Texture2D* getColorTexture() const
     {
         return mpColorTexture;
@@ -348,6 +358,7 @@ public:
     void setItemData(const ItemID& item_id, const void* data, u32 data_change_flag);
 
     void pushBackItem(ItemType item_type, const void* data, const void* extra);
+    void pushBackItemWithTransform(s32 dx, s32 dy, ItemType item_type, const void* data, const void* extra);
     void popBackItem(ItemType item_type, const void* extra);
 
     void insertItem(const ItemID& item_id, const void* data);

@@ -6,6 +6,9 @@
 ActionItemPushBack::ActionItemPushBack(const void* context)
     : IAction(context)
     , mItems(static_cast<const Context*>(context)->items)
+    , mTransform(static_cast<const Context*>(context)->transform)
+    , mCenterUnitX(static_cast<const Context*>(context)->center_unit_x)
+    , mCenterUnitY(static_cast<const Context*>(context)->center_unit_y)
 {
 }
 
@@ -15,13 +18,35 @@ bool ActionItemPushBack::apply() const
         false, false, false
     };
 
-    for (const Item& item : mItems)
+    if (mTransform)
     {
-        CourseView::instance()->pushBackItem(item.item_type, item.data.get(), item.extra.get());
-        if (item.item_type == ITEM_TYPE_BG_UNIT_OBJ)
+        const rio::BaseVec2f& center_pos = CourseView::instance()->getCenterWorldPos();
+        s32 center_unit_x =  center_pos.x / 16;
+        s32 center_unit_y = -center_pos.y / 16;
+
+        s32 dx = center_unit_x - mCenterUnitX;
+        s32 dy = center_unit_y - mCenterUnitY;
+
+        for (const Item& item : mItems)
         {
-            u8 layer = *static_cast<const u8*>(item.extra.get());
-            layers_changed[layer] = true;
+            CourseView::instance()->pushBackItemWithTransform(dx, dy, item.item_type, item.data.get(), item.extra.get());
+            if (item.item_type == ITEM_TYPE_BG_UNIT_OBJ)
+            {
+                u8 layer = *static_cast<const u8*>(item.extra.get());
+                layers_changed[layer] = true;
+            }
+        }
+    }
+    else
+    {
+        for (const Item& item : mItems)
+        {
+            CourseView::instance()->pushBackItem(item.item_type, item.data.get(), item.extra.get());
+            if (item.item_type == ITEM_TYPE_BG_UNIT_OBJ)
+            {
+                u8 layer = *static_cast<const u8*>(item.extra.get());
+                layers_changed[layer] = true;
+            }
         }
     }
 
