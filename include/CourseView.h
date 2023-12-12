@@ -310,6 +310,9 @@ public:
     void gather();
     void dispose();
 
+    void undo();
+    void redo();
+
     void moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit);
     void setItemData(const ItemID& item_id, const void* data, u32 data_change_flag);
 

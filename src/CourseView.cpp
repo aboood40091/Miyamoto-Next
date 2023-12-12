@@ -783,6 +783,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
 void CourseView::processKeyboardInput()
 {
+    /*
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_X))
         mLayerShown[LAYER_0] = !mLayerShown[LAYER_0];
 
@@ -791,6 +792,25 @@ void CourseView::processKeyboardInput()
 
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_B))
         mLayerShown[LAYER_2] = !mLayerShown[LAYER_2];
+    */
+}
+
+void CourseView::undo()
+{
+    if (!ActionMgr::instance()->canUndo())
+        return;
+
+    clearSelection();
+    ActionMgr::instance()->undo();
+}
+
+void CourseView::redo()
+{
+    if (!ActionMgr::instance()->canRedo())
+        return;
+
+    clearSelection();
+    ActionMgr::instance()->redo();
 }
 
 void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, bool commit)
@@ -1580,10 +1600,32 @@ void CourseView::onCursorReleasedCompletely_()
     if (!mIsFocused)
         return;
 
-    if (hasSelection() &&
+    if (ActionMgr::instance()->canUndo() &&
+        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         ImGui::IsKeyPressed(ImGuiKey_Z)))
+        undo();
+
+    else if (ActionMgr::instance()->canRedo() &&
+        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         (((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
+           ImGui::IsKeyPressed(ImGuiKey_Z)) ||
+          ImGui::IsKeyPressed(ImGuiKey_Y))))
+        redo();
+
+    else if (hasSelection() &&
         (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
          ImGui::IsKeyPressed(ImGuiKey_Backspace)))
-         deleteSelection();
+        deleteSelection();
+
+    else if (hasSelection() &&
+        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         ImGui::IsKeyPressed(ImGuiKey_C)))
+        copySelection();
+
+    else if (hasClipboard() &&
+        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         ImGui::IsKeyPressed(ImGuiKey_V)))
+        pasteClipboard();
 }
 
 void CourseView::update()

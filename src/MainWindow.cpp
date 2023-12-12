@@ -972,28 +972,21 @@ void MainWindow::drawMainMenuBarUI_()
     {
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", nullptr, false, ActionMgr::instance()->canUndo()))
-            {
-                mpCourseView->clearSelection();
-                ActionMgr::instance()->undo();
-            }
+            if (ImGui::MenuItem("Undo", "Ctrl+Z", false, ActionMgr::instance()->canUndo()))
+                mpCourseView->undo();
 
-            if (ImGui::MenuItem("Redo", nullptr, false, ActionMgr::instance()->canRedo()))
-            {
-                mpCourseView->clearSelection();
-                ActionMgr::instance()->redo();
-            }
+            if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z / Ctrl+Y", false, ActionMgr::instance()->canRedo()))
+                mpCourseView->redo();
 
-            ImGui::EndMenu();
-        }
+            ImGui::Separator();
 
-        if (ImGui::BeginMenu("Selection"))
-        {
             if (ImGui::MenuItem("Delete", "Delete / Backspace", false, mpCourseView->hasSelection()))
                 mpCourseView->deleteSelection();
-            if (ImGui::MenuItem("Copy", nullptr, false, mpCourseView->hasSelection()))
+
+            if (ImGui::MenuItem("Copy", "Ctrl+C", false, mpCourseView->hasSelection()))
                 mpCourseView->copySelection();
-            if (ImGui::MenuItem("Paste", nullptr, false, mpCourseView->hasClipboard()))
+
+            if (ImGui::MenuItem("Paste", "Ctrl+V", false, mpCourseView->hasClipboard()))
                 mpCourseView->pasteClipboard();
 
             ImGui::EndMenu();
