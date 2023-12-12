@@ -986,6 +986,9 @@ void MainWindow::drawMainMenuBarUI_()
             if (ImGui::MenuItem("Copy", "Ctrl+C", false, mpCourseView->hasSelection()))
                 mpCourseView->copySelection();
 
+            if (ImGui::MenuItem("Cut", "Ctrl+X", false, mpCourseView->hasSelection()))
+                mpCourseView->cutSelection();
+
             if (ImGui::MenuItem("Paste", "Ctrl+V", false, mpCourseView->hasClipboard()))
                 mpCourseView->pasteClipboard();
 

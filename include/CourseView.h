@@ -253,6 +253,12 @@ public:
         mClipboard.data = nullptr;
     }
 
+    void cutSelection()
+    {
+        copySelection();
+        deleteSelection();
+    }
+
     void setPaintType_None()
     {
         mPaintNext.type = ITEM_TYPE_MAX_NUM;

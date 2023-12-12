@@ -1622,6 +1622,11 @@ void CourseView::onCursorReleasedCompletely_()
          ImGui::IsKeyPressed(ImGuiKey_C)))
         copySelection();
 
+    else if (hasSelection() &&
+        ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         ImGui::IsKeyPressed(ImGuiKey_X)))
+        cutSelection();
+
     else if (hasClipboard() &&
         ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
          ImGui::IsKeyPressed(ImGuiKey_V)))
