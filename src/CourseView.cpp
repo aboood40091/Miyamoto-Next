@@ -1602,6 +1602,7 @@ void CourseView::onCursorReleasedCompletely_()
 
     if (ActionMgr::instance()->canUndo() &&
         ((ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) &&
+         !(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
          ImGui::IsKeyPressed(ImGuiKey_Z)))
         undo();
 
