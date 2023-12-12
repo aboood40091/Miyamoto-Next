@@ -737,6 +737,58 @@ void MainWindow::drawPaletteUI_()
     ImGui::End();
     */
 
+    if (ImGui::Begin("Areas"))
+    {
+        ImGui::Button("Add");
+        ImGui::SameLine();
+        ImGui::Button("Remove");
+        ImGui::SameLine();
+        ImGui::Button("Clone");
+
+        if (ImGui::BeginTabBar("AreaTabBar"))
+        {
+            std::vector<AreaData>& data_vec = mpCourseView->getCourseDataFile()->getAreaData();
+
+            for (u32 i = 0; i < data_vec.size(); i++)
+            {
+                AreaData& area_data = data_vec[i];
+                const std::string& str = std::format("Area {0:d}", area_data.id);
+
+                ImGui::PushID(i);
+                if (ImGui::BeginTabItem(str.c_str()))
+                {
+                    const u8 single_step = 1;
+
+                    ImGui::BeginDisabled();
+                    ImGui::InputScalar("Id", ImGuiDataType_U8, &area_data.id, &single_step);
+                    ImGui::DragScalarN("Offset", ImGuiDataType_U16, &area_data.offset, 2);
+                    ImGui::DragScalarN("Size", ImGuiDataType_U16, &area_data.size, 2);
+                    ImGui::InputScalar("Color Obj", ImGuiDataType_U16, &area_data.color_obj);
+                    ImGui::InputScalar("Color Bg", ImGuiDataType_U16, &area_data.color_bg);
+                    ImGui::InputScalar("Scroll Id", ImGuiDataType_U8, &area_data.scroll, &single_step);
+                    ImGui::InputScalar("Zoom Type", ImGuiDataType_U8, &area_data.zoom_type);
+                    ImGui::InputScalar("Zoom Id", ImGuiDataType_U8, &area_data.zoom_id);
+                    ImGui::InputScalar("Zoom Change", ImGuiDataType_U8, &area_data.zoom_change);
+                    ImGui::InputScalar("Mask", ImGuiDataType_U8, &area_data.mask);
+                    ImGui::InputScalar("DistantView Id", ImGuiDataType_U8, &area_data.bg2, &single_step);
+                    ImGui::InputScalar("Unused 0x13", ImGuiDataType_U8, &area_data.bg3);
+                    ImGui::InputScalar("Direction", ImGuiDataType_U8, &area_data.direction);
+                    ImGui::InputScalar("Unknown 0x15", ImGuiDataType_U8, &area_data._15);
+                    ImGui::InputScalar("Music", ImGuiDataType_U8, &area_data.bgm);
+                    ImGui::InputScalar("Modulation", ImGuiDataType_U8, &area_data.bgm_mode);
+                    ImGui::InputScalar("Unused 0x18", ImGuiDataType_U8, &area_data.dv);
+                    ImGui::InputScalar("Flags", ImGuiDataType_U8, &area_data.flag, nullptr, nullptr, "%02X");
+                    ImGui::EndDisabled();
+
+                    ImGui::EndTabItem();
+                }
+                ImGui::PopID();
+            }
+            ImGui::EndTabBar();
+        }
+    }
+    ImGui::End();
+
     if (ImGui::Begin("Locations"))
     {
         if (ImGui::IsWindowFocused())
