@@ -57,6 +57,7 @@ public:
 
 public:
     BgUnitObj();
+    ~BgUnitObj();
 
     void load(u8 width, u8 height, u16 random, u16 data_offs, const void* unt, u32 unt_size);
 
