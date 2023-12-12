@@ -381,7 +381,7 @@ void BgTexMgr::createUnitDefaultRender_()
             [[maybe_unused]] const rio::Texture2D& texture = *(mUnitObjTexArray[env].emplace_back(std::make_unique<rio::Texture2D>(rio::TEXTURE_FORMAT_R8_G8_B8_A8_UNORM, tex_w, tex_h, 1)));
 #if RIO_IS_WIN
             RIO_GL_CALL(glBindTexture(GL_TEXTURE_2D, texture.getNativeTextureHandle()));
-            RIO_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST));
+            RIO_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)); // TODO: Generate mipmaps
             RIO_GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 #endif // RIO_IS_WIN
         }

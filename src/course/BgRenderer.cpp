@@ -43,7 +43,7 @@ BgRenderer::BgRenderer()
 {
     mTextureSampler.setMinFilter(rio::TEX_XY_FILTER_MODE_LINEAR);
     mTextureSampler.setMagFilter(rio::TEX_XY_FILTER_MODE_LINEAR);
-    mTextureSampler.setMipFilter(rio::TEX_MIP_FILTER_MODE_POINT);
+    mTextureSampler.setMipFilter(rio::TEX_MIP_FILTER_MODE_LINEAR);
 
     rio::MemUtil::set(mDrawNum, 0, sizeof(mDrawNum));
     rio::MemUtil::set(mDynamicDrawNum, 0, sizeof(mDynamicDrawNum));
