@@ -580,10 +580,10 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     const char* dv_name = nullptr;
 
-    u8 area;
-
     if (mpCourseDataFile->getAreaData().size() > 0)
     {
+        u8 area;
+
         if (start_next_goto)
         {
           //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < mpCourseDataFile->getAreaData().size());

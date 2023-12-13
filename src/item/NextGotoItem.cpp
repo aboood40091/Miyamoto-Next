@@ -78,20 +78,20 @@ void NextGotoItem::drawSelectionUI()
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.
 
-    ImGui::InputScalar("Id", ImGuiDataType_U8, &mSelectionData.id, &single_step);
+    ImGui::InputScalar("ID", ImGuiDataType_U8, &mSelectionData.id, &single_step);
     ImGui::InputScalar("Area", ImGuiDataType_U8, &mSelectionData.area, &single_step);
     ImGui::InputScalar("Type", ImGuiDataType_U8, &mSelectionData.type);
-    ImGui::InputScalar("Dest Id", ImGuiDataType_U8, &mSelectionData.destination.next_goto, &single_step);
-    ImGui::InputScalar("Dest Area", ImGuiDataType_U8, &mSelectionData.destination.file, &single_step);
+    ImGui::InputScalar("Destination File", ImGuiDataType_U8, &mSelectionData.destination.file, &single_step);
+    ImGui::InputScalar("Destination ID", ImGuiDataType_U8, &mSelectionData.destination.next_goto, &single_step);
     ImGui::DragScalarN("Camera Offset", ImGuiDataType_U16, &mSelectionData.camera_offset, 2);
-    ImGui::InputScalar("MP Spawn Flag", ImGuiDataType_U8, &mSelectionData.mp_spawn_flag);
-    ImGui::InputScalar("MP Inner Gap", ImGuiDataType_U8, &mSelectionData.mp_inner_gap);
+    ImGui::InputScalar("Multiplayer Spawn Flag", ImGuiDataType_U8, &mSelectionData.mp_spawn_flag);
+    ImGui::InputScalar("Multiplayer Inner Spacing", ImGuiDataType_U8, &mSelectionData.mp_inner_gap);
     ImGui::InputScalar("Flags", ImGuiDataType_U16, &mSelectionData.flag, nullptr, nullptr, "%04X");
     ImGui::InputScalar("Baby Yoshi NextGoto", ImGuiDataType_U8, &mSelectionData.chibi_yoshi_next_goto, &single_step);
     ImGui::InputScalar("Coin Edit Priority", ImGuiDataType_U8, &mSelectionData.coin_edit_priority, &single_step);
-    ImGui::InputScalar("Path Info", ImGuiDataType_U8, &mSelectionData.rail.info, &single_step);
-    ImGui::InputScalar("Path Node", ImGuiDataType_U8, &mSelectionData.rail.point, &single_step);
-    ImGui::InputScalar("Transition", ImGuiDataType_U8, &mSelectionData.wipe_type);
+    ImGui::InputScalar("Rail ID", ImGuiDataType_U8, &mSelectionData.rail.info, &single_step);
+    ImGui::InputScalar("Rail Point", ImGuiDataType_U8, &mSelectionData.rail.point, &single_step);
+    ImGui::InputScalar("Wipe Type", ImGuiDataType_U8, &mSelectionData.wipe_type);
 
     ImGui::Separator();
 
