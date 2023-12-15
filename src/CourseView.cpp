@@ -468,6 +468,7 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 {
     onCursorRelease_L_();
     onCursorRelease_R_();
+    clearClipboard();
 
 #if RIO_IS_CAFE
     GX2DrawDone();
