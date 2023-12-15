@@ -425,6 +425,8 @@ private:
     void onSelectionChange_();
     void drawSelectionBox_();
 
+    s32 findNearestArea_(s32 x, s32 y);
+
     void calcDistantViewScissor_();
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
 

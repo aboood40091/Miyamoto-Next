@@ -1316,6 +1316,39 @@ void CourseView::onCursorRelease_Paint_BgUnitObj_()
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
+s32 CourseView::findNearestArea_(s32 x, s32 y)
+{
+    s32 area = -1;
+    f32 dist = std::numeric_limits<f32>::infinity();
+
+    for (const AreaData& area_data : mpCourseDataFile->getAreaData())
+    {
+        s32 min_x = area_data.offset.x;
+        s32 max_x = min_x + area_data.size.x;
+        s32 min_y = area_data.offset.y;
+        s32 max_y = min_y + area_data.size.y;
+
+        if (min_x <= x && x <= max_x &&
+            min_y <= y && y <= max_y)
+        {
+            area = area_data.id;
+            break;
+        }
+
+        s32 nearest_x = std::clamp<s32>(x, min_x, max_x);
+        s32 nearest_y = std::clamp<s32>(y, min_y, max_y);
+
+        f32 cur_dist = rio::Mathf::sqrt(rio::Mathf::square(x - nearest_x) + rio::Mathf::square(y - nearest_y));
+        if (cur_dist < dist)
+        {
+            area = area_data.id;
+            dist = cur_dist;
+        }
+    }
+
+    return area;
+}
+
 void CourseView::onCursorPress_Paint_MapActor_()
 {
     clearSelection_();
@@ -1372,8 +1405,16 @@ void CourseView::onCursorRelease_Paint_MapActor_()
     s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, BG_MAX_X - 8);
     s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, BG_MAX_Y - 8);
 
+    s32 area = findNearestArea_(x, y);
+    if (area == -1)
+    {
+        // TODO: Show pop-up informing user that an area must exist first
+        return;
+    }
+
     p_data->offset.x = x;
     p_data->offset.y = y;
+    p_data->area = area;
 
     ActionItemPushBack::Context context;
     context.items.emplace_back(
@@ -1447,8 +1488,16 @@ void CourseView::onCursorRelease_Paint_NextGoto_()
     s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, BG_MAX_X - 8);
     s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, BG_MAX_Y - 8);
 
+    s32 area = findNearestArea_(x, y);
+    if (area == -1)
+    {
+        // TODO: Show pop-up informing user that an area must exist first
+        return;
+    }
+
     p_data->offset.x = x;
     p_data->offset.y = y;
+    p_data->area = area;
 
     ActionItemPushBack::Context context;
     context.items.emplace_back(
