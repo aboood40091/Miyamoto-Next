@@ -48,4 +48,3 @@ bin/*.dll
 # Test files
 bin/fs/content/game/
 bin/fs/content/shaders/agl_shader_temp_out.*
-bin/fs/content/shaders/cache/
