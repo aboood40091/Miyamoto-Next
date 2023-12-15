@@ -2313,6 +2313,7 @@ void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::Draw
 
 void CourseView::DrawCallback3D::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
+    mCourseView.bindRenderBuffer_(true);
 }
 
 void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -2323,7 +2324,8 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
     render_state.setBlendEnable(false);
     render_state.apply();
 
-    if (mCourseView.mpCourseDataFile != nullptr)
+    const CourseDataFile* p_cd_file = mCourseView.mpCourseDataFile;
+    if (p_cd_file != nullptr)
     {
         if (mCourseView.mActorShown)
         {
@@ -2346,10 +2348,13 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
         if (mCourseView.mLocationShown)
             for (LocationItem& item : mCourseView.mLocationItem)
                 item.drawOpa();
+    }
 
+    mCourseView.bindRenderBuffer_(false);
+
+    if (p_cd_file != nullptr)
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawOpa();
-    }
 }
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -2406,12 +2411,13 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
                 item.drawXlu();
 
         bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
-
-        for (AreaItem& item : mCourseView.mAreaItem)
-            item.drawXlu();
     }
 
     mCourseView.bindRenderBuffer_(false);
+
+    if (p_cd_file != nullptr)
+        for (AreaItem& item : mCourseView.mAreaItem)
+            item.drawXlu();
 
     if (mCourseView.mCursorAction == CURSOR_ACTION_SELECTION_BOX)
         mCourseView.drawSelectionBox_();
