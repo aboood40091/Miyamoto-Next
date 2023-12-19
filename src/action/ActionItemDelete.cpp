@@ -20,7 +20,7 @@ bool ActionItemDelete::apply() const
 
     if (!mItems[ITEM_TYPE_BG_UNIT_OBJ].empty())
     {
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile());
+        Bg::instance()->processBgCourseData(CourseView::instance()->getCourseDataFile());
         BgRenderer::instance()->createVertexBuffer();
     }
 
@@ -35,7 +35,7 @@ void ActionItemDelete::unapply() const
 
     if (!mItems[ITEM_TYPE_BG_UNIT_OBJ].empty())
     {
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile());
+        Bg::instance()->processBgCourseData(CourseView::instance()->getCourseDataFile());
         BgRenderer::instance()->createVertexBuffer();
     }
 }

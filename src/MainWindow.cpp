@@ -350,19 +350,14 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     mEnvSelectedObj = u16(-1);
 
     CourseDataFile& cd_file = CourseData::instance()->getCourseDataFile(id);
-    if (!cd_file.isValid())
-    {
-        mCurrentFile = -1;
-        mpCourseView->reset();
-        return;
-    }
+    RIO_ASSERT(cd_file.isValid());
 
     mCurrentFile = id;
 
     BgTexMgr::instance()->initialize(cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(&cd_file, Globals::useRealZoom());
+    mpCourseView->initialize(cd_file, Globals::useRealZoom());
 }
 
 void MainWindow::processMouseInput_()
@@ -420,18 +415,15 @@ void MainWindow::processKeyboardInput_()
 
     if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_A))
     {
-        if (mCurrentFile != -1)
+        s32 prev_file = mCurrentFile;
+
+        while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getCourseDataFile(mCurrentFile).isValid())
+            continue;
+
+        if (mCurrentFile != prev_file)
         {
-            s32 prev_file = mCurrentFile;
-
-            while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getCourseDataFile(mCurrentFile).isValid())
-                continue;
-
-            if (mCurrentFile != prev_file)
-            {
-                ActionMgr::instance()->discard(true);
-                setCurrentCourseDataFile(mCurrentFile);
-            }
+            ActionMgr::instance()->discard(true);
+            setCurrentCourseDataFile(mCurrentFile);
         }
     }
 }
@@ -747,7 +739,7 @@ void MainWindow::drawPaletteUI_()
 
         if (ImGui::BeginTabBar("AreaTabBar"))
         {
-            std::vector<AreaData>& data_vec = mpCourseView->getCourseDataFile()->getAreaData();
+            std::vector<AreaData>& data_vec = mpCourseView->getCourseDataFile().getAreaData();
 
             for (u32 i = 0; i < data_vec.size(); i++)
             {
@@ -778,7 +770,7 @@ void MainWindow::drawPaletteUI_()
                         if (ImGui::CollapsingHeader("Scroll Data (Preview)"))
                         {
                             const ScrollData* p_scroll_data = nullptr;
-                            for (const ScrollData& scroll_data : mpCourseView->getCourseDataFile()->getScrollData())
+                            for (const ScrollData& scroll_data : mpCourseView->getCourseDataFile().getScrollData())
                             {
                                 if (scroll_data.id == area_data.scroll)
                                 {
@@ -825,7 +817,7 @@ void MainWindow::drawPaletteUI_()
                         if (ImGui::CollapsingHeader("Distant View Data (Preview)"))
                         {
                             const DistantViewData* p_dv_data = nullptr;
-                            for (const DistantViewData& dv_data : mpCourseView->getCourseDataFile()->getDistantViewData())
+                            for (const DistantViewData& dv_data : mpCourseView->getCourseDataFile().getDistantViewData())
                             {
                                 if (dv_data.id == area_data.bg2)
                                 {
@@ -895,7 +887,7 @@ void MainWindow::drawPaletteUI_()
         if (ImGui::BeginListBox("##LocationList", ImVec2(-1, -1)))
         {
             const std::vector<LocationItem>& item_vec = mpCourseView->getLocationItem();
-            const std::vector<Location>& data_vec = mpCourseView->getCourseDataFile()->getLocation();
+            const std::vector<Location>& data_vec = mpCourseView->getCourseDataFile().getLocation();
 
             for (u32 i = 0; i < item_vec.size(); i++)
             {
@@ -926,7 +918,7 @@ void MainWindow::drawPaletteUI_()
         if (ImGui::BeginListBox("##NextGotoList", ImVec2(-1, -1)))
         {
             const std::vector<NextGotoItem>& item_vec = mpCourseView->getNextGotoItem();
-            const std::vector<NextGoto>& data_vec = mpCourseView->getCourseDataFile()->getNextGoto();
+            const std::vector<NextGoto>& data_vec = mpCourseView->getCourseDataFile().getNextGoto();
 
             for (u32 i = 0; i < item_vec.size(); i++)
             {
@@ -988,7 +980,7 @@ void MainWindow::drawPaletteUI_()
                 if (ImGui::BeginListBox("##ActorCurrentList", ImVec2(-1, -1)))
                 {
                     const std::vector< std::unique_ptr<MapActorItem> >& item_vec = mpCourseView->getMapActorItem();
-                    const std::vector<MapActorData>& data_vec = mpCourseView->getCourseDataFile()->getMapActorData();
+                    const std::vector<MapActorData>& data_vec = mpCourseView->getCourseDataFile().getMapActorData();
                     for (u32 i = 0; i < item_vec.size(); i++)
                     {
                         const MapActorItem& map_actor_item = *(item_vec[i]);

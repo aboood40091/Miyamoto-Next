@@ -224,20 +224,23 @@ public:
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;
 
-    void initialize(CourseDataFile* p_cd_file, bool real_zoom);
-    void reset()
+    void initialize(CourseDataFile& cd_file, bool real_zoom);
+
+    bool isInitialized() const
     {
-        initialize(nullptr, false);
+        return mpCourseDataFile != nullptr;
     }
 
-    CourseDataFile* getCourseDataFile()
+    CourseDataFile& getCourseDataFile()
     {
-        return mpCourseDataFile;
+        RIO_ASSERT(isInitialized());
+        return *mpCourseDataFile;
     }
 
-    const CourseDataFile* getCourseDataFile() const
+    const CourseDataFile& getCourseDataFile() const
     {
-        return mpCourseDataFile;
+        RIO_ASSERT(isInitialized());
+        return *mpCourseDataFile;
     }
 
     bool hasSelection() const

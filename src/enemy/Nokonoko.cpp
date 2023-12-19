@@ -247,7 +247,7 @@ void Nokonoko::scheduleDraw()
     if (drawBox())
         return;
 
-    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     if (map_actor_data.settings[0] >> 4 & 1)
         Renderer::instance()->drawModel(*mpShellModel);

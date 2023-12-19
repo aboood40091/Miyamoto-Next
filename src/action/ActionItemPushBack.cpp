@@ -55,7 +55,7 @@ bool ActionItemPushBack::apply() const
         if (!layers_changed[layer])
             continue;
 
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile(), layer);
+        Bg::instance()->processBgCourseData(CourseView::instance()->getCourseDataFile(), layer);
         BgRenderer::instance()->createVertexBuffer(layer);
     }
 
@@ -83,7 +83,7 @@ void ActionItemPushBack::unapply() const
         if (!layers_changed[layer])
             continue;
 
-        Bg::instance()->processBgCourseData(*CourseView::instance()->getCourseDataFile(), layer);
+        Bg::instance()->processBgCourseData(CourseView::instance()->getCourseDataFile(), layer);
         BgRenderer::instance()->createVertexBuffer(layer);
     }
 }

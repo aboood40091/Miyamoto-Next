@@ -59,6 +59,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mDrawCallbackDV(*this)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
+    , mpCourseDataFile(nullptr)
     , mpDVControlArea(nullptr)
     , mCursorAction(CURSOR_ACTION_NONE)
     , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
@@ -464,7 +465,7 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 }
 
-void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
+void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
 {
     onCursorRelease_L_();
     onCursorRelease_R_();
@@ -490,7 +491,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     mLocationItem.clear();
     mAreaItem.clear();
 
-    mpCourseDataFile = p_cd_file;
+    RIO_ASSERT(cd_file.isValid());
+    mpCourseDataFile = &cd_file;
     mpDVControlArea = nullptr;
 
     mCursorAction = CURSOR_ACTION_NONE;
@@ -498,55 +500,40 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     setZoomUnitSize(32);
     mRealBgZoom = mBgZoom;
 
-    if (mpCourseDataFile == nullptr)
-    {
-        // Clear BG
-        Bg::instance()->clearBgCourseData();
-        BgRenderer::instance()->createVertexBuffer();
-
-        // Load default distant view
-        const char* dv_name = "Nohara";
-        const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
-        RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
-        DistantViewMgr::instance()->initialize(dv_name, dv_path, Globals::forceSharcfb());
-
-        return;
-    }
-
-    Bg::instance()->processBgCourseData(*mpCourseDataFile);
+    Bg::instance()->processBgCourseData(getCourseDataFile());
     BgRenderer::instance()->createVertexBuffer();
 
     for (u8 layer = 0; layer < CD_FILE_LAYER_MAX_NUM; layer++)
     {
-        std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(layer);
+        std::vector<BgCourseData>& vec = getCourseDataFile().getBgData(layer);
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
             mBgUnitItem[layer].emplace_back(vec[i], layer << 22 | i);
     }
 
     {
-        std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+        std::vector<MapActorData>& vec = getCourseDataFile().getMapActorData();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
             mMapActorItemPtr.emplace_back(ActorCreateMgr::instance()->create(vec[i], i));
     }
 
     {
-        std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+        std::vector<NextGoto>& vec = getCourseDataFile().getNextGoto();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
             mNextGotoItem.emplace_back(vec[i], i);
     }
 
     {
-        std::vector<Location>& vec = mpCourseDataFile->getLocation();
+        std::vector<Location>& vec = getCourseDataFile().getLocation();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
             mLocationItem.emplace_back(vec[i], i);
     }
 
     {
-        std::vector<AreaData>& vec = mpCourseDataFile->getAreaData();
+        std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
             mAreaItem.emplace_back(i);
@@ -555,8 +542,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
     const NextGoto* start_next_goto = nullptr;
   //if (!start_next_goto)
     {
-        u8 start = mpCourseDataFile->getOptions().start_next_goto;
-        for (const NextGoto& next_goto : mpCourseDataFile->getNextGoto())
+        u8 start = getCourseDataFile().getOptions().start_next_goto;
+        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
         {
             if (next_goto.id == start)
             {
@@ -568,8 +555,8 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     if (!start_next_goto)
     {
-        u8 start = mpCourseDataFile->getOptions().start_next_goto_coin_boost;
-        for (const NextGoto& next_goto : mpCourseDataFile->getNextGoto())
+        u8 start = getCourseDataFile().getOptions().start_next_goto_coin_boost;
+        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
         {
             if (next_goto.id == start)
             {
@@ -581,15 +568,15 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
 
     const char* dv_name = nullptr;
 
-    if (mpCourseDataFile->getAreaData().size() > 0)
+    if (getCourseDataFile().getAreaData().size() > 0)
     {
         u8 area;
 
         if (start_next_goto)
         {
-          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < mpCourseDataFile->getAreaData().size());
+          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < getCourseDataFile().getAreaData().size());
             area =
-                (start_next_goto->area >= 0 && start_next_goto->area < mpCourseDataFile->getAreaData().size())
+                (start_next_goto->area >= 0 && start_next_goto->area < getCourseDataFile().getAreaData().size())
                     ? start_next_goto->area
                     : 0;
         }
@@ -598,12 +585,12 @@ void CourseView::initialize(CourseDataFile* p_cd_file, bool real_zoom)
             area = 0;
         }
 
-        const AreaData& area_data = mpCourseDataFile->getAreaData()[area];
+        const AreaData& area_data = getCourseDataFile().getAreaData()[area];
 
-      //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < mpCourseDataFile->getDistantViewData().size());
-        if (area_data.bg2 >= 0 && area_data.bg2 < mpCourseDataFile->getDistantViewData().size())
+      //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < getCourseDataFile().getDistantViewData().size());
+        if (area_data.bg2 >= 0 && area_data.bg2 < getCourseDataFile().getDistantViewData().size())
         {
-            const DistantViewData& dv_data = mpCourseDataFile->getDistantViewData()[area_data.bg2];
+            const DistantViewData& dv_data = getCourseDataFile().getDistantViewData()[area_data.bg2];
             dv_name = dv_data.name;
             mpDVControlArea = &area_data;
 
@@ -845,7 +832,7 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
     {
         if (layers_changed[layer])
         {
-            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
+            Bg::instance()->processBgCourseData(getCourseDataFile(), layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
     }
@@ -863,24 +850,24 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         {
             u8 layer = item_id.getIndex() >> 22;
 
-            mpCourseDataFile->getBgData(layer)[item_id.getIndex() & 0x003FFFFF] = *static_cast<const BgCourseData*>(data);
+            getCourseDataFile().getBgData(layer)[item_id.getIndex() & 0x003FFFFF] = *static_cast<const BgCourseData*>(data);
 
-            Bg::instance()->processBgCourseData(*mpCourseDataFile, layer);
+            Bg::instance()->processBgCourseData(getCourseDataFile(), layer);
             BgRenderer::instance()->createVertexBuffer(layer);
         }
         break;
     case ITEM_TYPE_MAP_ACTOR:
         {
             const MapActorData& map_actor_data = *static_cast<const MapActorData*>(data);
-            mpCourseDataFile->getMapActorData()[item_id.getIndex()] = map_actor_data;
+            getCourseDataFile().getMapActorData()[item_id.getIndex()] = map_actor_data;
             mMapActorItemPtr[item_id.getIndex()]->onDataChange(map_actor_data, (MapActorItem::DataChangeFlag)data_change_flag);
         }
         break;
     case ITEM_TYPE_NEXT_GOTO:
-        mpCourseDataFile->getNextGoto()[item_id.getIndex()] = *static_cast<const NextGoto*>(data);
+        getCourseDataFile().getNextGoto()[item_id.getIndex()] = *static_cast<const NextGoto*>(data);
         break;
     case ITEM_TYPE_LOCATION:
-        mpCourseDataFile->getLocation()[item_id.getIndex()] = *static_cast<const Location*>(data);
+        getCourseDataFile().getLocation()[item_id.getIndex()] = *static_cast<const Location*>(data);
         break;
     }
 }
@@ -1051,7 +1038,7 @@ void CourseView::pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer)
 {
     RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
 
-    std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+    std::vector<BgCourseData>& data_vec = getCourseDataFile().getBgData(layer);
     std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
     RIO_ASSERT(data_vec.size() == item_vec.size());
     u32 i = item_vec.size();
@@ -1065,7 +1052,7 @@ void CourseView::pushBackItem_BgUnitObj_(const BgCourseData& data, u8 layer)
 
 void CourseView::popBackItem_BgUnitObj_(u8 layer)
 {
-    std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+    std::vector<BgCourseData>& data_vec = getCourseDataFile().getBgData(layer);
     std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
     RIO_ASSERT(data_vec.size() == item_vec.size());
 
@@ -1077,7 +1064,7 @@ void CourseView::popBackItem_BgUnitObj_(u8 layer)
 
 void CourseView::pushBackItem_MapActor_(const MapActorData& data)
 {
-    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    std::vector<MapActorData>& vec = getCourseDataFile().getMapActorData();
     RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
     u32 i = mMapActorItemPtr.size();
 
@@ -1090,7 +1077,7 @@ void CourseView::pushBackItem_MapActor_(const MapActorData& data)
 
 void CourseView::popBackItem_MapActor_()
 {
-    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    std::vector<MapActorData>& vec = getCourseDataFile().getMapActorData();
     RIO_ASSERT(vec.size() == mMapActorItemPtr.size());
 
     mMapActorItemPtr.pop_back();
@@ -1101,7 +1088,7 @@ void CourseView::popBackItem_MapActor_()
 
 void CourseView::pushBackItem_NextGoto_(const NextGoto& data)
 {
-    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    std::vector<NextGoto>& vec = getCourseDataFile().getNextGoto();
     RIO_ASSERT(vec.size() == mNextGotoItem.size());
     u32 i = mNextGotoItem.size();
 
@@ -1114,7 +1101,7 @@ void CourseView::pushBackItem_NextGoto_(const NextGoto& data)
 
 void CourseView::popBackItem_NextGoto_()
 {
-    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    std::vector<NextGoto>& vec = getCourseDataFile().getNextGoto();
     RIO_ASSERT(vec.size() == mNextGotoItem.size());
 
     mNextGotoItem.pop_back();
@@ -1125,7 +1112,7 @@ void CourseView::popBackItem_NextGoto_()
 
 void CourseView::pushBackItem_Location_(const Location& data)
 {
-    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    std::vector<Location>& vec = getCourseDataFile().getLocation();
     RIO_ASSERT(vec.size() == mLocationItem.size());
     u32 i = mLocationItem.size();
 
@@ -1138,7 +1125,7 @@ void CourseView::pushBackItem_Location_(const Location& data)
 
 void CourseView::popBackItem_Location_()
 {
-    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    std::vector<Location>& vec = getCourseDataFile().getLocation();
     RIO_ASSERT(vec.size() == mLocationItem.size());
 
     mLocationItem.pop_back();
@@ -1249,13 +1236,13 @@ void CourseView::onCursorPress_Paint_BgUnitObj_()
 
     pushBackItem_BgUnitObj_({ mPaintCurrent.bg_unit_obj_type, { u16(x), u16(y) }, { 1, 1 } }, mPaintCurrent.layer);
 
-    Bg::instance()->processBgCourseData(*mpCourseDataFile, mPaintCurrent.layer);
+    Bg::instance()->processBgCourseData(getCourseDataFile(), mPaintCurrent.layer);
     BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
 }
 
 void CourseView::onCursorHold_Paint_BgUnitObj_()
 {
-    std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(mPaintCurrent.layer);
+    std::vector<BgCourseData>& vec = getCourseDataFile().getBgData(mPaintCurrent.layer);
     BgCourseData& data = vec[vec.size() - 1];
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
@@ -1279,13 +1266,13 @@ void CourseView::onCursorHold_Paint_BgUnitObj_()
     data.size.x = w;
     data.size.y = h;
 
-    Bg::instance()->processBgCourseData(*mpCourseDataFile, mPaintCurrent.layer);
+    Bg::instance()->processBgCourseData(getCourseDataFile(), mPaintCurrent.layer);
     BgRenderer::instance()->createVertexBuffer(mPaintCurrent.layer);
 }
 
 void CourseView::onCursorRelease_Paint_BgUnitObj_()
 {
-    const std::vector<BgCourseData>& vec = mpCourseDataFile->getBgData(mPaintCurrent.layer);
+    const std::vector<BgCourseData>& vec = getCourseDataFile().getBgData(mPaintCurrent.layer);
     std::shared_ptr<BgCourseData> p_data = std::make_shared<BgCourseData>(vec[vec.size() - 1]);
 
     popBackItem_BgUnitObj_(mPaintCurrent.layer);
@@ -1322,7 +1309,7 @@ s32 CourseView::findNearestArea_(s32 x, s32 y)
     s32 area = -1;
     f32 dist = std::numeric_limits<f32>::infinity();
 
-    for (const AreaData& area_data : mpCourseDataFile->getAreaData())
+    for (const AreaData& area_data : getCourseDataFile().getAreaData())
     {
         s32 min_x = area_data.offset.x;
         s32 max_x = min_x + area_data.size.x;
@@ -1379,7 +1366,7 @@ void CourseView::onCursorPress_Paint_MapActor_()
 
 void CourseView::onCursorHold_Paint_MapActor_()
 {
-    std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    std::vector<MapActorData>& vec = getCourseDataFile().getMapActorData();
     MapActorData& data = vec[vec.size() - 1];
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
@@ -1397,7 +1384,7 @@ void CourseView::onCursorHold_Paint_MapActor_()
 
 void CourseView::onCursorRelease_Paint_MapActor_()
 {
-    const std::vector<MapActorData>& vec = mpCourseDataFile->getMapActorData();
+    const std::vector<MapActorData>& vec = getCourseDataFile().getMapActorData();
     std::shared_ptr<MapActorData> p_data = std::make_shared<MapActorData>(vec[vec.size() - 1]);
 
     popBackItem_MapActor_();
@@ -1444,7 +1431,7 @@ void CourseView::onCursorPress_Paint_NextGoto_()
     {
         bool conflict = false;
 
-        for (const NextGoto& next_goto : mpCourseDataFile->getNextGoto())
+        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
         {
             if (next_goto.id == id)
             {
@@ -1467,7 +1454,7 @@ void CourseView::onCursorPress_Paint_NextGoto_()
 
 void CourseView::onCursorHold_Paint_NextGoto_()
 {
-    std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    std::vector<NextGoto>& vec = getCourseDataFile().getNextGoto();
     NextGoto& data = vec[vec.size() - 1];
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
@@ -1480,7 +1467,7 @@ void CourseView::onCursorHold_Paint_NextGoto_()
 
 void CourseView::onCursorRelease_Paint_NextGoto_()
 {
-    const std::vector<NextGoto>& vec = mpCourseDataFile->getNextGoto();
+    const std::vector<NextGoto>& vec = getCourseDataFile().getNextGoto();
     std::shared_ptr<NextGoto> p_data = std::make_shared<NextGoto>(vec[vec.size() - 1]);
 
     popBackItem_NextGoto_();
@@ -1527,7 +1514,7 @@ void CourseView::onCursorPress_Paint_Location_()
     {
         bool conflict = false;
 
-        for (const Location& location : mpCourseDataFile->getLocation())
+        for (const Location& location : getCourseDataFile().getLocation())
         {
             if (location.id == id)
             {
@@ -1553,7 +1540,7 @@ void CourseView::onCursorPress_Paint_Location_()
 
 void CourseView::onCursorHold_Paint_Location_()
 {
-    std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    std::vector<Location>& vec = getCourseDataFile().getLocation();
     Location& data = vec[vec.size() - 1];
 
     const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
@@ -1577,7 +1564,7 @@ void CourseView::onCursorHold_Paint_Location_()
 
 void CourseView::onCursorRelease_Paint_Location_()
 {
-    const std::vector<Location>& vec = mpCourseDataFile->getLocation();
+    const std::vector<Location>& vec = getCourseDataFile().getLocation();
     std::shared_ptr<Location> p_data = std::make_shared<Location>(vec[vec.size() - 1]);
 
     popBackItem_Location_();
@@ -1869,7 +1856,7 @@ void CourseView::update()
         mBgZoom
     );
 
-    if (mpCourseDataFile != nullptr)
+    if (isInitialized())
         for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
             p_item->onSceneUpdate();
 }
@@ -1999,7 +1986,7 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
             u32 i = item_id.getIndex() & 0x003FFFFF;
             const BgCourseData& data_ = *static_cast<const BgCourseData*>(data);
 
-            std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+            std::vector<BgCourseData>& data_vec = getCourseDataFile().getBgData(layer);
             std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
             RIO_ASSERT(data_vec.size() == item_vec.size());
 
@@ -2016,7 +2003,7 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
             u32 i = item_id.getIndex();
             const MapActorData& data_ = *static_cast<const MapActorData*>(data);
 
-            std::vector<MapActorData>& data_vec = mpCourseDataFile->getMapActorData();
+            std::vector<MapActorData>& data_vec = getCourseDataFile().getMapActorData();
             RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
 
             data_vec.insert(data_vec.begin() + i, data_);
@@ -2032,7 +2019,7 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
             u32 i = item_id.getIndex();
             const NextGoto& data_ = *static_cast<const NextGoto*>(data);
 
-            std::vector<NextGoto>& data_vec = mpCourseDataFile->getNextGoto();
+            std::vector<NextGoto>& data_vec = getCourseDataFile().getNextGoto();
             RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
 
             data_vec.insert(data_vec.begin() + i, data_);
@@ -2048,7 +2035,7 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
             u32 i = item_id.getIndex();
             const Location& data_ = *static_cast<const Location*>(data);
 
-            std::vector<Location>& data_vec = mpCourseDataFile->getLocation();
+            std::vector<Location>& data_vec = getCourseDataFile().getLocation();
             RIO_ASSERT(data_vec.size() == mLocationItem.size());
 
             data_vec.insert(data_vec.begin() + i, data_);
@@ -2075,7 +2062,7 @@ void CourseView::eraseItem(const ItemID& item_id)
             u8 layer = item_id.getIndex() >> 22;
             u32 i = item_id.getIndex() & 0x003FFFFF;
 
-            std::vector<BgCourseData>& data_vec = mpCourseDataFile->getBgData(layer);
+            std::vector<BgCourseData>& data_vec = getCourseDataFile().getBgData(layer);
             std::vector<BgUnitItem>& item_vec = mBgUnitItem[layer];
             RIO_ASSERT(data_vec.size() == item_vec.size());
 
@@ -2091,7 +2078,7 @@ void CourseView::eraseItem(const ItemID& item_id)
         {
             u32 i = item_id.getIndex();
 
-            std::vector<MapActorData>& data_vec = mpCourseDataFile->getMapActorData();
+            std::vector<MapActorData>& data_vec = getCourseDataFile().getMapActorData();
             RIO_ASSERT(data_vec.size() == mMapActorItemPtr.size());
 
             mMapActorItemPtr.erase(mMapActorItemPtr.begin() + i);
@@ -2106,7 +2093,7 @@ void CourseView::eraseItem(const ItemID& item_id)
         {
             u32 i = item_id.getIndex();
 
-            std::vector<NextGoto>& data_vec = mpCourseDataFile->getNextGoto();
+            std::vector<NextGoto>& data_vec = getCourseDataFile().getNextGoto();
             RIO_ASSERT(data_vec.size() == mNextGotoItem.size());
 
             mNextGotoItem.erase(mNextGotoItem.begin() + i);
@@ -2121,7 +2108,7 @@ void CourseView::eraseItem(const ItemID& item_id)
         {
             u32 i = item_id.getIndex();
 
-            std::vector<Location>& data_vec = mpCourseDataFile->getLocation();
+            std::vector<Location>& data_vec = getCourseDataFile().getLocation();
             RIO_ASSERT(data_vec.size() == mLocationItem.size());
 
             mLocationItem.erase(mLocationItem.begin() + i);
@@ -2150,28 +2137,28 @@ void CourseView::deleteSelection()
         case ITEM_TYPE_BG_UNIT_OBJ:
             context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
                 std::make_shared<BgCourseData>(
-                    mpCourseDataFile->getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
+                    getCourseDataFile().getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
                 )
             ));
             break;
         case ITEM_TYPE_MAP_ACTOR:
             context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
                 std::make_shared<MapActorData>(
-                    mpCourseDataFile->getMapActorData()[item_id.getIndex()]
+                    getCourseDataFile().getMapActorData()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_NEXT_GOTO:
             context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
                 std::make_shared<NextGoto>(
-                    mpCourseDataFile->getNextGoto()[item_id.getIndex()]
+                    getCourseDataFile().getNextGoto()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_LOCATION:
             context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
                 std::make_shared<Location>(
-                    mpCourseDataFile->getLocation()[item_id.getIndex()]
+                    getCourseDataFile().getLocation()[item_id.getIndex()]
                 )
             ));
             break;
@@ -2205,7 +2192,7 @@ void CourseView::copySelection()
         case ITEM_TYPE_BG_UNIT_OBJ:
             context->items.emplace_back(ITEM_TYPE_BG_UNIT_OBJ, std::static_pointer_cast<const void>(
                 std::make_shared<BgCourseData>(
-                    mpCourseDataFile->getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
+                    getCourseDataFile().getBgData(item_id.getIndex() >> 22)[item_id.getIndex() & 0x003FFFFF]
                 )
             ), std::static_pointer_cast<const void>(
                 std::make_shared<u8>(item_id.getIndex() >> 22)
@@ -2214,21 +2201,21 @@ void CourseView::copySelection()
         case ITEM_TYPE_MAP_ACTOR:
             context->items.emplace_back(ITEM_TYPE_MAP_ACTOR, std::static_pointer_cast<const void>(
                 std::make_shared<MapActorData>(
-                    mpCourseDataFile->getMapActorData()[item_id.getIndex()]
+                    getCourseDataFile().getMapActorData()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_NEXT_GOTO:
             context->items.emplace_back(ITEM_TYPE_NEXT_GOTO, std::static_pointer_cast<const void>(
                 std::make_shared<NextGoto>(
-                    mpCourseDataFile->getNextGoto()[item_id.getIndex()]
+                    getCourseDataFile().getNextGoto()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_LOCATION:
             context->items.emplace_back(ITEM_TYPE_LOCATION, std::static_pointer_cast<const void>(
                 std::make_shared<Location>(
-                    mpCourseDataFile->getLocation()[item_id.getIndex()]
+                    getCourseDataFile().getLocation()[item_id.getIndex()]
                 )
             ));
             break;
@@ -2374,13 +2361,13 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
     render_state.setBlendEnable(false);
     render_state.apply();
 
-    const CourseDataFile* p_cd_file = mCourseView.mpCourseDataFile;
-    if (p_cd_file != nullptr)
+    bool initialized = mCourseView.isInitialized();
+    if (initialized)
     {
         if (mCourseView.mActorShown)
         {
             std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
-            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
+            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.getCourseDataFile().getMapActorData();
 
             for (u32 i = 0; i < map_actor_item_vec.size(); i++)
                 if (map_actor_data_vec[i].layer != LAYER_1)
@@ -2402,7 +2389,7 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
 
     mCourseView.bindRenderBuffer_(false);
 
-    if (p_cd_file != nullptr)
+    if (initialized)
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawOpa();
 }
@@ -2415,10 +2402,10 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
     render_state.setBlendEnable(TARGET_TYPE_ITEM_ID, false);
     render_state.apply();
 
-    const CourseDataFile* p_cd_file = mCourseView.mpCourseDataFile;
-    if (p_cd_file != nullptr)
+    bool initialized = mCourseView.isInitialized();
+    if (initialized)
     {
-        const CourseDataFile& cd_file = *p_cd_file;
+        const CourseDataFile& cd_file = mCourseView.getCourseDataFile();
 
         BgRenderer& bg_renderer = *(BgRenderer::instance());
         const bool* layer_shown = mCourseView.mLayerShown;
@@ -2435,7 +2422,7 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         if (mCourseView.mActorShown)
         {
             std::vector< std::unique_ptr<MapActorItem> >& map_actor_item_vec = mCourseView.mMapActorItemPtr;
-            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.mpCourseDataFile->getMapActorData();
+            const std::vector<MapActorData>& map_actor_data_vec = mCourseView.getCourseDataFile().getMapActorData();
 
             for (u32 i = 0; i < map_actor_item_vec.size(); i++)
                 if (map_actor_data_vec[i].layer != LAYER_1)
@@ -2465,7 +2452,7 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
 
     mCourseView.bindRenderBuffer_(false);
 
-    if (p_cd_file != nullptr)
+    if (initialized)
         for (AreaItem& item : mCourseView.mAreaItem)
             item.drawXlu();
 

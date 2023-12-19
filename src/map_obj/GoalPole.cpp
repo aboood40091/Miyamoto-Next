@@ -241,7 +241,7 @@ void GoalPole::scheduleDraw()
     if (drawBox())
         return;
 
-    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     Renderer::instance()->drawModel(*mpBaseModel);
     Renderer::instance()->drawModel(*mpGoalFlagModel);

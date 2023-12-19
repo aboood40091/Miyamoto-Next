@@ -20,7 +20,7 @@ LocationItem::LocationItem(const Location& location, u32 index)
 
 void LocationItem::move(s16 dx, s16 dy, bool commit)
 {
-    Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+    Location& location = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 
     location.offset.x = mBasePosition.x + dx;
     location.offset.y = mBasePosition.y + dy;
@@ -33,7 +33,7 @@ void LocationItem::move(s16 dx, s16 dy, bool commit)
 
 void LocationItem::drawOpa()
 {
-    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+    const Location& location = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(location.offset.x), -f32(location.offset.y + location.size.y), getZPos_() + 10 };
     rio::Vector2f size { f32(location.size.x), f32(location.size.y) };
@@ -48,7 +48,7 @@ void LocationItem::drawOpa()
 
 void LocationItem::drawXlu()
 {
-    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+    const Location& location = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(location.offset.x), -f32(location.offset.y + location.size.y), getZPos_() };
     rio::Vector2f size { f32(location.size.x), f32(location.size.y) };
@@ -64,12 +64,12 @@ void LocationItem::drawXlu()
 void LocationItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+        mSelectionData = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 }
 
 void LocationItem::drawSelectionUI()
 {
-    const Location& location = CourseView::instance()->getCourseDataFile()->getLocation()[mItemID.getIndex()];
+    const Location& location = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 
     ImGui::Text("Location");
     ImGui::Separator();

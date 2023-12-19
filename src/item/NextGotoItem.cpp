@@ -20,7 +20,7 @@ NextGotoItem::NextGotoItem(const NextGoto& next_goto, u32 index)
 
 void NextGotoItem::move(s16 dx, s16 dy, bool commit)
 {
-    NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+    NextGoto& next_goto = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 
     next_goto.offset.x = mBasePosition.x + dx;
     next_goto.offset.y = mBasePosition.y + dy;
@@ -33,7 +33,7 @@ void NextGotoItem::move(s16 dx, s16 dy, bool commit)
 
 void NextGotoItem::drawOpa()
 {
-    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8), getZPos_() + 10 };
     rio::Vector2f size { 16.0f, 16.0f };
@@ -49,7 +49,7 @@ void NextGotoItem::drawOpa()
 
 void NextGotoItem::drawXlu()
 {
-    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8), getZPos_() };
     rio::Vector2f size { 16.0f, 16.0f };
@@ -66,12 +66,12 @@ void NextGotoItem::drawXlu()
 void NextGotoItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+        mSelectionData = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 }
 
 void NextGotoItem::drawSelectionUI()
 {
-    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile()->getNextGoto()[mItemID.getIndex()];
+    const NextGoto& next_goto = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 
     ImGui::Text("NextGoto");
     ImGui::Separator();

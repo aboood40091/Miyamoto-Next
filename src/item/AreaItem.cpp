@@ -23,7 +23,7 @@ AreaItem::AreaItem(u32 index)
 
 void AreaItem::drawOpa()
 {
-    const AreaData& area_data = CourseView::instance()->getCourseDataFile()->getAreaData()[mIndex];
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mIndex];
 
     rio::Vector3f offs { f32(area_data.offset.x), -f32(area_data.offset.y + area_data.size.y), getZPos_() + 10 };
     rio::Vector2f size { f32(area_data.size.x), f32(area_data.size.y) };
@@ -36,7 +36,7 @@ void AreaItem::drawOpa()
 
 void AreaItem::drawXlu()
 {
-    const AreaData& area_data = CourseView::instance()->getCourseDataFile()->getAreaData()[mIndex];
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mIndex];
 
     if (!(area_data.mask & 0x20))
         return;

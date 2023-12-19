@@ -18,7 +18,7 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
     dx /= 16;
     dy /= 16;
 
-    BgCourseData& data = CourseView::instance()->getCourseDataFile()->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+    BgCourseData& data = CourseView::instance()->getCourseDataFile().getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 
     if (dx == 0 && dy == 0)
     {
@@ -43,15 +43,14 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
 void BgUnitItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = CourseView::instance()->getCourseDataFile()->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+        mSelectionData = CourseView::instance()->getCourseDataFile().getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 }
 
 void BgUnitItem::drawSelectionUI()
 {
-    const CourseDataFile* p_cd_file = CourseView::instance()->getCourseDataFile();
-    RIO_ASSERT(p_cd_file != nullptr);
+    const CourseDataFile& cd_file = CourseView::instance()->getCourseDataFile();
 
-    const BgCourseData& data = p_cd_file->getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+    const BgCourseData& data = cd_file.getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 
     ImGui::Text("Bg Unit Object");
     ImGui::Separator();
@@ -66,7 +65,7 @@ void BgUnitItem::drawSelectionUI()
 
      if (type_modified)
     {
-        const BgUnitFile* file = Bg::instance()->getUnitFile(p_cd_file->getEnvironment(env));
+        const BgUnitFile* file = Bg::instance()->getUnitFile(cd_file.getEnvironment(env));
         if (file && idx < file->getObjCount())
             mSelectionData.type = (env << 12) | idx;
     }

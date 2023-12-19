@@ -21,7 +21,7 @@ MapActorItem::MapActorItem(const MapActorData& map_actor_data, u32 index)
 
 void MapActorItem::move(s16 dx, s16 dy, bool commit)
 {
-    MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     map_actor_data.offset.x = mBasePosition.x + dx;
     map_actor_data.offset.y = mBasePosition.y + dy;
@@ -43,7 +43,7 @@ void MapActorItem::drawOpa(const rio::lyr::DrawInfo& draw_info)
     if (!drawBox())
         return;
 
-    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8), getDefaultZPos(map_actor_data.layer) + 10 };
     rio::Vector2f size { 16.0f, 16.0f };
@@ -62,7 +62,7 @@ void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
     if (!drawBox())
         return;
 
-    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     rio::Vector3f offs { f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8), getDefaultZPos(map_actor_data.layer) };
     rio::Vector2f size { 16.0f, 16.0f };
@@ -79,12 +79,12 @@ void MapActorItem::drawXlu(const rio::lyr::DrawInfo& draw_info)
 void MapActorItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+        mSelectionData = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 }
 
 void MapActorItem::drawSelectionUI()
 {
-    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile()->getMapActorData()[mItemID.getIndex()];
+    const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
     const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.id);
     if (name.empty())
