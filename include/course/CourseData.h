@@ -26,26 +26,16 @@ public:
     bool loadFromPack(const std::string& path);
     std::span<u8> save(const std::string& level_name) const;
 
-    CourseDataFile* getFile(u32 index)
+    CourseDataFile& getCourseDataFile(u32 index)
     {
         RIO_ASSERT(index < CD_FILE_MAX_NUM);
-
-        CourseDataFile& cd_file = mFile[index];
-        if (cd_file.isValid())
-            return &cd_file;
-
-        return nullptr;
+        return mFile[index];
     }
 
-    const CourseDataFile* getFile(u32 index) const
+    const CourseDataFile& getCourseDataFile(u32 index) const
     {
         RIO_ASSERT(index < CD_FILE_MAX_NUM);
-
-        const CourseDataFile& cd_file = mFile[index];
-        if (cd_file.isValid())
-            return &cd_file;
-
-        return nullptr;
+        return mFile[index];
     }
 
 private:

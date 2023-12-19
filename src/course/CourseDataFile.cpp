@@ -16,6 +16,8 @@ inline void CD_FILE_COPY_32_BE(void* dst, const void* src)
 
 CourseDataFile::CourseDataFile()
     : mID(-1)
+    , mEnvironment{ 0 }
+    , mOptions{ 0 }
 {
 }
 

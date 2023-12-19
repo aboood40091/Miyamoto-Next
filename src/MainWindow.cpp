@@ -349,8 +349,8 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     mEnvSelectedObj = u16(-1);
 
-    CourseDataFile* p_cd_file = CourseData::instance()->getFile(id);
-    if (!p_cd_file)
+    CourseDataFile& cd_file = CourseData::instance()->getCourseDataFile(id);
+    if (!cd_file.isValid())
     {
         mCurrentFile = -1;
         mpCourseView->reset();
@@ -359,10 +359,10 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
 
     mCurrentFile = id;
 
-    BgTexMgr::instance()->initialize(*p_cd_file, getBgPrepareLayer());
+    BgTexMgr::instance()->initialize(cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(p_cd_file, Globals::useRealZoom());
+    mpCourseView->initialize(&cd_file, Globals::useRealZoom());
 }
 
 void MainWindow::processMouseInput_()
@@ -424,7 +424,7 @@ void MainWindow::processKeyboardInput_()
         {
             s32 prev_file = mCurrentFile;
 
-            while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getFile(mCurrentFile))
+            while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getCourseDataFile(mCurrentFile).isValid())
                 continue;
 
             if (mCurrentFile != prev_file)
