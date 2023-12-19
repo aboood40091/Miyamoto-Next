@@ -94,12 +94,15 @@ bool CourseData::loadFromPack(const std::string& path)
     */
 
     SharcArchiveRes archive;
+    bool inner_archive = false;
 
     if (pack_arc.getFile("course/course1.bin") != nullptr)
         archive = pack_arc;
 
     else
     {
+        inner_archive = true;
+
         std::string level_name = "";
 
         void* level_dat = nullptr;
@@ -145,8 +148,6 @@ bool CourseData::loadFromPack(const std::string& path)
         }
     }
 
-    Bg::instance()->clear();
-
     for (s32 i = 0; i < CD_FILE_MAX_NUM; i++)
     {
         sCourseDataFileName  [COURSE_DATA_FILE_ID_POS] = '1' + i;
@@ -164,10 +165,32 @@ bool CourseData::loadFromPack(const std::string& path)
             archive.getFile(sCourseDataFileL2Name)
         );
 
-        if (!cd_file.isValid())
-            continue;
+        if (!inner_archive)
+        {
+            read_files.emplace(sCourseDataFileName);
+            read_files.emplace(sCourseDataFileL0Name);
+            read_files.emplace(sCourseDataFileL1Name);
+            read_files.emplace(sCourseDataFileL2Name);
+        }
 
-        RIO_LOG("Has area %d\n", i + 1);
+        if (i == 0)
+        {
+            if (!cd_file.isValid())
+            {
+                RIO_LOG("File 0 must be valid!\n");
+                RIO_ASSERT(false);
+                return false;
+            }
+
+            Bg::instance()->clear();
+        }
+        else
+        {
+            if (!cd_file.isValid())
+                continue;
+        }
+
+        RIO_LOG("Has file %d\n", i);
 
         for (s32 j = 0; j < CD_FILE_ENV_MAX_NUM; j++)
         {
