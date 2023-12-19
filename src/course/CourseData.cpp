@@ -70,7 +70,7 @@ bool CourseData::loadFromPack(const std::string& path)
     arg.path = /* std::string("native://") + */ path;
     arg.alignment = 0x2000;
 
-    u8* pack_arc_dat = SZSDecompressor::tryDecomp(arg);
+    u8* pack_arc_dat = SZSDecompressor::tryDecomp(arg, false);
     if (!pack_arc_dat)
         return false;
 
