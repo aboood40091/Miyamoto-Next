@@ -92,6 +92,23 @@ bool Bg::loadUnit(const SharcArchiveRes& pack_arc, const std::string& name)
     return true;
 }
 
+bool Bg::loadUnit(void* file, u32 filesize, const std::string& name)
+{
+    if (name.empty() ||     // Case 1: Empty slot
+        getUnitFile(name))  // Case 2: Slot already loaded
+        return true;
+
+    BgUnitFile* p_unit_file = new BgUnitFile(name);
+    if (!p_unit_file->load({ (u8*)file, filesize }))
+    {
+        delete p_unit_file;
+        return false;
+    }
+
+    mUnitFileMap.try_emplace(name, p_unit_file);
+    return true;
+}
+
 void Bg::clear()
 {
     for (auto it : mUnitFileMap)

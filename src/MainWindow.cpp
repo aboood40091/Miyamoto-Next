@@ -257,7 +257,8 @@ void MainWindow::prepare_()
     ActionMgr::instance()->discard(false);
 
     const std::string& level_path = Globals::getContentPath() + "/Common/course_res_pack/" + level_fname;
-    CourseData::instance()->loadFromPack(level_path);
+    if (!CourseData::instance()->loadFromPack(level_path))
+        CourseData::instance()->createNew();
     setCurrentCourseDataFile(0);
 }
 

@@ -23,6 +23,17 @@ CourseDataFile::CourseDataFile()
 
 CourseDataFile::~CourseDataFile() = default;
 
+void CourseDataFile::createNew(u32 id)
+{
+    RIO_ASSERT(id < CD_FILE_MAX_NUM);
+
+    // Clear it
+    clear();
+
+    mID = id;
+    rio::MemUtil::copy(mEnvironment.pa_slot_name[0], "Pa0_jyotyu", 10 + 1); // 10 == len("Pa0_jyotyu")
+}
+
 void CourseDataFile::load(
     u32 id,
     const void* file,

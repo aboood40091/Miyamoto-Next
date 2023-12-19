@@ -23,6 +23,7 @@ private:
     CourseData& operator=(const CourseData&);
 
 public:
+    void createNew();
     bool loadFromPack(const std::string& path);
     std::span<u8> save(const std::string& level_name) const;
 

@@ -64,6 +64,26 @@ CourseData::~CourseData()
     Bg::destroySingleton();
 }
 
+void CourseData::createNew()
+{
+    Bg::instance()->clear();
+    clearResData_();
+
+    mFile[0].createNew(0);
+    for (s32 i = 1; i < CD_FILE_MAX_NUM; i++)
+        mFile[i].clear();
+
+    rio::FileDevice::LoadArg arg;
+    arg.path = "unit/Pa0_jyotyu.szs";
+    arg.alignment = 0x2000;
+
+    u8* arc_dat = SZSDecompressor::tryDecomp(arg);
+    RIO_ASSERT(arc_dat);
+
+    [[maybe_unused]] bool success = Bg::instance()->loadUnit(arc_dat, arg.read_size, "Pa0_jyotyu");
+    RIO_ASSERT(success);
+}
+
 bool CourseData::loadFromPack(const std::string& path)
 {
     rio::FileDevice::LoadArg arg;

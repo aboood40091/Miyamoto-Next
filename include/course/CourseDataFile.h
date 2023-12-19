@@ -308,6 +308,8 @@ public:
     CourseDataFile();
     ~CourseDataFile();
 
+    void createNew(u32 id);
+
     void load(
         u32 id,
         const void* file,

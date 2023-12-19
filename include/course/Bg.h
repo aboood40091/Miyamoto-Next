@@ -44,6 +44,7 @@ private:
 
 public:
     bool loadUnit(const SharcArchiveRes& pack_arc, const std::string& name);
+    bool loadUnit(void* file, u32 filesize, const std::string& name);
     void clear();
 
     const BgUnitFile* getUnitFile(const std::string& name) const
