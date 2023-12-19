@@ -465,7 +465,7 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 }
 
-void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
+void CourseView::uninitialize()
 {
     onCursorRelease_L_();
     onCursorRelease_R_();
@@ -491,11 +491,17 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
     mLocationItem.clear();
     mAreaItem.clear();
 
-    RIO_ASSERT(cd_file.isValid());
-    mpCourseDataFile = &cd_file;
+    mpCourseDataFile = nullptr;
     mpDVControlArea = nullptr;
 
     mCursorAction = CURSOR_ACTION_NONE;
+}
+
+void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
+{
+    uninitialize();
+    RIO_ASSERT(cd_file.isValid());
+    mpCourseDataFile = &cd_file;
 
     setZoomUnitSize(32);
     mRealBgZoom = mBgZoom;

@@ -25,7 +25,7 @@ private:
 public:
     void createNew();
     bool loadFromPack(const std::string& path);
-    std::span<u8> save(const std::string& level_name) const;
+    std::span<u8> save() const;
 
     CourseDataFile& getCourseDataFile(u32 index)
     {

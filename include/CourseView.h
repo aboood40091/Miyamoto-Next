@@ -225,6 +225,7 @@ public:
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;
 
     void initialize(CourseDataFile& cd_file, bool real_zoom);
+    void uninitialize();
 
     bool isInitialized() const
     {

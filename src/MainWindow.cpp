@@ -17,6 +17,7 @@
 #include <graphics/Renderer.h>
 #include <resource/ResMgr.h>
 #include <graphics/ShaderHolder.h>
+#include <resource/SZSCompressor.h>
 #include <resource/SZSDecompressor.h>
 #include <ui/ImGuiUtil.h>
 
@@ -36,6 +37,13 @@
 
 #if RIO_IS_WIN
 #include <graphics/win/ShaderUtil.h>
+
+#include <misc/win/rio_Windows.h>
+#include <commdlg.h>
+
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 #endif // RIO_IS_WIN
 
 #include <rio.h>
@@ -240,6 +248,9 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Initialized Renderer\n");
 
+    CoinOrigin::createSingleton();
+    CoinOrigin::instance()->initialize();
+
     mCourseViewSize.x = width;
     mCourseViewSize.y = height;
 
@@ -251,23 +262,20 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created CourseView\n");
 
-    CoinOrigin::createSingleton();
-    CoinOrigin::instance()->initialize();
-
     ActionMgr::instance()->discard(false);
 
     const std::string& level_path = Globals::getContentPath() + "/Common/course_res_pack/" + level_fname;
     if (!CourseData::instance()->loadFromPack(level_path))
         CourseData::instance()->createNew();
-    setCurrentCourseDataFile(0);
+    setCurrentCourseDataFile_(0);
 }
 
 void MainWindow::exit_()
 {
-    CoinOrigin::destroySingleton();
-
     mpCourseView = nullptr;
     CourseView::destroySingleton();
+
+    CoinOrigin::destroySingleton();
 
     Renderer::destroySingleton();
 
@@ -344,7 +352,7 @@ void MainWindow::exit_()
 #endif // RIO_IS_WIN
 }
 
-void MainWindow::setCurrentCourseDataFile(u32 id)
+void MainWindow::setCurrentCourseDataFile_(u32 id)
 {
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
 
@@ -359,6 +367,103 @@ void MainWindow::setCurrentCourseDataFile(u32 id)
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
     mpCourseView->initialize(cd_file, Globals::useRealZoom());
+}
+
+void MainWindow::courseNew()
+{
+    ActionMgr::instance()->discard(false);
+
+    CourseData::instance()->createNew();
+    setCurrentCourseDataFile_(0);
+}
+
+void MainWindow::courseOpen()
+{
+#if RIO_IS_WIN
+    ActionMgr::instance()->discard(false);
+
+    const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
+                         "Compressed course pack (*.szs)\0*.szs\0"
+                         "Uncompressed course pack (*.sarc)\0*.sarc\0";
+
+    OPENFILENAMEA ofn;
+    CHAR szFile[260] = { 0 };
+    CHAR currentDir[256] = { 0 };
+    ZeroMemory(&ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = glfwGetWin32Window(rio::Window::instance()->getNativeWindow().getGLFWwindow());
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    if (GetCurrentDirectoryA(256, currentDir))
+        ofn.lpstrInitialDir = currentDir;
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+    if (!GetOpenFileNameA(&ofn))
+        return;
+
+    RIO_LOG("Chose file: %s\n", ofn.lpstrFile);
+    std::string level_path = "native://";
+    level_path += ofn.lpstrFile;
+
+    if (!CourseData::instance()->loadFromPack(level_path))
+        return;
+
+    setCurrentCourseDataFile_(0);
+#endif // RIO_IS_WIN
+}
+
+void MainWindow::courseSaveAs()
+{
+#if RIO_IS_WIN
+    const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
+                         "Compressed course pack (*.szs)\0*.szs\0"
+                         "Uncompressed course pack (*.sarc)\0*.sarc\0";
+
+    OPENFILENAMEA ofn;
+    CHAR szFile[260] = { 0 };
+    CHAR currentDir[256] = { 0 };
+    ZeroMemory(&ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = glfwGetWin32Window(rio::Window::instance()->getNativeWindow().getGLFWwindow());
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    if (GetCurrentDirectoryA(256, currentDir))
+        ofn.lpstrInitialDir = currentDir;
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+
+    // Sets the default extension by extracting it from the filter
+    ofn.lpstrDefExt = strchr(filter, '\0') + 1;
+
+    if (!GetSaveFileNameA(&ofn))
+        return;
+
+    RIO_LOG("Save as file: %s\n", ofn.lpstrFile);
+    std::string level_path = "native://";
+    level_path += ofn.lpstrFile;
+
+    bool compress = level_path.ends_with(".szs");
+
+    std::span<u8> out = CourseData::instance()->save();
+    RIO_ASSERT(out.data() && out.size());
+
+    if (compress)
+    {
+        const std::span<u8>& out_szs = SZSCompressor::compress(out, SZSCompressor::LEVEL_DEFAULT);
+        RIO_ASSERT(out_szs.data() && out_szs.size());
+        rio::MemUtil::free(out.data());
+        out = out_szs;
+    }
+
+    rio::FileHandle handle;
+    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, level_path, rio::FileDevice::FILE_OPEN_FLAG_WRITE))
+        handle.tryWrite(nullptr, out.data(), out.size());
+
+    rio::MemUtil::free(out.data());
+#endif // RIO_IS_WIN
 }
 
 void MainWindow::processMouseInput_()
@@ -424,7 +529,7 @@ void MainWindow::processKeyboardInput_()
         if (mCurrentFile != prev_file)
         {
             ActionMgr::instance()->discard(true);
-            setCurrentCourseDataFile(mCurrentFile);
+            setCurrentCourseDataFile_(mCurrentFile);
         }
     }
 }
@@ -1110,6 +1215,20 @@ void MainWindow::drawMainMenuBarUI_()
 {
     if (ImGui::BeginMainMenuBar())
     {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("New", "Ctrl+N"))
+                courseNew();
+
+            if (ImGui::MenuItem("Open...", "Ctrl+O"))
+                courseOpen();
+
+            if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                courseSaveAs();
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Edit"))
         {
             if (ImGui::MenuItem("Undo", "Ctrl+Z", false, ActionMgr::instance()->canUndo()))

@@ -1,3 +1,4 @@
+#include <CourseView.h>
 #include <course/Bg.h>
 #include <course/BgUnitFile.h>
 #include <course/CourseData.h>
@@ -273,13 +274,12 @@ bool CourseData::loadFromPack(const std::string& path)
     return true;
 }
 
-std::span<u8> CourseData::save(const std::string& level_name) const
+std::span<u8> CourseData::save() const
 {
     SharcWriter<0x65> pack_writer;
     for (const auto& file : mResData)
         pack_writer.addFile(file.first, file.second);
 
-    pack_writer.addFile("levelname", { (u8*)level_name.c_str(), level_name.length() });
     for (const auto& file : Bg::instance()->getUnitFileMap())
     {
         [[maybe_unused]] bool success = file.second->save();
@@ -287,7 +287,6 @@ std::span<u8> CourseData::save(const std::string& level_name) const
         pack_writer.addFile(file.first, file.second->getData());
     }
 
-    SharcWriter<0x65> level_arc_writer;
     for (s32 i = 0; i < CD_FILE_MAX_NUM; i++)
     {
         const CourseDataFile& cd_file = mFile[i];
@@ -301,23 +300,20 @@ std::span<u8> CourseData::save(const std::string& level_name) const
 
         const auto& cd_file_data = cd_file.save();
 
-        level_arc_writer.addFile(sCourseDataFileName, cd_file_data[0]);
-        if (cd_file_data[1].data()) level_arc_writer.addFile(sCourseDataFileL0Name, cd_file_data[1]);
-        if (cd_file_data[2].data()) level_arc_writer.addFile(sCourseDataFileL1Name, cd_file_data[2]);
-        if (cd_file_data[3].data()) level_arc_writer.addFile(sCourseDataFileL2Name, cd_file_data[3]);
+        pack_writer.addFile(sCourseDataFileName, cd_file_data[0]);
+        if (cd_file_data[1].data()) pack_writer.addFile(sCourseDataFileL0Name, cd_file_data[1]);
+        if (cd_file_data[2].data()) pack_writer.addFile(sCourseDataFileL1Name, cd_file_data[2]);
+        if (cd_file_data[3].data()) pack_writer.addFile(sCourseDataFileL2Name, cd_file_data[3]);
     }
 
-    const std::span<u8> out_level_archive = level_arc_writer.save();
-    pack_writer.addFile(level_name, out_level_archive);
-
-    const std::span<u8> out_archive = pack_writer.save(true);
-    rio::MemUtil::free(out_level_archive.data());
-
-    return out_archive;
+    return pack_writer.save(true);
 }
 
 void CourseData::clearResData_()
 {
+    if (CourseView::instance())
+        CourseView::instance()->uninitialize();
+
     for (const auto& file : mResData)
     {
         ResMgr::instance()->destroyArchiveRes(file.first);

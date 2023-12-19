@@ -23,7 +23,9 @@ public:
         return static_cast<RenderObjLayer*>(mLayerBgPrepare.ptr);
     }
 
-    void setCurrentCourseDataFile(u32 id);
+    void courseNew();
+    void courseOpen();
+    void courseSaveAs();
 
 private:
     void prepare_() override;
@@ -34,6 +36,8 @@ private:
     void resize_(s32 width, s32 height);
     static void onResizeCallback_(s32 width, s32 height);
 #endif // RIO_IS_WIN
+
+    void setCurrentCourseDataFile_(u32 id);
 
     void processMouseInput_();
     void processKeyboardInput_();
