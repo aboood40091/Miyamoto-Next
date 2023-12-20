@@ -1240,111 +1240,13 @@ void CourseView::onCursorPress_Paint_BgUnitObj_()
     mCursorP1World.x = x;
     mCursorP1World.y = y;
 
-    u16 type;
-    u8 flag;
+    u16 type = mPaintCurrent.bg_unit_obj_type;
+    u8 flag = 0;
 
-    switch (mPaintCurrent.bg_unit_obj_type)
+    if (16 <= type && type <= 39)
     {
-    default:
-        type = mPaintCurrent.bg_unit_obj_type;
-        flag = 0;
-        break;
-    case 16:
+        flag = type - 15;
         type = 28;
-        flag = 1;
-        break;
-    case 17:
-        type = 28;
-        flag = 2;
-        break;
-    case 18:
-        type = 28;
-        flag = 3;
-        break;
-    case 19:
-        type = 28;
-        flag = 4;
-        break;
-    case 20:
-        type = 28;
-        flag = 5;
-        break;
-    case 21:
-        type = 28;
-        flag = 6;
-        break;
-    case 22:
-        type = 28;
-        flag = 7;
-        break;
-    case 23:
-        type = 28;
-        flag = 8;
-        break;
-    case 24:
-        type = 28;
-        flag = 9;
-        break;
-    case 25:
-        type = 28;
-        flag = 10;
-        break;
-    case 26:
-        type = 28;
-        flag = 11;
-        break;
-    case 27:
-        type = 28;
-        flag = 12;
-        break;
-    case 28:
-        type = 28;
-        flag = 13;
-        break;
-    case 29:
-        type = 28;
-        flag = 14;
-        break;
-    case 30:
-        type = 28;
-        flag = 15;
-        break;
-    case 31:
-        type = 28;
-        flag = 16;
-        break;
-    case 32:
-        type = 28;
-        flag = 17;
-        break;
-    case 33:
-        type = 28;
-        flag = 18;
-        break;
-    case 34:
-        type = 28;
-        flag = 19;
-        break;
-    case 35:
-        type = 28;
-        flag = 20;
-        break;
-    case 36:
-        type = 28;
-        flag = 21;
-        break;
-    case 37:
-        type = 28;
-        flag = 22;
-        break;
-    case 38:
-        type = 28;
-        flag = 23;
-        break;
-    case 39:
-        type = 28;
-        flag = 24;
-        break;
     }
 
     pushBackItem_BgUnitObj_({ type, { u16(x), u16(y) }, { 1, 1 }, flag }, mPaintCurrent.layer);
