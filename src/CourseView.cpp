@@ -543,7 +543,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
-            mAreaItem.emplace_back(i);
+            mAreaItem.emplace_back(vec[i], i);
     }
 
     const NextGoto* start_next_goto = nullptr;
@@ -832,6 +832,9 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
         case ITEM_TYPE_LOCATION:
             mLocationItem[item_id.getIndex()].move(dx, dy, commit);
             break;
+        case ITEM_TYPE_AREA:
+            mAreaItem[item_id.getIndex()].move(dx, dy, commit);
+            break;
         }
     }
 
@@ -875,6 +878,9 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         break;
     case ITEM_TYPE_LOCATION:
         getCourseDataFile().getLocation()[item_id.getIndex()] = *static_cast<const Location*>(data);
+        break;
+    case ITEM_TYPE_AREA:
+        getCourseDataFile().getAreaData()[item_id.getIndex()] = *static_cast<const AreaData*>(data);
         break;
     }
 }
@@ -1141,6 +1147,30 @@ void CourseView::popBackItem_Location_()
     RIO_ASSERT(vec.size() == mLocationItem.size());
 }
 
+void CourseView::pushBackItem_Area_(const AreaData& data)
+{
+    std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
+    RIO_ASSERT(vec.size() == mAreaItem.size());
+    u32 i = mAreaItem.size();
+
+    vec.push_back(data);
+    RIO_ASSERT(vec.size() == i + 1);
+
+    mAreaItem.emplace_back(data, i);
+    RIO_ASSERT(mAreaItem.size() == i + 1);
+}
+
+void CourseView::popBackItem_Area_()
+{
+    std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
+    RIO_ASSERT(vec.size() == mAreaItem.size());
+
+    mAreaItem.pop_back();
+    vec.pop_back();
+
+    RIO_ASSERT(vec.size() == mAreaItem.size());
+}
+
 void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
 {
     switch (item_type)
@@ -1158,6 +1188,9 @@ void CourseView::pushBackItem(ItemType item_type, const void* data, const void* 
         break;
     case ITEM_TYPE_LOCATION:
         pushBackItem_Location_(*static_cast<const Location*>(data));
+        break;
+    case ITEM_TYPE_AREA:
+        pushBackItem_Area_(*static_cast<const AreaData*>(data));
         break;
     }
 }
@@ -1200,6 +1233,14 @@ void CourseView::pushBackItemWithTransform(s32 dx, s32 dy, ItemType item_type, c
             pushBackItem_Location_(data_);
         }
         break;
+    case ITEM_TYPE_AREA:
+        {
+            AreaData data_(*static_cast<const AreaData*>(data));
+            data_.offset.x = std::clamp<s32>(data_.offset.x + dx * 16, 0, BG_MAX_X - 1);
+            data_.offset.y = std::clamp<s32>(data_.offset.y + dy * 16, 0, BG_MAX_Y - 1);
+            pushBackItem_Area_(data_);
+        }
+        break;
     }
 }
 
@@ -1220,6 +1261,9 @@ void CourseView::popBackItem(ItemType item_type, const void* extra)
         break;
     case ITEM_TYPE_LOCATION:
         popBackItem_Location_();
+        break;
+    case ITEM_TYPE_AREA:
+        popBackItem_Area_();
         break;
     }
 }
@@ -1611,6 +1655,106 @@ void CourseView::onCursorRelease_Paint_Location_()
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
 }
 
+void CourseView::onCursorPress_Paint_Area_()
+{
+    clearSelection_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = s32( p.x / 8) * 8;
+    s32 y = s32(-p.y / 8) * 8;
+
+    if (x < 0 || x >= BG_MAX_X || y < 0 || y >= BG_MAX_Y)
+    {
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        return;
+    }
+
+    u8 id = 0;
+    while (true)
+    {
+        bool conflict = false;
+
+        for (const AreaData& area : getCourseDataFile().getAreaData())
+        {
+            if (area.id == id)
+            {
+                conflict = true;
+                break;
+            }
+        }
+
+        if (!conflict)
+            break;
+
+        if (id == 0xff) // bruh
+            break;
+
+        id++;
+    }
+
+    mCursorP1World.x = x;
+    mCursorP1World.y = y;
+
+    pushBackItem_Area_({ .offset = { u16(x), u16(y) }, .size = { 8, 8 }, .id = id });
+}
+
+void CourseView::onCursorHold_Paint_Area_()
+{
+    std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
+    AreaData& data = vec[vec.size() - 1];
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, BG_MAX_X);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, BG_MAX_Y);
+
+    u16 x1 = std::min<u16>(x, mCursorP1World.x); if (x1 == BG_MAX_X) x1 = BG_MAX_X - 8;
+    u16 y1 = std::min<u16>(y, mCursorP1World.y); if (y1 == BG_MAX_Y) y1 = BG_MAX_Y - 8;
+
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = x2 - x1 + 8;
+    u32 h = y2 - y1 + 8;
+
+    data.offset.x = x1;
+    data.offset.y = y1;
+    data.size.x = w;
+    data.size.y = h;
+}
+
+void CourseView::onCursorRelease_Paint_Area_()
+{
+    const std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
+    std::shared_ptr<AreaData> p_data = std::make_shared<AreaData>(vec[vec.size() - 1]);
+
+    popBackItem_Area_();
+
+    const rio::BaseVec2f& p = viewToWorldPos(mCursorPos);
+    s32 x = std::clamp<s32>(s32( p.x / 8) * 8, 0, BG_MAX_X);
+    s32 y = std::clamp<s32>(s32(-p.y / 8) * 8, 0, BG_MAX_Y);
+
+    u16 x1 = std::min<u16>(x, mCursorP1World.x); if (x1 == BG_MAX_X) x1 = BG_MAX_X - 8;
+    u16 y1 = std::min<u16>(y, mCursorP1World.y); if (y1 == BG_MAX_Y) y1 = BG_MAX_Y - 8;
+
+    u16 x2 = std::max<u16>(x, mCursorP1World.x);
+    u16 y2 = std::max<u16>(y, mCursorP1World.y);
+
+    u32 w = x2 - x1 + 8;
+    u32 h = y2 - y1 + 8;
+
+    p_data->offset.x = x1;
+    p_data->offset.y = y1;
+    p_data->size.x = w;
+    p_data->size.y = h;
+
+    ActionItemPushBack::Context context;
+    context.items.emplace_back(
+        ITEM_TYPE_AREA,
+        std::static_pointer_cast<const void>(p_data)
+    );
+    ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);
+}
+
 void CourseView::onCursorPress_R_()
 {
     switch (mPaintNext.type)
@@ -1636,6 +1780,10 @@ void CourseView::onCursorPress_R_()
         mPaintCurrent.type = ITEM_TYPE_LOCATION;
         onCursorPress_Paint_Location_();
         break;
+    case ITEM_TYPE_AREA:
+        mPaintCurrent.type = ITEM_TYPE_AREA;
+        onCursorPress_Paint_Area_();
+        break;
     }
 }
 
@@ -1656,6 +1804,9 @@ void CourseView::onCursorHold_R_()
         break;
     case ITEM_TYPE_LOCATION:
         onCursorHold_Paint_Location_();
+        break;
+    case ITEM_TYPE_AREA:
+        onCursorHold_Paint_Area_();
         break;
     }
 }
@@ -1680,6 +1831,10 @@ void CourseView::onCursorRelease_R_()
         break;
     case ITEM_TYPE_LOCATION:
         onCursorRelease_Paint_Location_();
+        mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
+        break;
+    case ITEM_TYPE_AREA:
+        onCursorRelease_Paint_Area_();
         mPaintCurrent.type = ITEM_TYPE_MAX_NUM;
         break;
     }
@@ -2076,6 +2231,22 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
                 mLocationItem[j].setIndex(j);
         }
         break;
+    case ITEM_TYPE_AREA:
+        {
+            u32 i = item_id.getIndex();
+            const AreaData& data_ = *static_cast<const AreaData*>(data);
+
+            std::vector<AreaData>& data_vec = getCourseDataFile().getAreaData();
+            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+
+            data_vec.insert(data_vec.begin() + i, data_);
+            mAreaItem.emplace(mAreaItem.begin() + i, data_, i);
+            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+
+            for (u32 j = i + 1; j < mAreaItem.size(); j++)
+                mAreaItem[j].setIndex(j);
+        }
+        break;
     }
 }
 
@@ -2149,6 +2320,21 @@ void CourseView::eraseItem(const ItemID& item_id)
                 mLocationItem[j].setIndex(j);
         }
         break;
+    case ITEM_TYPE_AREA:
+        {
+            u32 i = item_id.getIndex();
+
+            std::vector<AreaData>& data_vec = getCourseDataFile().getAreaData();
+            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+
+            mAreaItem.erase(mAreaItem.begin() + i);
+            data_vec.erase(data_vec.begin() + i);
+            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+
+            for (u32 j = i; j < mAreaItem.size(); j++)
+                mAreaItem[j].setIndex(j);
+        }
+        break;
     }
 }
 
@@ -2189,6 +2375,13 @@ void CourseView::deleteSelection()
             context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
                 std::make_shared<Location>(
                     getCourseDataFile().getLocation()[item_id.getIndex()]
+                )
+            ));
+            break;
+        case ITEM_TYPE_AREA:
+            context.items.emplace_back(item_id, std::static_pointer_cast<const void>(
+                std::make_shared<AreaData>(
+                    getCourseDataFile().getAreaData()[item_id.getIndex()]
                 )
             ));
             break;
@@ -2249,6 +2442,13 @@ void CourseView::copySelection()
                 )
             ));
             break;
+        case ITEM_TYPE_AREA:
+            context->items.emplace_back(ITEM_TYPE_AREA, std::static_pointer_cast<const void>(
+                std::make_shared<AreaData>(
+                    getCourseDataFile().getAreaData()[item_id.getIndex()]
+                )
+            ));
+            break;
         }
     }
 
@@ -2286,6 +2486,9 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
         break;
     case ITEM_TYPE_LOCATION:
         mLocationItem[item_id.getIndex()].setSelection(is_selected);
+        break;
+    case ITEM_TYPE_AREA:
+        mAreaItem[item_id.getIndex()].setSelection(is_selected);
         break;
     }
 }
@@ -2523,6 +2726,9 @@ void CourseView::drawSelectionUI()
                 break;
             case ITEM_TYPE_LOCATION:
                 mLocationItem[selected_item.getIndex()].drawSelectionUI();
+                break;
+            case ITEM_TYPE_AREA:
+                mAreaItem[selected_item.getIndex()].drawSelectionUI();
                 break;
             }
         }

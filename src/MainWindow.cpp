@@ -7,6 +7,7 @@
 #include <course/CoinOrigin.h>
 #include <course/CourseData.h>
 #include <course/CourseDataFile.h>
+#include <item/AreaItem.h>
 #include <item/BgUnitItem.h>
 #include <item/LocationItem.h>
 #include <item/MapActorItem.h>
@@ -619,6 +620,9 @@ void MainWindow::calc_()
     case ITEM_TYPE_LOCATION:
         mpCourseView->setPaintType_Location();
         break;
+    case ITEM_TYPE_AREA:
+        mpCourseView->setPaintType_Area();
+        break;
     }
 
     mpCourseView->update();
@@ -881,147 +885,31 @@ void MainWindow::drawPaletteUI_()
 
     if (ImGui::Begin("Areas"))
     {
-        ImGui::Button("Add");
-        ImGui::SameLine();
-        ImGui::Button("Remove");
-        ImGui::SameLine();
-        ImGui::Button("Clone");
+        if (ImGui::IsWindowFocused())
+            mPaintType = ITEM_TYPE_AREA;
 
-        if (ImGui::BeginTabBar("AreaTabBar"))
+        static ImGuiTextFilter filter;
+        filter.Draw("##AreaSearch", -1);
+
+        if (ImGui::BeginListBox("##AreaList", ImVec2(-1, -1)))
         {
+            const std::vector<AreaItem>& item_vec = mpCourseView->getAreaItem();
             std::vector<AreaData>& data_vec = mpCourseView->getCourseDataFile().getAreaData();
 
             for (u32 i = 0; i < data_vec.size(); i++)
             {
-                AreaData& area_data = data_vec[i];
-                const std::string& str = std::format("Area {0:d}", area_data.id);
+                const AreaItem& area_item = item_vec[i];
+                const AreaData& area_data = data_vec[i];
 
-                ImGui::PushID(i);
-                if (ImGui::BeginTabItem(str.c_str()))
+                const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", area_data.id, area_data.offset.x, area_data.offset.y);
+
+                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    const u8 single_step = 1;
-
-                    ImGui::InputScalar("ID", ImGuiDataType_U8, &area_data.id, &single_step);
-
-                    ImGui::Separator();
-                    ImGui::DragScalarN("Offset", ImGuiDataType_U16, &area_data.offset, 2);
-                    ImGui::DragScalarN("Size", ImGuiDataType_U16, &area_data.size, 2);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Color OBJ (Unused)", ImGuiDataType_U16, &area_data.color_obj);
-                    ImGui::InputScalar("Color BG (Unused)", ImGuiDataType_U16, &area_data.color_bg);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Scroll ID", ImGuiDataType_U8, &area_data.scroll, &single_step);
-                    if (ImGui::BeginChild((str + " Scrl Preview").c_str(), ImVec2(0, 0), ImGuiChildFlags_FrameStyle | ImGuiChildFlags_AutoResizeY))
-                    {
-                        if (ImGui::CollapsingHeader("Scroll Data (Preview)"))
-                        {
-                            const ScrollData* p_scroll_data = nullptr;
-                            for (const ScrollData& scroll_data : mpCourseView->getCourseDataFile().getScrollData())
-                            {
-                                if (scroll_data.id == area_data.scroll)
-                                {
-                                    p_scroll_data = &scroll_data;
-                                    break;
-                                }
-                            }
-
-                            if (p_scroll_data == nullptr)
-                                ImGui::TextDisabled("Invalid");
-
-                            else
-                            {
-                                ScrollData& scroll_data = *const_cast<ScrollData*>(p_scroll_data);
-                                ImGui::BeginDisabled();
-                                {
-                                  //ImGui::InputScalar("ID", ImGuiDataType_U16, &scroll_data.id);
-                                    ImGui::DragScalarN("Bound", ImGuiDataType_S32, &(scroll_data.bound[0]), 2);
-                                    ImGui::DragScalarN("Bound (Lakitu)", ImGuiDataType_S32, &(scroll_data.bound[1]), 2);
-                                    ImGui::InputScalar("Flags", ImGuiDataType_U16, &scroll_data.flag, nullptr, nullptr, "%04X");
-                                    ImGui::DragScalarN("Multiplayer Bound Adjust", ImGuiDataType_S16, &scroll_data.mp_bound_adjust, 2);
-                                }
-                                ImGui::EndDisabled();
-                            }
-                        }
-                    }
-                    ImGui::EndChild();
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Zoom Type", ImGuiDataType_U8, &area_data.zoom_type);
-                    ImGui::InputScalar("Zoom ID", ImGuiDataType_U8, &area_data.zoom_id);
-                    ImGui::InputScalar("Zoom Change", ImGuiDataType_U8, &area_data.zoom_change);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Mask No", ImGuiDataType_U8, &area_data.mask);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Distant View ID", ImGuiDataType_U8, &area_data.bg2, &single_step);
-                    if (ImGui::BeginChild((str + " DV Preview").c_str(), ImVec2(0, 0), ImGuiChildFlags_FrameStyle | ImGuiChildFlags_AutoResizeY))
-                    {
-                        if (ImGui::CollapsingHeader("Distant View Data (Preview)"))
-                        {
-                            const DistantViewData* p_dv_data = nullptr;
-                            for (const DistantViewData& dv_data : mpCourseView->getCourseDataFile().getDistantViewData())
-                            {
-                                if (dv_data.id == area_data.bg2)
-                                {
-                                    p_dv_data = &dv_data;
-                                    break;
-                                }
-                            }
-
-                            if (p_dv_data == nullptr)
-                                ImGui::TextDisabled("Invalid");
-
-                            else
-                            {
-                                DistantViewData& dv_data = *const_cast<DistantViewData*>(p_dv_data);
-                                ImGui::BeginDisabled();
-                                {
-                                  //ImGui::InputScalar("ID", ImGuiDataType_U16, &dv_data.id);
-                                    ImGui::DragScalarN("Offset (Unused)", ImGuiDataType_S16, &dv_data.offset, 3);
-                                    ImGui::InputText("Name", dv_data.name, CD_FILE_DV_NAME_MAX_LEN + 1);
-                                    ImGui::InputScalar("Parallax Mode (Unused)", ImGuiDataType_U8, &dv_data.parallax_mode);
-                                }
-                                ImGui::EndDisabled();
-                            }
-                        }
-                    }
-                    ImGui::EndChild();
-                    ImGui::InputScalar("Unused 0x13", ImGuiDataType_U8, &area_data.bg3);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Direction", ImGuiDataType_U8, &area_data.direction);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Unknown 0x15", ImGuiDataType_U8, &area_data._15);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Bgm", ImGuiDataType_U8, &area_data.bgm);
-                    ImGui::InputScalar("Bgm Mode", ImGuiDataType_U8, &area_data.bgm_mode);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Unused 0x18", ImGuiDataType_U8, &area_data.dv);
-
-                    ImGui::Separator();
-
-                    ImGui::InputScalar("Flags", ImGuiDataType_U8, &area_data.flag, nullptr, nullptr, "%02X");\
-
-                    ImGui::EndTabItem();
+                    mpCourseView->setCameraCenterWorldPos({ f32(area_data.offset.x + 8), -f32(area_data.offset.y + 8) });
+                    mpCourseView->selectItem(area_item.getItemID());
                 }
-                ImGui::PopID();
             }
-            ImGui::EndTabBar();
+            ImGui::EndListBox();
         }
     }
     ImGui::End();

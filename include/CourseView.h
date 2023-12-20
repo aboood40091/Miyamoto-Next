@@ -303,6 +303,11 @@ public:
         mPaintNext.type = ITEM_TYPE_LOCATION;
     }
 
+    void setPaintType_Area()
+    {
+        mPaintNext.type = ITEM_TYPE_AREA;
+    }
+
     const std::vector< std::unique_ptr<MapActorItem> >& getMapActorItem() const
     {
         return mMapActorItemPtr;
@@ -316,6 +321,11 @@ public:
     const std::vector<NextGotoItem>& getNextGotoItem() const
     {
         return mNextGotoItem;
+    }
+
+    const std::vector<AreaItem>& getAreaItem() const
+    {
+        return mAreaItem;
     }
 
     bool* getLayerVisibility(u8 layer)
@@ -419,6 +429,9 @@ private:
     void pushBackItem_Location_(const Location& data);
     void popBackItem_Location_();
 
+    void pushBackItem_Area_(const AreaData& data);
+    void popBackItem_Area_();
+
     void onCursorPress_Paint_BgUnitObj_();
     void onCursorHold_Paint_BgUnitObj_();
     void onCursorRelease_Paint_BgUnitObj_();
@@ -434,6 +447,10 @@ private:
     void onCursorPress_Paint_Location_();
     void onCursorHold_Paint_Location_();
     void onCursorRelease_Paint_Location_();
+
+    void onCursorPress_Paint_Area_();
+    void onCursorHold_Paint_Area_();
+    void onCursorRelease_Paint_Area_();
 
     void onCursorReleasedCompletely_();
 
