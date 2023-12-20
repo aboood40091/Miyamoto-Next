@@ -1757,6 +1757,11 @@ void CourseView::onCursorReleasedCompletely_()
         {
             static_cast<MainWindow*>(rio::sRootTask)->courseOpen();
         }
+        else if (!(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
+                 ImGui::IsKeyPressed(ImGuiKey_S))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->courseSave();
+        }
         else if ((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
                  ImGui::IsKeyPressed(ImGuiKey_S))
         {

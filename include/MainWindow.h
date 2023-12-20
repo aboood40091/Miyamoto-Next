@@ -25,6 +25,7 @@ public:
 
     void courseNew();
     void courseOpen();
+    void courseSave();
     void courseSaveAs();
 
 private:
@@ -83,6 +84,7 @@ private:
     bool                    mCourseViewFocused;
     bool                    mCourseViewCameraMoved;
     RenderMgr               mRenderMgrBgPrepare;
+    std::string             mCoursePath;
     s32                     mCurrentFile;
     ItemType                mPaintType;
     u16                     mEnvSelectedObj;
