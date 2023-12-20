@@ -68,7 +68,7 @@ const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, const std:
     return &it.first->second.archive_res;
 }
 
-const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, void* archive, bool fatal_errors)
+const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, const void* archive, bool fatal_errors)
 {
     {
         const auto& it = mResMap.find(key);
@@ -81,7 +81,7 @@ const SharcArchiveRes* ResMgr::loadArchiveRes(const std::string& key, void* arch
 
     Resource res;
     res.ref_counter = 1;
-    res.archive = archive;
+    res.archive = const_cast<void*>(archive);
     res.self_alloc = false;
     if (!res.archive_res.prepareArchive(res.archive, fatal_errors))
         return nullptr;

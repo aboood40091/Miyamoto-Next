@@ -25,7 +25,7 @@ private:
 
 public:
     const SharcArchiveRes* loadArchiveRes(const std::string& key, const std::string& archive_path, bool decompress);
-    const SharcArchiveRes* loadArchiveRes(const std::string& key, void* archive, bool fatal_errors);
+    const SharcArchiveRes* loadArchiveRes(const std::string& key, const void* archive, bool fatal_errors);
     void destroyArchiveRes(const std::string& key);
 
     const SharcArchiveRes* getArchiveRes(const std::string& key) const;

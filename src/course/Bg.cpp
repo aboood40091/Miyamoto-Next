@@ -79,10 +79,10 @@ bool Bg::loadUnit(const SharcArchiveRes& pack_arc, const std::string& name)
         return true;
 
     u32 filesize = 0;
-    void* file = pack_arc.getFile(name.c_str(), &filesize);
+    const void* file = pack_arc.getFileConst(name.c_str(), &filesize);
 
     BgUnitFile* p_unit_file = new BgUnitFile(name);
-    if (!p_unit_file->load({ (u8*)file, filesize }))
+    if (!p_unit_file->load({ (const u8*)file, filesize }))
     {
         delete p_unit_file;
         return false;
@@ -92,7 +92,7 @@ bool Bg::loadUnit(const SharcArchiveRes& pack_arc, const std::string& name)
     return true;
 }
 
-bool Bg::loadUnit(void* file, u32 filesize, const std::string& name)
+bool Bg::loadUnit(const void* file, u32 filesize, const std::string& name)
 {
     if (name.empty() ||     // Case 1: Empty slot
         getUnitFile(name))  // Case 2: Slot already loaded

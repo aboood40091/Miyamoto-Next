@@ -117,7 +117,7 @@ bool CourseData::loadFromPack(const std::string& path)
     SharcArchiveRes archive;
     bool inner_archive = false;
 
-    if (pack_arc.getFile("course/course1.bin") != nullptr)
+    if (pack_arc.getFileConst("course/course1.bin") != nullptr)
         archive = pack_arc;
 
     else
@@ -126,21 +126,21 @@ bool CourseData::loadFromPack(const std::string& path)
 
         std::string level_name = "";
 
-        void* level_dat = nullptr;
+        const void* level_dat = nullptr;
 
-        u32     level_name_len = 0;
-        char*   level_name_dat = static_cast<char*>(pack_arc.getFile("levelname", &level_name_len));
+        u32                 level_name_len = 0;
+        const char* const   level_name_dat = static_cast<const char*>(pack_arc.getFileConst("levelname", &level_name_len));
 
         if (level_name_len)
         {
             level_name = std::string(level_name_dat, level_name_len);
-            level_dat = pack_arc.getFile(level_name.c_str());
+            level_dat = pack_arc.getFileConst(level_name.c_str());
         }
 
         if (!level_dat)
         {
             level_name = remove_extension(path_basename(path));
-            level_dat = pack_arc.getFile(level_name.c_str());
+            level_dat = pack_arc.getFileConst(level_name.c_str());
         }
         else
         {
@@ -180,10 +180,10 @@ bool CourseData::loadFromPack(const std::string& path)
 
         cd_file.load(
             i,
-            archive.getFile(sCourseDataFileName),
-            archive.getFile(sCourseDataFileL0Name),
-            archive.getFile(sCourseDataFileL1Name),
-            archive.getFile(sCourseDataFileL2Name)
+            archive.getFileConst(sCourseDataFileName),
+            archive.getFileConst(sCourseDataFileL0Name),
+            archive.getFileConst(sCourseDataFileL1Name),
+            archive.getFileConst(sCourseDataFileL2Name)
         );
 
         if (!inner_archive)
@@ -237,7 +237,7 @@ bool CourseData::loadFromPack(const std::string& path)
             continue;
 
         u32 size = 0;
-        u8* data = static_cast<u8*>(pack_arc.getFile(name.c_str(), &size));
+        const void* const data = pack_arc.getFileConst(name.c_str(), &size);
 
         u8* new_data = static_cast<u8*>(rio::MemUtil::alloc(size, 0x2000));
         rio::MemUtil::copy(new_data, data, size);

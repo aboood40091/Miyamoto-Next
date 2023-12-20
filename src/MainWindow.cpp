@@ -215,7 +215,7 @@ void MainWindow::prepare_()
   //RIO_LOG("MainWindow::prepare_(): mJyotyuActorPack.archive_res.prepareArchive() done\n");
 
     for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
-        ResMgr::instance()->loadArchiveRes(entry.name, mJyotyuActorPack.archive_res.getFile(entry.name), true);
+        ResMgr::instance()->loadArchiveRes(entry.name, mJyotyuActorPack.archive_res.getFileConst(entry.name), true);
 
   //RIO_LOG("Initialized jyotyuActorPack\n");
 
@@ -232,7 +232,7 @@ void MainWindow::prepare_()
   //RIO_LOG("MainWindow::prepare_(): mCobPack.archive_res.prepareArchive() done\n");
 
     for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
-        ResMgr::instance()->loadArchiveRes(entry.name, mCobPack.archive_res.getFile(entry.name), true);
+        ResMgr::instance()->loadArchiveRes(entry.name, mCobPack.archive_res.getFileConst(entry.name), true);
 
   //RIO_LOG("Initialized cobPack\n");
 

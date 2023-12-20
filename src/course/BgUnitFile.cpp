@@ -71,7 +71,7 @@ bool BgUnitFile::load(std::span<const u8> data)
     const std::string chk_name = "BG_chk/d_bgchk_" + mName + ".bin";        // Bg Check (Collision)
 
     u32 chk_filesize = 0;
-    void* const chk = archive.getFile(chk_name.c_str(), &chk_filesize);
+    const void* const chk = archive.getFileConst(chk_name.c_str(), &chk_filesize);
 
     if (!(chk_filesize >= sizeof(u64) * BG_MAX_PER_UNIT_NUM))
     {
@@ -96,8 +96,8 @@ bool BgUnitFile::load(std::span<const u8> data)
     u32 uhd_filesize = 0;
     u32 unt_filesize = 0;
 
-    void* uhd = archive.getFile(uhd_name.c_str(), &uhd_filesize);
-    void* unt = archive.getFile(unt_name.c_str(), &unt_filesize);
+    const void* const uhd = archive.getFileConst(uhd_name.c_str(), &uhd_filesize);
+    const void* const unt = archive.getFileConst(unt_name.c_str(), &unt_filesize);
 
     if (!(uhd && unt))
     {
@@ -134,8 +134,8 @@ bool BgUnitFile::load(std::span<const u8> data)
     u32 tex_filesize = 0;
     u32 nml_filesize = 0;
 
-    void* tex = archive.getFile(tex_name.c_str(), &tex_filesize);
-    void* nml = archive.getFile(nml_name.c_str(), &nml_filesize);
+    const void* const tex = archive.getFileConst(tex_name.c_str(), &tex_filesize);
+    const void* const nml = archive.getFileConst(nml_name.c_str(), &nml_filesize);
 
     switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mpTexture))
     {
@@ -187,7 +187,7 @@ bool BgUnitFile::load(std::span<const u8> data)
     for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
     {
         u32 anm_filesize = 0;
-        void* anm = archive.getFile(cAnimeFilename[i], &anm_filesize);
+        const void* const anm = archive.getFileConst(cAnimeFilename[i], &anm_filesize);
         if (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)anm, anm_filesize }, &(mpAnimeTexture[i])) == Texture2DUtil::GTX_ERROR_OK)
             RIO_LOG("\"%s\": loaded: %s\n", mName.c_str(), cAnimeFilename[i]);
     }
