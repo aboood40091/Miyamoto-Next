@@ -247,29 +247,6 @@ bool CourseData::loadFromPack(const std::string& path)
         ResMgr::instance()->loadArchiveRes(name, new_data, false);
     }
 
-#if 0
-    const std::span<u8> out_archive = save(level_name);
-    const std::span<u8> out_szs = SZSCompressor::compress(out_archive);
-    {
-        rio::FileHandle handle;
-#if RIO_IS_WIN
-        const std::string& save_path = remove_extension(path) + "_test_win.szs";
-#elif RIO_IS_CAFE
-        const std::string& save_path = remove_extension(path) + "_test_cafe.szs";
-#else
-        const std::string& save_path = remove_extension(path) + "_test.szs";
-#endif
-
-        [[maybe_unused]] rio::FileDevice* device = rio::FileDeviceMgr::instance()->tryOpen(&handle, save_path, rio::FileDevice::FILE_OPEN_FLAG_WRITE);
-        RIO_ASSERT(device != nullptr);
-
-        [[maybe_unused]] u32 written_size = handle.write(out_szs.data(), out_szs.size());
-        RIO_ASSERT(written_size == out_szs.size());
-    }
-    rio::MemUtil::free(out_szs.data());
-    rio::MemUtil::free(out_archive.data());
-#endif
-
     rio::MemUtil::free(pack_arc_dat);
     return true;
 }
@@ -280,11 +257,14 @@ std::span<u8> CourseData::save() const
     for (const auto& file : mResData)
         pack_writer.addFile(file.first, file.second);
 
+    std::vector<u8*> to_free;
+    to_free.reserve(Bg::instance()->getUnitFileMap().size() + 4 * CD_FILE_MAX_NUM);
+
     for (const auto& file : Bg::instance()->getUnitFileMap())
     {
-        [[maybe_unused]] bool success = file.second->save();
-        RIO_ASSERT(success);
-        pack_writer.addFile(file.first, file.second->getData());
+        const auto& file_data = file.second->save();
+        RIO_ASSERT(file_data.data() && file_data.size());
+        pack_writer.addFile(file.first, file_data); to_free.push_back(file_data.data());
     }
 
     for (s32 i = 0; i < CD_FILE_MAX_NUM; i++)
@@ -300,13 +280,18 @@ std::span<u8> CourseData::save() const
 
         const auto& cd_file_data = cd_file.save();
 
-        pack_writer.addFile(sCourseDataFileName, cd_file_data[0]);
-        if (cd_file_data[1].data()) pack_writer.addFile(sCourseDataFileL0Name, cd_file_data[1]);
-        if (cd_file_data[2].data()) pack_writer.addFile(sCourseDataFileL1Name, cd_file_data[2]);
-        if (cd_file_data[3].data()) pack_writer.addFile(sCourseDataFileL2Name, cd_file_data[3]);
+        pack_writer.addFile(sCourseDataFileName, cd_file_data[0]); to_free.push_back(cd_file_data[0].data());
+        if (cd_file_data[1].data()) { pack_writer.addFile(sCourseDataFileL0Name, cd_file_data[1]); to_free.push_back(cd_file_data[1].data()); }
+        if (cd_file_data[2].data()) { pack_writer.addFile(sCourseDataFileL1Name, cd_file_data[2]); to_free.push_back(cd_file_data[2].data()); }
+        if (cd_file_data[3].data()) { pack_writer.addFile(sCourseDataFileL2Name, cd_file_data[3]); to_free.push_back(cd_file_data[3].data()); }
     }
 
-    return pack_writer.save(true);
+    const auto& ret = pack_writer.save(true);
+
+    for (u8* ptr : to_free)
+        rio::MemUtil::free(ptr);
+
+    return ret;
 }
 
 void CourseData::clearResData_()

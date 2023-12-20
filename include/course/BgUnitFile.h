@@ -10,6 +10,12 @@
 
 class BgUnitFile
 {
+    struct TextureFile
+    {
+        rio::Texture2D* p_tex = nullptr;
+        std::span<u8>   data;
+    };
+
 public:
     BgUnitFile(const std::string& name);
     ~BgUnitFile();
@@ -17,16 +23,11 @@ public:
     bool load(std::span<const u8> data);
     void unload();
 
-    bool save();
+    std::span<u8> save() const;
 
     const std::string& getName() const
     {
         return mName;
-    }
-
-    std::span<const u8> getData() const
-    {
-        return mData;
     }
 
     u64 getBgCheck(s32 index) const
@@ -48,28 +49,27 @@ public:
 
     const rio::Texture2D* getTexture() const
     {
-        return mpTexture;
+        return mTextureFile.p_tex;
     }
 
     const rio::Texture2D* getNormalTexture() const
     {
-        return mpNormalTexture;
+        return mNormalTextureFile.p_tex;
     }
 
     const rio::Texture2D* getAnimeTexture(AnimeType type) const
     {
-        return mpAnimeTexture[type];
+        return mAnimeTextureFile[type].p_tex;
     }
 
 private:
     std::string             mName;
-    std::span<u8>           mData;
 
     u64                     mBgCheck[BG_MAX_PER_UNIT_NUM];
 
     std::vector<BgUnitObj>  mObj;
 
-    rio::Texture2D*         mpTexture;
-    rio::Texture2D*         mpNormalTexture;
-    rio::Texture2D*         mpAnimeTexture[ANIME_TYPE_MAX];
+    TextureFile             mTextureFile;
+    TextureFile             mNormalTextureFile;
+    TextureFile             mAnimeTextureFile[ANIME_TYPE_MAX];
 };

@@ -7,14 +7,38 @@
 
 #include <cstring>
 
+namespace {
+
+static inline void initializeSpan(std::span<u8>* p_data_span, const void* data, u32 size)
+{
+    *p_data_span = std::span(static_cast<u8*>(rio::MemUtil::alloc(size, 4)), size);
+    rio::MemUtil::copy(p_data_span->data(), data, size);
+}
+
+static inline void destroySpan(std::span<u8>* p_data_span)
+{
+    if (p_data_span->data())
+    {
+        rio::MemUtil::free(p_data_span->data());
+        *p_data_span = std::span<u8>();
+    }
+}
+
+}
+
+static const char* const cAnimeFilename[ANIME_TYPE_MAX] = {
+    "BG_tex/hatena_anime.gtx",
+    "BG_tex/block_anime.gtx",
+    "BG_tex/tuka_coin_anime.gtx",
+    "BG_tex/belt_conveyor_anime.gtx",
+    "BG_tex/hatena_anime_L.gtx",
+    "BG_tex/block_anime_L.gtx"
+};
+
 BgUnitFile::BgUnitFile(const std::string& name)
     : mName(name)
-    , mData()
-    , mpTexture(nullptr)
-    , mpNormalTexture(nullptr)
 {
     RIO_ASSERT(!mName.empty());
-    rio::MemUtil::set(mpAnimeTexture, 0, sizeof(mpAnimeTexture));
 }
 
 BgUnitFile::~BgUnitFile()
@@ -28,16 +52,13 @@ void BgUnitFile::unload()
 
     mObj.clear();
 
-    Texture2DUtil::destroy(&mpTexture);
-    Texture2DUtil::destroy(&mpNormalTexture);
+    Texture2DUtil::destroy(&mTextureFile.p_tex);        destroySpan(&mTextureFile.data);
+    Texture2DUtil::destroy(&mNormalTextureFile.p_tex);  destroySpan(&mNormalTextureFile.data);
 
     for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
-        Texture2DUtil::destroy(&(mpAnimeTexture[i]));
-
-    if (mData.data())
     {
-        rio::MemUtil::free(mData.data());
-        mData = std::span<u8>();
+        Texture2DUtil::destroy(&mAnimeTextureFile[i].p_tex);
+        destroySpan(&mAnimeTextureFile[i].data);
     }
 }
 
@@ -53,12 +74,6 @@ bool BgUnitFile::load(std::span<const u8> data)
         RIO_LOG("\"%s\" does not exist or is empty.\n", mName.c_str());
         return false;
     }
-
-    u8* file_new = static_cast<u8*>(rio::MemUtil::alloc(filesize, 4));
-    RIO_ASSERT(file_new);
-    rio::MemUtil::copy(file_new, file, filesize);
-
-    mData = std::span(file_new, filesize);
 
     SharcArchiveRes archive;
     if (!archive.prepareArchive(file))
@@ -137,9 +152,10 @@ bool BgUnitFile::load(std::span<const u8> data)
     const void* const tex = archive.getFileConst(tex_name.c_str(), &tex_filesize);
     const void* const nml = archive.getFileConst(nml_name.c_str(), &nml_filesize);
 
-    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mpTexture))
+    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)tex, tex_filesize }, &mTextureFile.p_tex))
     {
     case Texture2DUtil::GTX_ERROR_OK:
+        initializeSpan(&mTextureFile.data, tex, tex_filesize);
         break;
     case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
     case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
@@ -156,9 +172,10 @@ bool BgUnitFile::load(std::span<const u8> data)
         return false;
     }
 
-    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)nml, nml_filesize }, &mpNormalTexture))
+    switch (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)nml, nml_filesize }, &mNormalTextureFile.p_tex))
     {
     case Texture2DUtil::GTX_ERROR_OK:
+        initializeSpan(&mNormalTextureFile.data, nml, nml_filesize);
         break;
     case Texture2DUtil::GTX_ERROR_SRC_TOO_SHORT:
     case Texture2DUtil::GTX_ERROR_SRC_EMPTY:
@@ -175,30 +192,24 @@ bool BgUnitFile::load(std::span<const u8> data)
         return false;
     }
 
-    static const char* const cAnimeFilename[ANIME_TYPE_MAX] = {
-        "BG_tex/hatena_anime.gtx",
-        "BG_tex/block_anime.gtx",
-        "BG_tex/tuka_coin_anime.gtx",
-        "BG_tex/belt_conveyor_anime.gtx",
-        "BG_tex/hatena_anime_L.gtx",
-        "BG_tex/block_anime_L.gtx"
-    };
-
     for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
     {
         u32 anm_filesize = 0;
         const void* const anm = archive.getFileConst(cAnimeFilename[i], &anm_filesize);
-        if (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)anm, anm_filesize }, &(mpAnimeTexture[i])) == Texture2DUtil::GTX_ERROR_OK)
+        if (Texture2DUtil::createFromGTX(std::span<const u8> { (const u8*)anm, anm_filesize }, &mAnimeTextureFile[i].p_tex) == Texture2DUtil::GTX_ERROR_OK)
+        {
             RIO_LOG("\"%s\": loaded: %s\n", mName.c_str(), cAnimeFilename[i]);
+            initializeSpan(&mAnimeTextureFile[i].data, anm, anm_filesize);
+        }
     }
 
     return true;
 }
 
-bool BgUnitFile::save()
+std::span<u8> BgUnitFile::save() const
 {
-    if (!mpTexture)
-        return false;
+    if (!mTextureFile.p_tex)
+        return std::span<u8>();
 
     SharcWriter<0x65> archive;
 
@@ -256,12 +267,18 @@ bool BgUnitFile::save()
     archive.addFile(uhd_name, { (u8*)uhd, uhd_filesize });
     archive.addFile(unt_name, { (u8*)unt, unt_filesize });
 
-    // TODO: Texture
+    archive.addFile(tex_name, mTextureFile.data);
+    archive.addFile(nml_name, mNormalTextureFile.data);
 
-    if (mData.data())
-        rio::MemUtil::free(mData.data());
+    for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
+        if (mAnimeTextureFile[i].p_tex)
+            archive.addFile(cAnimeFilename[i], mAnimeTextureFile[i].data);
 
-    mData = archive.save(true);
+    const auto& ret = archive.save(true);
 
-    return true;
+    rio::MemUtil::free(chk);
+    rio::MemUtil::free(uhd);
+    rio::MemUtil::free(unt);
+
+    return ret;
 }
