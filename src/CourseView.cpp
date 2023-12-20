@@ -685,7 +685,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         bg_pos,
         bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
-        mBgZoom
+        mRealBgZoom
     );
 
   //RIO_LOG("Initialized DistantViewMgr\n");
@@ -1859,7 +1859,7 @@ void CourseView::update()
         getDistantViewLayer(),
         bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
-        mBgZoom
+        mRealBgZoom
     );
 
     if (isInitialized())
