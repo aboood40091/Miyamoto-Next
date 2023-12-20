@@ -251,8 +251,7 @@ public:
 
     void clearSelection()
     {
-        onCursorRelease_L_();
-        onCursorRelease_R_();
+        releaseCursorNow();
         clearSelection_();
     }
 
@@ -342,6 +341,20 @@ public:
     bool* getLocationVisibility()
     {
         return &mLocationShown;
+    }
+
+    void setCursorForceReleaseOnNextUpdate(CursorReleaseFlag flag)
+    {
+        mCursorForceReleaseFlag |= flag;
+    }
+
+    void releaseCursorNow(CursorReleaseFlag flag = CURSOR_RELEASE_FLAG_ALL)
+    {
+        if (flag & CURSOR_RELEASE_FLAG_L)
+            onCursorRelease_L_();
+
+        if (flag & CURSOR_RELEASE_FLAG_R)
+            onCursorRelease_R_();
     }
 
     void setCameraCenterWorldPos(const rio::BaseVec2f& center_pos);

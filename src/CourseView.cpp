@@ -467,8 +467,7 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 
 void CourseView::uninitialize()
 {
-    onCursorRelease_L_();
-    onCursorRelease_R_();
+    releaseCursorNow();
     clearClipboard();
 
 #if RIO_IS_CAFE
@@ -1792,11 +1791,7 @@ void CourseView::update()
         }
     }
 
-    if (cursor_release_flag & CURSOR_RELEASE_FLAG_L)
-        onCursorRelease_L_();
-
-    if (cursor_release_flag & CURSOR_RELEASE_FLAG_R)
-        onCursorRelease_R_();
+    releaseCursorNow(cursor_release_flag);
 
     switch (mCursorState)
     {
