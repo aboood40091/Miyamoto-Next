@@ -1,5 +1,6 @@
 #include <CourseView.h>
 #include <Globals.h>
+#include <MainWindow.h>
 #include <action/ActionItemDelete.h>
 #include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
@@ -29,6 +30,7 @@
 #endif // RIO_IS_CAFE
 
 #include <imgui.h>
+#include <rio.h>
 
 #include <unordered_set>
 
@@ -1746,6 +1748,19 @@ void CourseView::onCursorReleasedCompletely_()
         else if (ImGui::IsKeyPressed(ImGuiKey_7))
         {
             mLocationShown ^= 1;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_N))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->courseNew();
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_O))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->courseOpen();
+        }
+        else if ((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) &&
+                 ImGui::IsKeyPressed(ImGuiKey_S))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->courseSaveAs();
         }
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
