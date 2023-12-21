@@ -47,6 +47,8 @@ void AreaItem::drawOpa()
 
     QuadRenderer::instance()->drawBox(
         QuadRenderer::Arg(sColor)
+            .setItemID(mItemID)
+            .setSelection(mIsSelected)
             .setCornerAndSize(offs, size)
     );
 }

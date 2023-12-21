@@ -2594,8 +2594,7 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
     render_state.setBlendEnable(false);
     render_state.apply();
 
-    bool initialized = mCourseView.isInitialized();
-    if (initialized)
+    if (mCourseView.isInitialized())
     {
         if (mCourseView.mActorShown)
         {
@@ -2618,13 +2617,12 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
         if (mCourseView.mLocationShown)
             for (LocationItem& item : mCourseView.mLocationItem)
                 item.drawOpa();
+
+        for (AreaItem& item : mCourseView.mAreaItem)
+            item.drawOpa();
     }
 
     mCourseView.bindRenderBuffer_(false);
-
-    if (initialized)
-        for (AreaItem& item : mCourseView.mAreaItem)
-            item.drawOpa();
 }
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
