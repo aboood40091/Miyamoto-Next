@@ -263,8 +263,6 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created CourseView\n");
 
-    ActionMgr::instance()->discard(false);
-
     const std::string& level_path = Globals::getContentPath() + "/Common/course_res_pack/" + level_fname;
     if (CourseData::instance()->loadFromPack(level_path))
     {
@@ -277,6 +275,7 @@ void MainWindow::prepare_()
         mCoursePath.clear();
         RIO_LOG("mCoursePath cleared\n");
     }
+    ActionMgr::instance()->discard(false);
     setCurrentCourseDataFile_(0);
 }
 
@@ -381,19 +380,16 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
 
 void MainWindow::courseNew()
 {
-    ActionMgr::instance()->discard(false);
-
     CourseData::instance()->createNew();
     mCoursePath.clear();
     RIO_LOG("mCoursePath cleared\n");
+    ActionMgr::instance()->discard(false);
     setCurrentCourseDataFile_(0);
 }
 
 void MainWindow::courseOpen()
 {
 #if RIO_IS_WIN
-    ActionMgr::instance()->discard(false);
-
     const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
                          "Compressed course pack (*.szs)\0*.szs\0"
                          "Uncompressed course pack (*.sarc)\0*.sarc\0";
@@ -424,6 +420,7 @@ void MainWindow::courseOpen()
 
     mCoursePath = level_path;
     RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+    ActionMgr::instance()->discard(false);
     setCurrentCourseDataFile_(0);
 #endif // RIO_IS_WIN
 }
@@ -449,8 +446,12 @@ void MainWindow::courseSave()
     }
 
     rio::FileHandle handle;
-    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, mCoursePath, rio::FileDevice::FILE_OPEN_FLAG_WRITE))
-        handle.tryWrite(nullptr, out.data(), out.size());
+    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, mCoursePath, rio::FileDevice::FILE_OPEN_FLAG_WRITE) &&
+        handle.tryWrite(nullptr, out.data(), out.size()) &&
+        handle.tryClose())
+    {
+        ActionMgr::instance()->onSave();
+    }
 
     rio::MemUtil::free(out.data());
 }
@@ -500,11 +501,13 @@ void MainWindow::courseSaveAs()
     }
 
     rio::FileHandle handle;
-    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, level_path, rio::FileDevice::FILE_OPEN_FLAG_WRITE))
+    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, level_path, rio::FileDevice::FILE_OPEN_FLAG_WRITE) &&
+        handle.tryWrite(nullptr, out.data(), out.size()) &&
+        handle.tryClose())
     {
-        handle.tryWrite(nullptr, out.data(), out.size());
         mCoursePath = level_path;
         RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+        ActionMgr::instance()->onSave();
     }
 
     rio::MemUtil::free(out.data());
