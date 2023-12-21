@@ -1674,9 +1674,9 @@ void CourseView::onCursorPress_Paint_Area_()
     {
         bool conflict = false;
 
-        for (const AreaData& area : getCourseDataFile().getAreaData())
+        for (const AreaData& area_data : getCourseDataFile().getAreaData())
         {
-            if (area.id == id)
+            if (area_data.id == id)
             {
                 conflict = true;
                 break;

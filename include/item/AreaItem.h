@@ -6,7 +6,7 @@
 class AreaItem : public ItemBase
 {
 public:
-    AreaItem(const AreaData& area, u32 index);
+    AreaItem(const AreaData& area_data, u32 index);
 
     void move(s16 dx, s16 dy, bool commit) override;
     void drawSelectionUI() override;

@@ -20,30 +20,30 @@ static const rio::Color4f sMaskColor{
      48 / 255.f
 };
 
-AreaItem::AreaItem(const AreaData& area, u32 index)
-    : ItemBase(ITEM_TYPE_AREA, index, area.offset.x, area.offset.y)
+AreaItem::AreaItem(const AreaData& area_data, u32 index)
+    : ItemBase(ITEM_TYPE_AREA, index, area_data.offset.x, area_data.offset.y)
 {
 }
 
 void AreaItem::move(s16 dx, s16 dy, bool commit)
 {
-    AreaData& area = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+    AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
-    area.offset.x = mBasePosition.x + dx;
-    area.offset.y = mBasePosition.y + dy;
+    area_data.offset.x = mBasePosition.x + dx;
+    area_data.offset.y = mBasePosition.y + dy;
     if (commit)
     {
-        mBasePosition.x = area.offset.x;
-        mBasePosition.y = area.offset.y;
+        mBasePosition.x = area_data.offset.x;
+        mBasePosition.y = area_data.offset.y;
     }
 }
 
 void AreaItem::drawOpa()
 {
-    const AreaData& area = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
-    rio::Vector3f offs { f32(area.offset.x), -f32(area.offset.y + area.size.y), getZPos_() + 10 };
-    rio::Vector2f size { f32(area.size.x), f32(area.size.y) };
+    rio::Vector3f offs { f32(area_data.offset.x), -f32(area_data.offset.y + area_data.size.y), getZPos_() + 10 };
+    rio::Vector2f size { f32(area_data.size.x), f32(area_data.size.y) };
 
     QuadRenderer::instance()->drawBox(
         QuadRenderer::Arg(sColor)
@@ -55,13 +55,13 @@ void AreaItem::drawOpa()
 
 void AreaItem::drawXlu()
 {
-    const AreaData& area = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
-    if (!(area.mask & 0x20))
+    if (!(area_data.mask & 0x20))
         return;
 
-    rio::Vector3f offs { f32(area.offset.x), -f32(area.offset.y + area.size.y), getZPos_() };
-    rio::Vector2f size { f32(area.size.x), f32(area.size.y) };
+    rio::Vector3f offs { f32(area_data.offset.x), -f32(area_data.offset.y + area_data.size.y), getZPos_() };
+    rio::Vector2f size { f32(area_data.size.x), f32(area_data.size.y) };
 
     QuadRenderer::instance()->drawQuad(
         QuadRenderer::Arg(sMaskColor)
@@ -77,7 +77,7 @@ void AreaItem::onSelectionChange_()
 
 void AreaItem::drawSelectionUI()
 {
-    const AreaData& area = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
     ImGui::Text("Area");
     ImGui::Separator();
@@ -204,14 +204,14 @@ void AreaItem::drawSelectionUI()
 
     if (ImGui::Button("Apply"))
     {
-        const bool anything_modified = memcmp(&mSelectionData, &area, sizeof(AreaData)) != 0;
+        const bool anything_modified = memcmp(&mSelectionData, &area_data, sizeof(AreaData)) != 0;
 
         if (anything_modified)
         {
             ActionItemDataChange::Context context {
                 mItemID,
                 std::static_pointer_cast<const void>(
-                    std::make_shared<const AreaData>(area)
+                    std::make_shared<const AreaData>(area_data)
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const AreaData>(mSelectionData)
@@ -224,5 +224,5 @@ void AreaItem::drawSelectionUI()
     ImGui::SameLine();
 
     if (ImGui::Button("Discard"))
-        mSelectionData = area;
+        mSelectionData = area_data;
 }
