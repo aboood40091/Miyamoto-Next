@@ -731,3 +731,58 @@ void CourseDataFile::setEnvironment(u32 index, const char* name)
     rio::MemUtil::copy(mEnvironment.pa_slot_name[index], name, name_len);
     mEnvironment.pa_slot_name[index][name_len] = '\0';
 }
+
+ScrollData* CourseDataFile::getScrollDataByID(u16 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mScrollData.size(); i++)
+        if (mScrollData[i].id == id)
+            return &(mScrollData[i]);
+
+    return nullptr;
+}
+
+DistantViewData* CourseDataFile::getDistantViewDataByID(u16 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mDistantViewData.size(); i++)
+        if (mDistantViewData[i].id == id)
+            return &(mDistantViewData[i]);
+
+    return nullptr;
+}
+
+NextGoto* CourseDataFile::getNextGotoByID(u8 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mNextGoto.size(); i++)
+        if (mNextGoto[i].id == id)
+            return &(mNextGoto[i]);
+
+    return nullptr;
+}
+
+AreaData* CourseDataFile::getAreaDataByID(u8 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mAreaData.size(); i++)
+        if (mAreaData[i].id == id)
+            return &(mAreaData[i]);
+
+    return nullptr;
+}
+
+Location* CourseDataFile::getLocationByID(u8 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mLocation.size(); i++)
+        if (mLocation[i].id == id)
+            return &(mLocation[i]);
+
+    return nullptr;
+}
+
+RailInfo* CourseDataFile::getRailInfoByID(u8 id, u32 start_index)
+{
+    for (u32 i = start_index; i < mRailInfo.size(); i++)
+        if (mRailInfo[i].id == id)
+            return &(mRailInfo[i]);
+
+    return nullptr;
+}
+

@@ -550,55 +550,32 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
   //if (!start_next_goto)
     {
         u8 start = getCourseDataFile().getOptions().start_next_goto;
-        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
-        {
-            if (next_goto.id == start)
-            {
-                start_next_goto = &next_goto;
-                break;
-            }
-        }
+        start_next_goto = getCourseDataFile().getNextGotoByID(start);
     }
 
     if (!start_next_goto)
     {
         u8 start = getCourseDataFile().getOptions().start_next_goto_coin_boost;
-        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
-        {
-            if (next_goto.id == start)
-            {
-                start_next_goto = &next_goto;
-                break;
-            }
-        }
+        start_next_goto = getCourseDataFile().getNextGotoByID(start);
     }
 
     const char* dv_name = nullptr;
 
     if (getCourseDataFile().getAreaData().size() > 0)
     {
-        u8 area;
-
+        const AreaData* p_area_data = nullptr;
         if (start_next_goto)
         {
-          //RIO_ASSERT(start_next_goto->area >= 0 && start_next_goto->area < getCourseDataFile().getAreaData().size());
-            area =
-                (start_next_goto->area >= 0 && start_next_goto->area < getCourseDataFile().getAreaData().size())
-                    ? start_next_goto->area
-                    : 0;
+            p_area_data = getCourseDataFile().getAreaDataByID(start_next_goto->area);
+          //RIO_ASSERT(p_area_data != nullptr);
         }
-        else
-        {
-            area = 0;
-        }
+        const AreaData& area_data = p_area_data != nullptr ? *p_area_data : getCourseDataFile().getAreaData()[0];
 
-        const AreaData& area_data = getCourseDataFile().getAreaData()[area];
-
-      //RIO_ASSERT(area_data.bg2 >= 0 && area_data.bg2 < getCourseDataFile().getDistantViewData().size());
-        if (area_data.bg2 >= 0 && area_data.bg2 < getCourseDataFile().getDistantViewData().size())
+        const DistantViewData* p_dv_data = getCourseDataFile().getDistantViewDataByID(area_data.bg2);
+      //RIO_ASSERT(p_dv_data != nullptr);
+        if (p_dv_data != nullptr)
         {
-            const DistantViewData& dv_data = getCourseDataFile().getDistantViewData()[area_data.bg2];
-            dv_name = dv_data.name;
+            dv_name = p_dv_data->name;
             mpDVControlArea = &area_data;
 
             const f32 w = s32(area_data.size.x);
@@ -1486,28 +1463,10 @@ void CourseView::onCursorPress_Paint_NextGoto_()
         return;
     }
 
-    u8 id = 0;
-    while (true)
-    {
-        bool conflict = false;
-
-        for (const NextGoto& next_goto : getCourseDataFile().getNextGoto())
-        {
-            if (next_goto.id == id)
-            {
-                conflict = true;
-                break;
-            }
-        }
-
-        if (!conflict)
+    u8 id;
+    for (id = 0; id < 0xff; id++)
+        if (getCourseDataFile().getNextGotoByID(id) == nullptr)
             break;
-
-        if (id == 0xff) // bruh
-            break;
-
-        id++;
-    }
 
     pushBackItem_NextGoto_({ .offset = { u16(x), u16(y) }, .id = id });
 }
@@ -1569,28 +1528,10 @@ void CourseView::onCursorPress_Paint_Location_()
         return;
     }
 
-    u8 id = 0;
-    while (true)
-    {
-        bool conflict = false;
-
-        for (const Location& location : getCourseDataFile().getLocation())
-        {
-            if (location.id == id)
-            {
-                conflict = true;
-                break;
-            }
-        }
-
-        if (!conflict)
+    u8 id;
+    for (id = 0; id < 0xff; id++)
+        if (getCourseDataFile().getLocationByID(id) == nullptr)
             break;
-
-        if (id == 0xff) // bruh
-            break;
-
-        id++;
-    }
 
     mCursorP1World.x = x;
     mCursorP1World.y = y;
@@ -1669,28 +1610,10 @@ void CourseView::onCursorPress_Paint_Area_()
         return;
     }
 
-    u8 id = 0;
-    while (true)
-    {
-        bool conflict = false;
-
-        for (const AreaData& area_data : getCourseDataFile().getAreaData())
-        {
-            if (area_data.id == id)
-            {
-                conflict = true;
-                break;
-            }
-        }
-
-        if (!conflict)
+    u8 id;
+    for (id = 0; id < 0xff; id++)
+        if (getCourseDataFile().getAreaDataByID(id) == nullptr)
             break;
-
-        if (id == 0xff) // bruh
-            break;
-
-        id++;
-    }
 
     mCursorP1World.x = x;
     mCursorP1World.y = y;

@@ -102,16 +102,7 @@ void AreaItem::drawSelectionUI()
     {
         if (ImGui::CollapsingHeader("Scroll Data (Preview)"))
         {
-            const ScrollData* p_scroll_data = nullptr;
-            for (const ScrollData& scroll_data : CourseView::instance()->getCourseDataFile().getScrollData())
-            {
-                if (scroll_data.id == mSelectionData.scroll)
-                {
-                    p_scroll_data = &scroll_data;
-                    break;
-                }
-            }
-
+            const ScrollData* const p_scroll_data = CourseView::instance()->getCourseDataFile().getScrollDataByID(mSelectionData.scroll);
             if (p_scroll_data == nullptr)
                 ImGui::TextDisabled("Invalid");
 
@@ -149,16 +140,7 @@ void AreaItem::drawSelectionUI()
     {
         if (ImGui::CollapsingHeader("Distant View Data (Preview)"))
         {
-            const DistantViewData* p_dv_data = nullptr;
-            for (const DistantViewData& dv_data : CourseView::instance()->getCourseDataFile().getDistantViewData())
-            {
-                if (dv_data.id == mSelectionData.bg2)
-                {
-                    p_dv_data = &dv_data;
-                    break;
-                }
-            }
-
+            const DistantViewData* const p_dv_data = CourseView::instance()->getCourseDataFile().getDistantViewDataByID(mSelectionData.bg2);
             if (p_dv_data == nullptr)
                 ImGui::TextDisabled("Invalid");
 

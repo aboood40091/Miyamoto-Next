@@ -372,6 +372,8 @@ public:
     {
         return mScrollData;
     }
+    ScrollData* getScrollDataByID(u16 id, u32 start_index = 0);
+    const ScrollData* getScrollDataByID(u16 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getScrollDataByID(id, start_index); }
 
     std::vector<DistantViewData>& getDistantViewData()
     {
@@ -381,6 +383,8 @@ public:
     {
         return mDistantViewData;
     }
+    DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0);
+    const DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getDistantViewDataByID(id, start_index); }
 
     std::vector<NextGoto>& getNextGoto()
     {
@@ -390,6 +394,8 @@ public:
     {
         return mNextGoto;
     }
+    NextGoto* getNextGotoByID(u8 id, u32 start_index = 0);
+    const NextGoto* getNextGotoByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getNextGotoByID(id, start_index); }
 
     std::vector<MapActorData>& getMapActorData()
     {
@@ -400,25 +406,6 @@ public:
         return mMapActorData;
     }
 
-    /*
-    u8 getAreaID(u8 area) const
-    u8 getAreaScroll(u8 area) const
-    u8 getAreaZoomType(u8 area) const
-    u8 getAreaZoomID(u8 area) const
-    u8 getAreaZoomChange(u8 area) const
-    u8 getAreaBgm(u8 area) const
-    u8 getAreaBgmMode(u8 area) const
-    u8 getAreaMaskNo(u8 area) const
-    u8 getAreaBg2(u8 area) const
-    u8 getAreaBg3(u8 area) const
-    u16 getAreaColorOBJ(u8 area) const
-    u16 getAreaColorBG(u8 area) const
-    u8 getAreaDirection(u8 area) const
-    u16 getAreaOffsetX(u8 area) const
-    u16 getAreaOffsetY(u8 area) const
-    u16 getAreaSizeX(u8 area) const
-    u16 getAreaSizeY(u8 area) const
-    */
     std::vector<AreaData>& getAreaData()
     {
         return mAreaData;
@@ -427,6 +414,8 @@ public:
     {
         return mAreaData;
     }
+    AreaData* getAreaDataByID(u8 id, u32 start_index = 0);
+    const AreaData* getAreaDataByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getAreaDataByID(id, start_index); }
 
     std::vector<Location>& getLocation()
     {
@@ -436,6 +425,8 @@ public:
     {
         return mLocation;
     }
+    Location* getLocationByID(u8 id, u32 start_index = 0);
+    const Location* getLocationByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getLocationByID(id, start_index); }
 
     std::vector<RailInfo>& getRailInfo()
     {
@@ -445,6 +436,8 @@ public:
     {
         return mRailInfo;
     }
+    RailInfo* getRailInfoByID(u8 id, u32 start_index = 0);
+    const RailInfo* getRailInfoByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getRailInfoByID(id, start_index); }
 
     std::vector<RailPoint>& getRailPoint()
     {
