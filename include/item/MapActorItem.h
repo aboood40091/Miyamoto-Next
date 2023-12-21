@@ -98,7 +98,7 @@ protected:
         MAP_ACTOR_ITEM_CREATE(CLASS)                                                                \
                                                                                                     \
     public:                                                                                         \
-        static const MapActorData* getDefaultData(u16 map_actor_id)                                 \
+        static const MapActorData* getDefaultData(u16 map_actor_type)                               \
         {                                                                                           \
             return nullptr;                                                                         \
         }

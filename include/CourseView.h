@@ -112,7 +112,7 @@ private:
         u16         bg_unit_obj_type;
 
         // MapActorItem
-        u16         map_actor_id;
+        u16         map_actor_type;
 
         // ...
 
@@ -287,10 +287,10 @@ public:
         mPaintNext.bg_unit_obj_type = bg_unit_obj_type;
     }
 
-    void setPaintType_MapActor(u16 map_actor_id)
+    void setPaintType_MapActor(u16 map_actor_type)
     {
         mPaintNext.type = ITEM_TYPE_MAP_ACTOR;
-        mPaintNext.map_actor_id = map_actor_id;
+        mPaintNext.map_actor_type = map_actor_type;
     }
 
     void setPaintType_NextGoto()

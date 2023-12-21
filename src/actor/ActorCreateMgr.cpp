@@ -47,11 +47,11 @@ void ActorCreateMgr::initialize()
 {
     mMapActorNameMap.clear();
     mActorFactoryMap.clear();
-    mMaxID = 0;
+    mTypeMaxNum = 0;
 
     // -------------------------------------------------------------
 
-    setMaxID(724);
+    setTypeMaxNum(724);
 
     // -------------------------------------------------------------
 
@@ -873,26 +873,26 @@ ActorCreateMgr::~ActorCreateMgr()
 {
 }
 
-void ActorCreateMgr::setMaxID(u16 max_num)
+void ActorCreateMgr::setTypeMaxNum(u16 max_num)
 {
-    RIO_ASSERT(max_num >= mMaxID); // Can only go up, for now
-    mMaxID = max_num;
+    RIO_ASSERT(max_num >= mTypeMaxNum); // Can only go up, for now
+    mTypeMaxNum = max_num;
 }
 
-u16 ActorCreateMgr::getMaxID() const
+u16 ActorCreateMgr::getTypeMaxNum() const
 {
-    return mMaxID;
+    return mTypeMaxNum;
 }
 
-void ActorCreateMgr::setName(u16 map_actor_id, const std::u8string& name)
+void ActorCreateMgr::setName(u16 map_actor_type, const std::u8string& name)
 {
-    RIO_ASSERT(map_actor_id < mMaxID);
-    mMapActorNameMap[map_actor_id] = name;
+    RIO_ASSERT(map_actor_type < mTypeMaxNum);
+    mMapActorNameMap[map_actor_type] = name;
 }
 
-const std::u8string& ActorCreateMgr::getName(u16 map_actor_id) const
+const std::u8string& ActorCreateMgr::getName(u16 map_actor_type) const
 {
-    const auto& itr = mMapActorNameMap.find(map_actor_id);
+    const auto& itr = mMapActorNameMap.find(map_actor_type);
     if (itr != mMapActorNameMap.end())
         return itr->second;
 
@@ -900,15 +900,15 @@ const std::u8string& ActorCreateMgr::getName(u16 map_actor_id) const
     return empty;
 }
 
-void ActorCreateMgr::setActorFactory(u16 map_actor_id, ActorFactory factory, const MapActorData* default_data)
+void ActorCreateMgr::setActorFactory(u16 map_actor_type, ActorFactory factory, const MapActorData* default_data)
 {
-    RIO_ASSERT(map_actor_id < mMaxID);
-    mActorFactoryMap[map_actor_id] = std::pair { factory, default_data };
+    RIO_ASSERT(map_actor_type < mTypeMaxNum);
+    mActorFactoryMap[map_actor_type] = std::pair { factory, default_data };
 }
 
-const std::pair<ActorFactory, const MapActorData*>* ActorCreateMgr::getActorFactory(u16 map_actor_id) const
+const std::pair<ActorFactory, const MapActorData*>* ActorCreateMgr::getActorFactory(u16 map_actor_type) const
 {
-    const auto& itr = mActorFactoryMap.find(map_actor_id);
+    const auto& itr = mActorFactoryMap.find(map_actor_type);
     if (itr != mActorFactoryMap.end())
         return &itr->second;
 
@@ -917,7 +917,7 @@ const std::pair<ActorFactory, const MapActorData*>* ActorCreateMgr::getActorFact
 
 std::unique_ptr<MapActorItem> ActorCreateMgr::create(const MapActorData& map_actor_data, u32 index) const
 {
-    const auto& itr = mActorFactoryMap.find(map_actor_data.id);
+    const auto& itr = mActorFactoryMap.find(map_actor_data.type);
     if (itr != mActorFactoryMap.end())
         return (*itr->second.first)(map_actor_data, index);
 

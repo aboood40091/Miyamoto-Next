@@ -197,7 +197,7 @@ void CourseDataFile::loadFile_(const CourseDataFileHeader* p_header)
             const MapActorData& src = p_src[i];
             MapActorData&       dst = mMapActorData[i];
 
-            dst.id          = CD_FILE_READ_16_BE(src.id);
+            dst.type        = CD_FILE_READ_16_BE(src.type);
             dst.offset.x    = CD_FILE_READ_16_BE(src.offset.x);
             dst.offset.y    = CD_FILE_READ_16_BE(src.offset.y);
             dst.event_id    = CD_FILE_READ_16_BE(src.event_id);
@@ -330,7 +330,7 @@ std::span<u8> CourseDataFile::saveFile_() const
 {
     std::set<u16> used_map_actors;
     for (const MapActorData& map_actor_data : mMapActorData)
-        used_map_actors.insert(map_actor_data.id);
+        used_map_actors.insert(map_actor_data.type);
 
     const u32 scroll_data_num       = mScrollData.size();
     const u32 distant_view_data_num = mDistantViewData.size();
@@ -515,7 +515,7 @@ std::span<u8> CourseDataFile::saveFile_() const
             const MapActorData& src = mMapActorData[i];
             MapActorData&       dst = p_dst[i];
 
-            dst.id          = CD_FILE_READ_16_BE(src.id);
+            dst.type        = CD_FILE_READ_16_BE(src.type);
             dst.offset.x    = CD_FILE_READ_16_BE(src.offset.x);
             dst.offset.y    = CD_FILE_READ_16_BE(src.offset.y);
             dst.event_id    = CD_FILE_READ_16_BE(src.event_id);

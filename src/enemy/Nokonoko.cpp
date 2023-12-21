@@ -31,7 +31,7 @@ static inline void SetColor(TexturePatternAnimation* tex_anim, const ModelResour
 
 Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
-    , cIsBig(map_actor_data.id == 476)
+    , cIsBig(map_actor_data.type == 476)
     , mpModelResource(nullptr)
     , mpModel(nullptr)
     , mpShellModel(nullptr)

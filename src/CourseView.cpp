@@ -1413,11 +1413,11 @@ void CourseView::onCursorPress_Paint_MapActor_()
 
     MapActorData map_actor_data = { 0 };
 
-    const auto& it = ActorCreateMgr::instance()->getActorFactory(mPaintCurrent.map_actor_id);
+    const auto& it = ActorCreateMgr::instance()->getActorFactory(mPaintCurrent.map_actor_type);
     if (it != nullptr && it->second != nullptr)
         map_actor_data = *it->second;
 
-    map_actor_data.id = mPaintCurrent.map_actor_id;
+    map_actor_data.type = mPaintCurrent.map_actor_type;
     map_actor_data.offset.x = x;
     map_actor_data.offset.y = y;
 
@@ -1769,7 +1769,7 @@ void CourseView::onCursorPress_R_()
         break;
     case ITEM_TYPE_MAP_ACTOR:
         mPaintCurrent.type = ITEM_TYPE_MAP_ACTOR;
-        mPaintCurrent.map_actor_id = mPaintNext.map_actor_id;
+        mPaintCurrent.map_actor_type = mPaintNext.map_actor_type;
         onCursorPress_Paint_MapActor_();
         break;
     case ITEM_TYPE_NEXT_GOTO:

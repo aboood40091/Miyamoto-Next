@@ -8,7 +8,7 @@ class ObjDokanActorLeft : public ObjDokanActorBase
 
 public:
     ObjDokanActorLeft(const MapActorData& map_actor_data, u32 index)
-        : ObjDokanActorBase(map_actor_data, index, ObjDokan::DIRECTION_LEFT, false, map_actor_data.id == 575, 16, -16)
+        : ObjDokanActorBase(map_actor_data, index, ObjDokan::DIRECTION_LEFT, false, map_actor_data.type == 575, 16, -16)
     {
     }
 };

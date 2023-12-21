@@ -71,7 +71,7 @@ MainWindow::MainWindow()
     , mPaintType(ITEM_TYPE_MAX_NUM)
     , mEnvSelectedObj(u16(-1))
     , mEnvPaintLayer(LAYER_1)
-    , mMapActorSelectedID(u16(-1))
+    , mMapActorSelectedType(u16(-1))
     , mMetricsLocation(0)
 {
 }
@@ -609,10 +609,10 @@ void MainWindow::calc_()
             mpCourseView->setPaintType_BgUnitObj(mEnvPaintLayer, mEnvSelectedObj);
         break;
     case ITEM_TYPE_MAP_ACTOR:
-        if (mMapActorSelectedID >= ActorCreateMgr::instance()->getMaxID())
+        if (mMapActorSelectedType >= ActorCreateMgr::instance()->getTypeMaxNum())
             mpCourseView->setPaintType_None();
         else
-            mpCourseView->setPaintType_MapActor(mMapActorSelectedID);
+            mpCourseView->setPaintType_MapActor(mMapActorSelectedType);
         break;
     case ITEM_TYPE_NEXT_GOTO:
         mpCourseView->setPaintType_NextGoto();
@@ -992,7 +992,7 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginListBox("##ActorAddList", ImVec2(-1, -1)))
                 {
-                    for (int n = 0; n < ActorCreateMgr::instance()->getMaxID(); n++)
+                    for (int n = 0; n < ActorCreateMgr::instance()->getTypeMaxNum(); n++)
                     {
                         const std::u8string& name = ActorCreateMgr::instance()->getName(n);
                         const std::string& str =
@@ -1000,8 +1000,8 @@ void MainWindow::drawPaletteUI_()
                                 ? std::to_string(n)
                                 : std::format("{0:d}: {1:s}", n, (const char*)name.c_str());
 
-                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), mMapActorSelectedID == n))
-                            mMapActorSelectedID = n;
+                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), mMapActorSelectedType == n))
+                            mMapActorSelectedType = n;
                     }
                     ImGui::EndListBox();
                 }
@@ -1023,11 +1023,11 @@ void MainWindow::drawPaletteUI_()
                     {
                         const MapActorItem& map_actor_item = *(item_vec[i]);
                         const MapActorData& map_actor_data = data_vec[i];
-                        const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.id);
+                        const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.type);
                         const std::string& str =
                             name.empty()
-                                ? std::format("{0:d}: ({1:d}, {2:d})", map_actor_data.id, map_actor_data.offset.x, map_actor_data.offset.y)
-                                : std::format("{0:d}: {1:s} ({2:d}, {3:d})", map_actor_data.id, (const char*)name.c_str(), map_actor_data.offset.x, map_actor_data.offset.y);
+                                ? std::format("{0:d}: ({1:d}, {2:d})", map_actor_data.type, map_actor_data.offset.x, map_actor_data.offset.y)
+                                : std::format("{0:d}: {1:s} ({2:d}, {3:d})", map_actor_data.type, (const char*)name.c_str(), map_actor_data.offset.x, map_actor_data.offset.y);
 
                         if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {

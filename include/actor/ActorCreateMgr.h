@@ -26,25 +26,25 @@ private:
 public:
     void initialize();
 
-    void setMaxID(u16 max_num);
-    u16 getMaxID() const;
+    void setTypeMaxNum(u16 max_num);
+    u16 getTypeMaxNum() const;
 
-    void setName(u16 map_actor_id, const std::u8string& name);
-    const std::u8string& getName(u16 map_actor_id) const;
+    void setName(u16 map_actor_type, const std::u8string& name);
+    const std::u8string& getName(u16 map_actor_type) const;
 
-    void setActorFactory(u16 map_actor_id, ActorFactory factory, const MapActorData* default_data = nullptr);
-    const std::pair<ActorFactory, const MapActorData*>* getActorFactory(u16 map_actor_id) const;
+    void setActorFactory(u16 map_actor_type, ActorFactory factory, const MapActorData* default_data = nullptr);
+    const std::pair<ActorFactory, const MapActorData*>* getActorFactory(u16 map_actor_type) const;
 
     template <typename T>
-    void setActorFactory(u16 map_actor_id)
+    void setActorFactory(u16 map_actor_type)
     {
-        setActorFactory(map_actor_id, &T::create, T::getDefaultData(map_actor_id));
+        setActorFactory(map_actor_type, &T::create, T::getDefaultData(map_actor_type));
     }
 
     std::unique_ptr<MapActorItem> create(const MapActorData& map_actor_data, u32 index) const;
 
 private:
-    u16                                     mMaxID;
+    u16                                     mTypeMaxNum;
     std::unordered_map<u16, std::u8string>  mMapActorNameMap;
     std::unordered_map<u16, std::pair<ActorFactory, const MapActorData*> >
                                             mActorFactoryMap;

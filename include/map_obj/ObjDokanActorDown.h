@@ -8,7 +8,7 @@ class ObjDokanActorDown : public ObjDokanActorBase
 
 public:
     ObjDokanActorDown(const MapActorData& map_actor_data, u32 index)
-        : ObjDokanActorBase(map_actor_data, index, ObjDokan::DIRECTION_DOWN, false, map_actor_data.id == 578, 16, 0)
+        : ObjDokanActorBase(map_actor_data, index, ObjDokan::DIRECTION_DOWN, false, map_actor_data.type == 578, 16, 0)
     {
     }
 };

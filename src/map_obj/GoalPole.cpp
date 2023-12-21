@@ -30,7 +30,7 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     , mpBaseModel(nullptr)
     , mpGoalFlagModel(nullptr)
     , mpTorideStdModel(nullptr)
-    , cIsKaiga(map_actor_data.id == 503 || map_actor_data.id == 631)
+    , cIsKaiga(map_actor_data.type == 503 || map_actor_data.type == 631)
     , mFrame(0)
 {
     static const std::string archive_path_normal        = Globals::getContentPath() + "/Common/actor/" + cResNameNormal     + ".szs";
@@ -38,7 +38,7 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     static const std::string archive_path_rdash         = Globals::getContentPath() + "/Common/actor/" + cResNameRDash      + ".szs";
     static const std::string archive_path_kaiga_rdash   = Globals::getContentPath() + "/Common/actor/" + cResNameKaigaRDash + ".szs";
 
-    bool rdash = map_actor_data.id == 630 || map_actor_data.id == 631;
+    bool rdash = map_actor_data.type == 630 || map_actor_data.type == 631;
 
     const std::string& res_name =
         rdash

@@ -169,7 +169,7 @@ struct MapActorData
 {
     // Official name not known.
 
-    u16 id;
+    u16 type;
     struct
     {
         u16 x;

@@ -12,7 +12,7 @@ static const std::string cResName[2] = {
 
 Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
-    , cIsKakibo(map_actor_data.id == 595)
+    , cIsKakibo(map_actor_data.type == 595)
     , mpModel(nullptr)
     , mIsLayer2(false)
 {

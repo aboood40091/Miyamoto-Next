@@ -86,11 +86,11 @@ void MapActorItem::drawSelectionUI()
 {
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
-    const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.id);
+    const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.type);
     if (name.empty())
-        ImGui::Text("Map Actor %d", map_actor_data.id);
+        ImGui::Text("Map Actor %d", map_actor_data.type);
     else
-        ImGui::Text("Map Actor %d: %s", map_actor_data.id, (char*)(name.c_str()));
+        ImGui::Text("Map Actor %d: %s", map_actor_data.type, (char*)(name.c_str()));
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.
@@ -135,7 +135,7 @@ void MapActorItem::drawSelectionUI()
 
         if (data_change_flag)
         {
-            mSelectionData.id = map_actor_data.id; // Copy over stuff not modified by the selection ui.
+            mSelectionData.type = map_actor_data.type; // Copy over stuff not modified by the selection ui.
             mSelectionData.offset = map_actor_data.offset; // Copy over stuff not modified by the selection ui.
 
             ActionItemDataChange::Context context {
