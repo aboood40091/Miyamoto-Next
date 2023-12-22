@@ -1201,7 +1201,7 @@ void MainWindow::drawMainMenuBarUI_()
 
         if (ImGui::BeginMenu("Course"))
         {
-            if (ImGui::MenuItem("Options", nullptr, mCourseFileOptionsOpen, !mCourseFileOptionsOpen))
+            if (ImGui::MenuItem("File Options", nullptr, mCourseFileOptionsOpen, !mCourseFileOptionsOpen))
             {
                 mCourseFileOptionsOpen = true;
                 mCourseFileOptions = mpCourseView->getCourseDataFile().getOptions();
