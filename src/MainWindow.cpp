@@ -566,20 +566,6 @@ void MainWindow::processKeyboardInput_()
         return;
 
     mpCourseView->processKeyboardInput();
-
-    if (rio::ControllerMgr::instance()->getMainController()->isTrig(1 << rio::Controller::PAD_IDX_A))
-    {
-        s32 prev_file = mCurrentFile;
-
-        while ((mCurrentFile = (mCurrentFile + 1) % CD_FILE_MAX_NUM), !CourseData::instance()->getCourseDataFile(mCurrentFile).isValid())
-            continue;
-
-        if (mCurrentFile != prev_file)
-        {
-            ActionMgr::instance()->discard(true);
-            setCurrentCourseDataFile_(mCurrentFile);
-        }
-    }
 }
 
 void MainWindow::calc_()
@@ -1205,6 +1191,29 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::Separator();
             ImGui::MenuItem("Toggle Location Visibility",   "Ctrl+7", mpCourseView->getLocationVisibility());
             // Ctrl+8 is reserved for paths and Ctrl+9 is reserved for comments
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Course"))
+        {
+            ImGui::MenuItem("Options");
+
+            ImGui::Separator();
+
+            for (u32 i = 0; i < CD_FILE_MAX_NUM; i++)
+            {
+                if (!CourseData::instance()->getCourseDataFile(i).isValid())
+                    continue;
+
+                const std::string& str = std::format("File {0:d}", i + 1);
+
+                if (ImGui::MenuItem(str.c_str(), nullptr, false, mCurrentFile != i))
+                {
+                    ActionMgr::instance()->discard(true);
+                    setCurrentCourseDataFile_(i);
+                }
+            }
 
             ImGui::EndMenu();
         }
