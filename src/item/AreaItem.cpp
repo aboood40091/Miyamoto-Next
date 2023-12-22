@@ -112,8 +112,7 @@ AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer
     if (p_dv_data == nullptr)
         return;
 
-    RIO_ASSERT(index < 64);
-    mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW_0 - index);
+    mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW);
     mpLayerDV = rio::lyr::Layer::peelIterator(mLayerItrDV);
     getDistantViewLayer()->initialize();
     getDistantViewLayer()->addDrawMethod(RenderObjLayer::cRenderStep_PostFx, rio::lyr::DrawMethod(this, &AreaItem::dv_PostFx_));
