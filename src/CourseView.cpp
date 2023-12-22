@@ -62,7 +62,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpLayer3D(nullptr)
     , mpLayerDV(nullptr)
     , mpCourseDataFile(nullptr)
-    , mpDVControlArea(nullptr)
+    , mDVControlArea(-1)
     , mCursorAction(CURSOR_ACTION_NONE)
     , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
     , mCursorState(CURSOR_STATE_RELEASE)
@@ -493,7 +493,7 @@ void CourseView::uninitialize()
     mAreaItem.clear();
 
     mpCourseDataFile = nullptr;
-    mpDVControlArea = nullptr;
+    mDVControlArea = -1;
 
     mCursorAction = CURSOR_ACTION_NONE;
 }
@@ -576,7 +576,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         if (p_dv_data != nullptr)
         {
             dv_name = p_dv_data->name;
-            mpDVControlArea = &area_data;
+            mDVControlArea = area_data.id;
 
             const f32 w = s32(area_data.size.x);
             const f32 h = s32(area_data.size.y);
@@ -635,9 +635,9 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
 
     rio::BaseVec2f bg_pos { 0.0f, 0.0f };
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
-    if (mpDVControlArea != nullptr)
+    if (mDVControlArea != -1)
     {
-        const AreaData& area_data = *mpDVControlArea;
+        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
 
         const f32 x =  s32(area_data.offset.x);
         const f32 y = -s32(area_data.offset.y);
@@ -1938,9 +1938,9 @@ void CourseView::update()
     rio::BaseVec2f bg_screen_center = center_pos;
 
     f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
-    if (mpDVControlArea != nullptr)
+    if (mDVControlArea != -1)
     {
-        const AreaData& area_data = *mpDVControlArea;
+        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
 
         const f32 x =  s32(area_data.offset.x);
         const f32 y = -s32(area_data.offset.y);
@@ -1975,11 +1975,11 @@ void CourseView::calcDistantViewScissor_()
 
     mDrawDV = true;
 
-    if (mpDVControlArea != nullptr)
+    if (mDVControlArea != -1)
     {
         mDrawDV = false;
 
-        const AreaData& area_data = *mpDVControlArea;
+        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
 
         const f32 x =  s32(area_data.offset.x);
         const f32 y = -s32(area_data.offset.y);

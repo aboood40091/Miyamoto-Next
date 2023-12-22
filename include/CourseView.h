@@ -480,7 +480,7 @@ private:
     rio::lyr::Layer            *mpLayer3D,
                                *mpLayerDV;
     CourseDataFile*             mpCourseDataFile;
-    const AreaData*             mpDVControlArea;
+    s32                         mDVControlArea;
     f32                         mBgZoom,
                                 mRealBgZoom;
     PaintContext                mPaintCurrent,
