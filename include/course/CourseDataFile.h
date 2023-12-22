@@ -372,8 +372,23 @@ public:
     {
         return mScrollData;
     }
-    ScrollData* getScrollDataByID(u16 id, u32 start_index = 0);
-    const ScrollData* getScrollDataByID(u16 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getScrollDataByID(id, start_index); }
+    s32 getScrollDataIndexByID(u16 id, u32 start_index = 0) const;
+    ScrollData* getScrollDataByID(u16 id, u32 start_index = 0)
+    {
+        s32 index = getScrollDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mScrollData[index]);
+        else
+            return nullptr;
+    }
+    const ScrollData* getScrollDataByID(u16 id, u32 start_index = 0) const
+    {
+        s32 index = getScrollDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mScrollData[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<DistantViewData>& getDistantViewData()
     {
@@ -383,8 +398,23 @@ public:
     {
         return mDistantViewData;
     }
-    DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0);
-    const DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getDistantViewDataByID(id, start_index); }
+    s32 getDistantViewDataIndexByID(u16 id, u32 start_index = 0) const;
+    DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0)
+    {
+        s32 index = getDistantViewDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mDistantViewData[index]);
+        else
+            return nullptr;
+    }
+    const DistantViewData* getDistantViewDataByID(u16 id, u32 start_index = 0) const
+    {
+        s32 index = getDistantViewDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mDistantViewData[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<NextGoto>& getNextGoto()
     {
@@ -394,8 +424,23 @@ public:
     {
         return mNextGoto;
     }
-    NextGoto* getNextGotoByID(u8 id, u32 start_index = 0);
-    const NextGoto* getNextGotoByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getNextGotoByID(id, start_index); }
+    s32 getNextGotoIndexByID(u8 id, u32 start_index = 0) const;
+    NextGoto* getNextGotoByID(u8 id, u32 start_index = 0)
+    {
+        s32 index = getNextGotoIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mNextGoto[index]);
+        else
+            return nullptr;
+    }
+    const NextGoto* getNextGotoByID(u8 id, u32 start_index = 0) const
+    {
+        s32 index = getNextGotoIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mNextGoto[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<MapActorData>& getMapActorData()
     {
@@ -414,8 +459,23 @@ public:
     {
         return mAreaData;
     }
-    AreaData* getAreaDataByID(u8 id, u32 start_index = 0);
-    const AreaData* getAreaDataByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getAreaDataByID(id, start_index); }
+    s32 getAreaDataIndexByID(u8 id, u32 start_index = 0) const;
+    AreaData* getAreaDataByID(u8 id, u32 start_index = 0)
+    {
+        s32 index = getAreaDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mAreaData[index]);
+        else
+            return nullptr;
+    }
+    const AreaData* getAreaDataByID(u8 id, u32 start_index = 0) const
+    {
+        s32 index = getAreaDataIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mAreaData[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<Location>& getLocation()
     {
@@ -425,8 +485,23 @@ public:
     {
         return mLocation;
     }
-    Location* getLocationByID(u8 id, u32 start_index = 0);
-    const Location* getLocationByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getLocationByID(id, start_index); }
+    s32 getLocationIndexByID(u8 id, u32 start_index = 0) const;
+    Location* getLocationByID(u8 id, u32 start_index = 0)
+    {
+        s32 index = getLocationIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mLocation[index]);
+        else
+            return nullptr;
+    }
+    const Location* getLocationByID(u8 id, u32 start_index = 0) const
+    {
+        s32 index = getLocationIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mLocation[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<RailInfo>& getRailInfo()
     {
@@ -436,8 +511,23 @@ public:
     {
         return mRailInfo;
     }
-    RailInfo* getRailInfoByID(u8 id, u32 start_index = 0);
-    const RailInfo* getRailInfoByID(u8 id, u32 start_index = 0) const { return const_cast<CourseDataFile*>(this)->getRailInfoByID(id, start_index); }
+    s32 getRailInfoIndexByID(u8 id, u32 start_index = 0) const;
+    RailInfo* getRailInfoByID(u8 id, u32 start_index = 0)
+    {
+        s32 index = getRailInfoIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mRailInfo[index]);
+        else
+            return nullptr;
+    }
+    const RailInfo* getRailInfoByID(u8 id, u32 start_index = 0) const
+    {
+        s32 index = getRailInfoIndexByID(id, start_index);
+        if (index >= 0)
+            return &(mRailInfo[index]);
+        else
+            return nullptr;
+    }
 
     std::vector<RailPoint>& getRailPoint()
     {

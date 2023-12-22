@@ -732,57 +732,57 @@ void CourseDataFile::setEnvironment(u32 index, const char* name)
     mEnvironment.pa_slot_name[index][name_len] = '\0';
 }
 
-ScrollData* CourseDataFile::getScrollDataByID(u16 id, u32 start_index)
+s32 CourseDataFile::getScrollDataIndexByID(u16 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mScrollData.size(); i++)
         if (mScrollData[i].id == id)
-            return &(mScrollData[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
-DistantViewData* CourseDataFile::getDistantViewDataByID(u16 id, u32 start_index)
+s32 CourseDataFile::getDistantViewDataIndexByID(u16 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mDistantViewData.size(); i++)
         if (mDistantViewData[i].id == id)
-            return &(mDistantViewData[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
-NextGoto* CourseDataFile::getNextGotoByID(u8 id, u32 start_index)
+s32 CourseDataFile::getNextGotoIndexByID(u8 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mNextGoto.size(); i++)
         if (mNextGoto[i].id == id)
-            return &(mNextGoto[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
-AreaData* CourseDataFile::getAreaDataByID(u8 id, u32 start_index)
+s32 CourseDataFile::getAreaDataIndexByID(u8 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mAreaData.size(); i++)
         if (mAreaData[i].id == id)
-            return &(mAreaData[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
-Location* CourseDataFile::getLocationByID(u8 id, u32 start_index)
+s32 CourseDataFile::getLocationIndexByID(u8 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mLocation.size(); i++)
         if (mLocation[i].id == id)
-            return &(mLocation[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
-RailInfo* CourseDataFile::getRailInfoByID(u8 id, u32 start_index)
+s32 CourseDataFile::getRailInfoIndexByID(u8 id, u32 start_index) const
 {
     for (u32 i = start_index; i < mRailInfo.size(); i++)
         if (mRailInfo[i].id == id)
-            return &(mRailInfo[i]);
+            return i;
 
-    return nullptr;
+    return -1;
 }
 
