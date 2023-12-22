@@ -1,6 +1,7 @@
 #pragma once
 
 #include <course/Constants.h>
+#include <distant_view/DistantViewMgr.h>
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
@@ -516,6 +517,7 @@ private:
     rio::RenderTargetColor      mItemIDTarget;
     rio::RenderBuffer           mRenderBuffer;
     agl::RenderBuffer           mRenderBufferDV;
+    DistantViewMgr              mDistantViewMgr;
     bool                        mDrawDV,
                                 mLayerShown[CD_FILE_LAYER_MAX_NUM],
                                 mActorShown,

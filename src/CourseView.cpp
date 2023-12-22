@@ -8,7 +8,6 @@
 #include <actor/ActorCreateMgr.h>
 #include <course/Bg.h>
 #include <course/BgRenderer.h>
-#include <distant_view/DistantViewMgr.h>
 #include <graphics/LayerID.h>
 #include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
@@ -75,6 +74,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpColorTexture(nullptr)
     , mpItemIDTexture(nullptr)
     , mpDepthTexture(nullptr)
+    , mDistantViewMgr(mRenderBufferDV)
 {
     mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW);
     mpLayerDV = rio::lyr::Layer::peelIterator(mLayerItrDV);
@@ -114,8 +114,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 
     createRenderBuffer_(width, height);
 
-    DistantViewMgr::createSingleton(mRenderBufferDV);
-    DistantViewMgr::instance()->setFlickerEnable(false);
+  //mDistantViewMgr.setFlickerEnable(false);
 
     BgRenderer::createSingleton();
     BgRenderer::instance()->setCamera(&mCamera);
@@ -148,7 +147,7 @@ CourseView::~CourseView()
 
     ActorCreateMgr::destroySingleton();
     BgRenderer::destroySingleton();
-    DistantViewMgr::destroySingleton();
+    mDistantViewMgr.destroy();
 
     if (mpColorTexture)
     {
@@ -234,8 +233,6 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
     mCamera.pos().y = center_pos.y + screen_world_h_half_now;
 
     createRenderBuffer_(width, height);
-
-    DistantViewMgr::instance()->onResizeRenderBuffer();
 }
 
 void CourseView::createRenderBuffer_(s32 width, s32 height)
@@ -302,6 +299,8 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
     mItemIDTarget.linkTexture2D(*mpItemIDTexture);
 
     mRenderBuffer.clear(rio::RenderBuffer::CLEAR_FLAG_DEPTH);
+
+    mDistantViewMgr.onResizeRenderBuffer();
 }
 
 void CourseView::bindRenderBuffer_(bool with_item_id)
@@ -657,7 +656,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         );
     }
 
-    DistantViewMgr::instance()->initialize(
+    mDistantViewMgr.initialize(
         dv_name, dv_path,
         Globals::forceSharcfb(),
         bg_pos,
@@ -1957,7 +1956,7 @@ void CourseView::update()
         );
     }
 
-    DistantViewMgr::instance()->update(
+    mDistantViewMgr.update(
         getDistantViewLayer(),
         bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
@@ -2051,7 +2050,7 @@ void CourseView::gather()
         calcDistantViewScissor_();
 
     if (mDrawDV)
-        DistantViewMgr::instance()->draw(getDistantViewLayer());
+        mDistantViewMgr.draw(getDistantViewLayer());
 
     if (mActorShown && mActorGraphicsShown)
     {
@@ -2077,7 +2076,7 @@ void CourseView::dispose()
 void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
 {
     if (mDrawDV)
-        DistantViewMgr::instance()->applyDepthOfField();
+        mDistantViewMgr.applyDepthOfField();
 }
 
 void CourseView::insertItem(const ItemID& item_id, const void* data)
