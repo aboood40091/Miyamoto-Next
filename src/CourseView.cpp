@@ -57,11 +57,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     : mIsFocused(false)
     , mIsHovered(false)
     , mDrawCallback3D(*this)
-    , mDrawCallbackDV(*this)
-    , mpLayer3D(nullptr)
-    , mpLayerDV(nullptr)
     , mpCourseDataFile(nullptr)
-    , mDVControlArea(-1)
     , mCursorAction(CURSOR_ACTION_NONE)
     , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
     , mCursorState(CURSOR_STATE_RELEASE)
@@ -74,15 +70,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mpColorTexture(nullptr)
     , mpItemIDTexture(nullptr)
     , mpDepthTexture(nullptr)
-    , mDistantViewMgr(mRenderBufferDV)
 {
-    mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW);
-    mpLayerDV = rio::lyr::Layer::peelIterator(mLayerItrDV);
-    getDistantViewLayer()->initialize();
-    getDistantViewLayer()->addDrawMethod(RenderObjLayer::cRenderStep_PostFx, rio::lyr::DrawMethod(this, &CourseView::dv_PostFx_));
-    getDistantViewLayer()->setRenderMgr(&mRenderMgrDV);
-    mRenderMgrDV.setDrawCallback(&mDrawCallbackDV);
-
     mLayerItr3D = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("3D", LAYER_ID_3D);
     mpLayer3D = rio::lyr::Layer::peelIterator(mLayerItr3D);
     get3DLayer()->initialize();
@@ -105,7 +93,6 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     );
 
     setZoomUnitSize(32);
-    mRealBgZoom = mBgZoom;
 
     mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
     mRenderBufferDV.setRenderTargetColor(&mColorTargetDV);
@@ -120,7 +107,6 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     BgRenderer::instance()->setCamera(&mCamera);
     BgRenderer::instance()->setProjection(&mProjection);
 
-    mDrawDV = true;
     mLayerShown[LAYER_0] = true;
     mLayerShown[LAYER_1] = true;
     mLayerShown[LAYER_2] = true;
@@ -143,11 +129,10 @@ CourseView::~CourseView()
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
-    mAreaItem.clear();
+    mAreaItemPtr.clear();
 
     ActorCreateMgr::destroySingleton();
     BgRenderer::destroySingleton();
-    mDistantViewMgr.destroy();
 
     if (mpColorTexture)
     {
@@ -186,12 +171,6 @@ CourseView::~CourseView()
         rio::lyr::Renderer::instance()->removeLayer(mLayerItr3D);
         mpLayer3D = nullptr;
     }
-
-    if (mpLayerDV != nullptr)
-    {
-        rio::lyr::Renderer::instance()->removeLayer(mLayerItrDV);
-        mpLayerDV = nullptr;
-    }
 }
 
 void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
@@ -202,13 +181,7 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
     RIO_GL_CALL(glFinish());
 #endif
 
-    const f32 screen_world_h_half_prev = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
-    const f32 screen_world_w_half_prev = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half_prev * mAspect;
-
-    const rio::Vector2f center_pos {
-        mCamera.pos().x + screen_world_w_half_prev,
-        mCamera.pos().y - screen_world_h_half_prev
-    };
+    const rio::BaseVec2f center_pos = getCameraCenterWorldPos();
 
     mSize.x = width;
     mSize.y = height;
@@ -226,11 +199,7 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
     else
         setZoom(mBgZoom);
 
-    const f32 screen_world_h_half_now = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
-    const f32 screen_world_w_half_now = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half_now * mAspect;
-
-    mCamera.pos().x = center_pos.x - screen_world_w_half_now;
-    mCamera.pos().y = center_pos.y + screen_world_h_half_now;
+    setCameraCenterWorldPos(center_pos);
 
     createRenderBuffer_(width, height);
 }
@@ -300,10 +269,11 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
 
     mRenderBuffer.clear(rio::RenderBuffer::CLEAR_FLAG_DEPTH);
 
-    mDistantViewMgr.onResizeRenderBuffer();
+    for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
+        p_item->onResizeRenderBuffer();
 }
 
-void CourseView::bindRenderBuffer_(bool with_item_id)
+void CourseView::bindRenderBuffer(bool with_item_id)
 {
     if (with_item_id)
         mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
@@ -313,7 +283,7 @@ void CourseView::bindRenderBuffer_(bool with_item_id)
     mRenderBuffer.bind();
 }
 
-void CourseView::unbindRenderBuffer_()
+void CourseView::unbindRenderBuffer()
 {
     mRenderBuffer.getRenderTargetColor()->invalidateGPUCache();
     mpColorTexture->setCompMap(0x00010205);
@@ -348,11 +318,22 @@ void CourseView::clearItemIDTexture_()
 
 void CourseView::setCameraCenterWorldPos(const rio::BaseVec2f& center_pos)
 {
-    const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
-    const f32 screen_world_w_half = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half * mAspect;
+    const f32 screen_world_h_half = getScreenWorldHalfHeight();
+    const f32 screen_world_w_half = screen_world_h_half * mAspect;
 
     mCamera.pos().x = center_pos.x - screen_world_w_half;
     mCamera.pos().y = center_pos.y + screen_world_h_half;
+}
+
+rio::BaseVec2f CourseView::getCameraCenterWorldPos() const
+{
+    const f32 screen_world_h_half = getScreenWorldHalfHeight();
+    const f32 screen_world_w_half = screen_world_h_half * mAspect;
+
+    return {
+        mCamera.pos().x + screen_world_w_half,
+        mCamera.pos().y - screen_world_h_half
+    };
 }
 
 rio::BaseVec2f CourseView::viewToWorldPos(const rio::BaseVec2f& pos) const
@@ -360,7 +341,7 @@ rio::BaseVec2f CourseView::viewToWorldPos(const rio::BaseVec2f& pos) const
     const rio::Vector2f& pos_view = static_cast<const rio::Vector2f&>(pos);
     const rio::Vector2f& camera_pos = static_cast<const rio::Vector2f&>(mCamera.pos());
 
-    const f32 screen_world_h = 224 * mBgZoom;
+    const f32 screen_world_h = getScreenWorldHeight();
     const f32 screen_world_w = screen_world_h * mAspect;
 
     return pos_view * (rio::Vector2f{ screen_world_w, -screen_world_h } / mSize) + camera_pos;
@@ -371,7 +352,7 @@ rio::BaseVec2f CourseView::worldToViewPos(const rio::BaseVec2f& pos) const
     const rio::Vector2f& pos_world = static_cast<const rio::Vector2f&>(pos);
     const rio::Vector2f& camera_pos = static_cast<const rio::Vector2f&>(mCamera.pos());
 
-    const f32 screen_world_h = 224 * mBgZoom;
+    const f32 screen_world_h = getScreenWorldHeight();
     const f32 screen_world_w = screen_world_h * mAspect;
 
     return (pos_world - camera_pos) * (mSize / rio::Vector2f{ screen_world_w, -screen_world_h });
@@ -403,69 +384,6 @@ void CourseView::updateCursorPos(const rio::BaseVec2f& window_pos)
         mCursorPos.y = max_y;
 }
 
-namespace {
-
-static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
-{
-    static const SafeArray<f32, 12> FLOAT_ARRAY_1022ced0 = {
-        1.0000000f,
-        1.0000000f,
-        1.0000000f,
-        1.4285715f,
-        1.3571428f,
-        1.2142857f,
-        1.2142857f,
-        1.2142857f,
-        0.5000000f,
-        1.2142857f,
-        1.2142857f,
-        1.4285715f
-    };
-
-    static const SafeArray<f32, 9> FLOAT_ARRAY_1022d020 = {
-        1.0f,
-        1.0f,
-        1.0f,
-        1.3571428f,
-        1.3571428f,
-        1.3571428f,
-        1.2142857f,
-        1.2142857f,
-        1.2142857f
-    };
-
-    static const SafeArray<f32, 10> FLOAT_ARRAY_1022cea8 = {
-        1.0000000f,
-        1.3571428f,
-        1.7142857f,
-        2.0000000f,
-        1.2142857f,
-        1.4285715f,
-        1.1428572f,
-        2.0000000f,
-        0.5000000f,
-        0.7500000f
-    };
-
-    switch (zoom_type)
-    {
-    case 0:
-    case 1:
-    case 6:
-    case 7:
-        return FLOAT_ARRAY_1022ced0[zoom_id];
-    case 2:
-        return FLOAT_ARRAY_1022d020[zoom_id];
-    case 3:
-    case 4:
-    case 5:
-    default:
-        return FLOAT_ARRAY_1022cea8[zoom_id];
-    }
-}
-
-}
-
 void CourseView::uninitialize()
 {
     releaseCursorNow();
@@ -489,10 +407,9 @@ void CourseView::uninitialize()
     mMapActorItemPtr.clear();
     mNextGotoItem.clear();
     mLocationItem.clear();
-    mAreaItem.clear();
+    mAreaItemPtr.clear();
 
     mpCourseDataFile = nullptr;
-    mDVControlArea = -1;
 
     mCursorAction = CURSOR_ACTION_NONE;
 }
@@ -504,7 +421,6 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
     mpCourseDataFile = &cd_file;
 
     setZoomUnitSize(32);
-    mRealBgZoom = mBgZoom;
 
     Bg::instance()->processBgCourseData(getCourseDataFile());
     BgRenderer::instance()->createVertexBuffer();
@@ -542,7 +458,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
         size_t num = vec.size();
         for (u32 i = 0; i < num; i++)
-            mAreaItem.emplace_back(vec[i], i);
+            mAreaItemPtr.emplace_back(std::make_unique<AreaItem>(vec[i], i, mRenderBufferDV));
     }
 
     const NextGoto* start_next_goto = nullptr;
@@ -558,51 +474,12 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         start_next_goto = getCourseDataFile().getNextGotoByID(start);
     }
 
-    const char* dv_name = nullptr;
-
-    if (getCourseDataFile().getAreaData().size() > 0)
+    if (start_next_goto)
     {
-        const AreaData* p_area_data = nullptr;
-        if (start_next_goto)
-        {
-            p_area_data = getCourseDataFile().getAreaDataByID(start_next_goto->area);
-          //RIO_ASSERT(p_area_data != nullptr);
-        }
-        const AreaData& area_data = p_area_data != nullptr ? *p_area_data : getCourseDataFile().getAreaData()[0];
-
-        const DistantViewData* p_dv_data = getCourseDataFile().getDistantViewDataByID(area_data.bg2);
-      //RIO_ASSERT(p_dv_data != nullptr);
-        if (p_dv_data != nullptr)
-        {
-            dv_name = p_dv_data->name;
-            mDVControlArea = area_data.id;
-
-            const f32 w = s32(area_data.size.x);
-            const f32 h = s32(area_data.size.y);
-
-            mRealBgZoom =
-                std::min<f32>(
-                    std::min<f32>(
-                        std::min<f32>(
-                            w / 398.22222222222222f,
-                            h / 224.0f
-                        ),
-                        2.0f
-                    ),
-                    GetZoomMult(area_data.zoom_type, area_data.zoom_id)
-                );
-
-            if (real_zoom)
-                setZoom(mRealBgZoom);
-        }
-        else
-        {
-            dv_name = "Nohara";
-        }
-    }
-    else
-    {
-        dv_name = "Nohara";
+        s32 area_index = getCourseDataFile().getAreaDataIndexByID(start_next_goto->area);
+      //RIO_ASSERT(area_index >= 0);
+        if (area_index >= 0 && real_zoom)
+            setZoom(mAreaItemPtr[area_index]->getRealBgZoom());
     }
 
     rio::BaseVec2f center_pos;
@@ -618,54 +495,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         center_pos.y = 0.0f;
     }
 
-    RIO_ASSERT(dv_name != nullptr);
-
-    const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
-    RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name);
-
-    const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
-    const f32 screen_world_w_half = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half * mAspect;
-
-    rio::BaseVec2f& camera_pos = mCamera.pos();
-    camera_pos.x = center_pos.x - screen_world_w_half;
-    camera_pos.y = center_pos.y + screen_world_h_half;
-
-    rio::BaseVec2f bg_screen_center = center_pos;
-
-    rio::BaseVec2f bg_pos { 0.0f, 0.0f };
-    f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
-    if (mDVControlArea != -1)
-    {
-        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
-
-        const f32 x =  s32(area_data.offset.x);
-        const f32 y = -s32(area_data.offset.y);
-        const f32 w =  s32(area_data.  size.x);
-        const f32 h =  s32(area_data.  size.y);
-
-        bg_pos.x = x + w * 0.5f;
-        bg_pos.y = (y - h) + 0.5f * mRealBgZoom * 224.0f;
-
-        bg_screen_center.x = std::clamp<f32>(center_pos.x, x, x + w);
-        bg_screen_center.y = std::clamp<f32>(center_pos.y, y - h, y);
-        const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - screen_world_h_half, y - h, y);
-
-        bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
-            screen_world_bottom - (y - h),
-            0.0f, h
-        );
-    }
-
-    mDistantViewMgr.initialize(
-        dv_name, dv_path,
-        Globals::forceSharcfb(),
-        bg_pos,
-        bg_screen_center,
-        bg_offset_area_bottom_to_screen_bottom,
-        mRealBgZoom
-    );
-
-  //RIO_LOG("Initialized DistantViewMgr\n");
+    setCameraCenterWorldPos(center_pos);
 }
 
 bool CourseView::processMouseInput(bool focused, bool hovered)
@@ -809,7 +639,7 @@ void CourseView::moveItems(const std::vector<ItemID>& items, s16 dx, s16 dy, boo
             mLocationItem[item_id.getIndex()].move(dx, dy, commit);
             break;
         case ITEM_TYPE_AREA:
-            mAreaItem[item_id.getIndex()].move(dx, dy, commit);
+            mAreaItemPtr[item_id.getIndex()]->move(dx, dy, commit);
             break;
         }
     }
@@ -1126,25 +956,25 @@ void CourseView::popBackItem_Location_()
 void CourseView::pushBackItem_Area_(const AreaData& data)
 {
     std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
-    RIO_ASSERT(vec.size() == mAreaItem.size());
-    u32 i = mAreaItem.size();
+    RIO_ASSERT(vec.size() == mAreaItemPtr.size());
+    u32 i = mAreaItemPtr.size();
 
     vec.push_back(data);
     RIO_ASSERT(vec.size() == i + 1);
 
-    mAreaItem.emplace_back(data, i);
-    RIO_ASSERT(mAreaItem.size() == i + 1);
+    mAreaItemPtr.emplace_back(std::make_unique<AreaItem>(data, i, mRenderBufferDV));
+    RIO_ASSERT(mAreaItemPtr.size() == i + 1);
 }
 
 void CourseView::popBackItem_Area_()
 {
     std::vector<AreaData>& vec = getCourseDataFile().getAreaData();
-    RIO_ASSERT(vec.size() == mAreaItem.size());
+    RIO_ASSERT(vec.size() == mAreaItemPtr.size());
 
-    mAreaItem.pop_back();
+    mAreaItemPtr.pop_back();
     vec.pop_back();
 
-    RIO_ASSERT(vec.size() == mAreaItem.size());
+    RIO_ASSERT(vec.size() == mAreaItemPtr.size());
 }
 
 void CourseView::pushBackItem(ItemType item_type, const void* data, const void* extra)
@@ -1924,133 +1754,20 @@ void CourseView::update()
         break;
     }
 
-    const rio::BaseVec2f& camera_pos = mCamera.pos();
-
-    const f32 screen_world_h_half = /* mSize.x / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
-    const f32 screen_world_w_half = /* mSize.y / (2 * mCamera.getZoomScale()) */ screen_world_h_half * mAspect;
-
-    const rio::BaseVec2f center_pos {
-        camera_pos.x + screen_world_w_half,
-        camera_pos.y - screen_world_h_half
-    };
-
-    rio::BaseVec2f bg_screen_center = center_pos;
-
-    f32 bg_offset_area_bottom_to_screen_bottom = 0.0f;
-    if (mDVControlArea != -1)
-    {
-        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
-
-        const f32 x =  s32(area_data.offset.x);
-        const f32 y = -s32(area_data.offset.y);
-        const f32 w =  s32(area_data.  size.x);
-        const f32 h =  s32(area_data.  size.y);
-
-        bg_screen_center.x = std::clamp<f32>(center_pos.x, x, x + w);
-        bg_screen_center.y = std::clamp<f32>(center_pos.y, y - h, y);
-        const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - screen_world_h_half, y - h, y);
-
-        bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
-            screen_world_bottom - (y - h),
-            0.0f, h
-        );
-    }
-
-    mDistantViewMgr.update(
-        getDistantViewLayer(),
-        bg_screen_center,
-        bg_offset_area_bottom_to_screen_bottom,
-        mRealBgZoom
-    );
-
     if (isInitialized())
+    {
+        for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
+            p_item->onSceneUpdate();
+
         for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
             p_item->onSceneUpdate();
-}
-
-void CourseView::calcDistantViewScissor_()
-{
-    mRenderBuffer.resetScissor();
-
-    mDrawDV = true;
-
-    if (mDVControlArea != -1)
-    {
-        mDrawDV = false;
-
-        const AreaData& area_data = *getCourseDataFile().getAreaDataByID(mDVControlArea);
-
-        const f32 x =  s32(area_data.offset.x);
-        const f32 y = -s32(area_data.offset.y);
-        const f32 w =  s32(area_data.  size.x);
-        const f32 h =  s32(area_data.  size.y);
-
-        const rio::BaseVec2f& camera_pos = mCamera.pos();
-
-        const f32 screen_world_h = 224 * mBgZoom;
-        const f32 screen_world_w = screen_world_h * mAspect;
-
-        const rio::BaseVec2f screen_world_min {
-            camera_pos.x,
-            camera_pos.y - screen_world_h
-        };
-
-        const rio::BaseVec2f screen_world_max {
-            camera_pos.x + screen_world_w,
-            camera_pos.y
-        };
-
-        const rio::BaseVec2f area_world_min {
-            x,
-            y - h
-        };
-
-        const rio::BaseVec2f area_world_max {
-            x + w,
-            y
-        };
-
-        if (screen_world_min.x < area_world_max.x && area_world_min.x < screen_world_max.x &&
-            screen_world_min.y < area_world_max.y && area_world_min.y < screen_world_max.y)
-        {
-            const rio::BaseVec2f visible_area_world_min {
-                std::max<f32>(screen_world_min.x, area_world_min.x),
-                std::max<f32>(screen_world_min.y, area_world_min.y)
-            };
-
-            const rio::BaseVec2f visible_area_world_max {
-                std::min<f32>(screen_world_max.x, area_world_max.x),
-                std::min<f32>(screen_world_max.y, area_world_max.y)
-            };
-
-            const rio::BaseVec2f& visible_area_min = worldToViewPos(visible_area_world_min);
-            const rio::BaseVec2f& visible_area_max = worldToViewPos(visible_area_world_max);
-
-            s32 scissor_min_x = std::max<s32>(visible_area_min.x, 0);
-            s32 scissor_min_y = std::max<s32>(visible_area_max.y, 0);
-
-            s32 scissor_max_x = std::min<s32>(visible_area_max.x, mRenderBuffer.getSize().x);
-            s32 scissor_max_y = std::min<s32>(visible_area_min.y, mRenderBuffer.getSize().y);
-
-            s32 scissor_w = scissor_max_x - scissor_min_x;
-            s32 scissor_h = scissor_max_y - scissor_min_y;
-
-            if (scissor_w > 0 && scissor_h > 0)
-            {
-                mRenderBuffer.setScissor(scissor_min_x, scissor_min_y, scissor_w, scissor_h);
-                mDrawDV = true;
-            }
-        }
     }
 }
 
 void CourseView::gather()
 {
-    if (Globals::applyDistantViewScissor())
-        calcDistantViewScissor_();
-
-    if (mDrawDV)
-        mDistantViewMgr.draw(getDistantViewLayer());
+    for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
+        p_item->gather();
 
     if (mActorShown && mActorGraphicsShown)
     {
@@ -2063,20 +1780,27 @@ void CourseView::gather()
         Renderer::instance()->resetLayer();
     }
 
-    mRenderMgrDV.calc();
     mRenderMgr3D.calc();
+
+    mpColorTexture->setCompMap(0x00010203);
+    mRenderBuffer.clear(
+        rio::RenderBuffer::CLEAR_FLAG_COLOR_DEPTH,
+        {
+            119 / 255.f,
+            136 / 255.f,
+            153 / 255.f,
+            1.0f
+        }
+    );
+    clearItemIDTexture_();
 }
 
 void CourseView::dispose()
 {
-    mRenderMgrDV.clear();
-    mRenderMgr3D.clear();
-}
+    for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
+        p_item->dispose();
 
-void CourseView::dv_PostFx_(const rio::lyr::DrawInfo&)
-{
-    if (mDrawDV)
-        mDistantViewMgr.applyDepthOfField();
+    mRenderMgr3D.clear();
 }
 
 void CourseView::insertItem(const ItemID& item_id, const void* data)
@@ -2159,14 +1883,14 @@ void CourseView::insertItem(const ItemID& item_id, const void* data)
             const AreaData& data_ = *static_cast<const AreaData*>(data);
 
             std::vector<AreaData>& data_vec = getCourseDataFile().getAreaData();
-            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+            RIO_ASSERT(data_vec.size() == mAreaItemPtr.size());
 
             data_vec.insert(data_vec.begin() + i, data_);
-            mAreaItem.emplace(mAreaItem.begin() + i, data_, i);
-            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+            mAreaItemPtr.emplace(mAreaItemPtr.begin() + i, std::make_unique<AreaItem>(data_, i, mRenderBufferDV));
+            RIO_ASSERT(data_vec.size() == mAreaItemPtr.size());
 
-            for (u32 j = i + 1; j < mAreaItem.size(); j++)
-                mAreaItem[j].setIndex(j);
+            for (u32 j = i + 1; j < mAreaItemPtr.size(); j++)
+                mAreaItemPtr[j]->setIndex(j);
         }
         break;
     }
@@ -2247,14 +1971,14 @@ void CourseView::eraseItem(const ItemID& item_id)
             u32 i = item_id.getIndex();
 
             std::vector<AreaData>& data_vec = getCourseDataFile().getAreaData();
-            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+            RIO_ASSERT(data_vec.size() == mAreaItemPtr.size());
 
-            mAreaItem.erase(mAreaItem.begin() + i);
+            mAreaItemPtr.erase(mAreaItemPtr.begin() + i);
             data_vec.erase(data_vec.begin() + i);
-            RIO_ASSERT(data_vec.size() == mAreaItem.size());
+            RIO_ASSERT(data_vec.size() == mAreaItemPtr.size());
 
-            for (u32 j = i; j < mAreaItem.size(); j++)
-                mAreaItem[j].setIndex(j);
+            for (u32 j = i; j < mAreaItemPtr.size(); j++)
+                mAreaItemPtr[j]->setIndex(j);
         }
         break;
     }
@@ -2410,7 +2134,7 @@ void CourseView::setItemSelection_(const ItemID& item_id, bool is_selected)
         mLocationItem[item_id.getIndex()].setSelection(is_selected);
         break;
     case ITEM_TYPE_AREA:
-        mAreaItem[item_id.getIndex()].setSelection(is_selected);
+        mAreaItemPtr[item_id.getIndex()]->setSelection(is_selected);
         break;
     }
 }
@@ -2465,47 +2189,15 @@ void CourseView::drawSelectionBox_()
     );
 }
 
-void CourseView::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-    mCourseView.mpColorTexture->setCompMap(0x00010203);
-    mCourseView.mRenderBuffer.clear(
-        rio::RenderBuffer::CLEAR_FLAG_COLOR_DEPTH,
-        {
-            119 / 255.f,
-            136 / 255.f,
-            153 / 255.f,
-            1.0f
-        }
-    );
-    mCourseView.clearItemIDTexture_();
-    mCourseView.bindRenderBuffer_(false);
-}
-
-void CourseView::DrawCallbackDV::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-}
-
-void CourseView::DrawCallbackDV::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-}
-
-void CourseView::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
-{
-    mCourseView.unbindRenderBuffer_();
-}
-
 void CourseView::DrawCallback3D::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    if (Globals::applyDistantViewScissor())
-        mCourseView.mRenderBuffer.resetScissor();
-
     mCourseView.mpColorTexture->setCompMap(0x00010203);
-    mCourseView.bindRenderBuffer_(true);
+    mCourseView.bindRenderBuffer(true);
 }
 
 void CourseView::DrawCallback3D::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
 {
-    mCourseView.bindRenderBuffer_(true);
+    mCourseView.bindRenderBuffer(true);
 }
 
 void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -2540,11 +2232,11 @@ void CourseView::DrawCallback3D::postDrawOpa(s32 view_index, const rio::lyr::Dra
             for (LocationItem& item : mCourseView.mLocationItem)
                 item.drawOpa();
 
-        for (AreaItem& item : mCourseView.mAreaItem)
-            item.drawOpa();
+        for (std::unique_ptr<AreaItem>& p_item : mCourseView.mAreaItemPtr)
+            p_item->drawOpa();
     }
 
-    mCourseView.bindRenderBuffer_(false);
+    mCourseView.bindRenderBuffer(false);
 }
 
 void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
@@ -2603,16 +2295,16 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         bg_renderer.render(LAYER_0, cd_file, layer_shown[LAYER_0]);
     }
 
-    mCourseView.bindRenderBuffer_(false);
+    mCourseView.bindRenderBuffer(false);
 
     if (initialized)
-        for (AreaItem& item : mCourseView.mAreaItem)
-            item.drawXlu();
+        for (std::unique_ptr<AreaItem>& p_item : mCourseView.mAreaItemPtr)
+            p_item->drawXlu();
 
     if (mCourseView.mCursorAction == CURSOR_ACTION_SELECTION_BOX)
         mCourseView.drawSelectionBox_();
 
-    mCourseView.unbindRenderBuffer_();
+    mCourseView.unbindRenderBuffer();
 }
 
 void CourseView::drawSelectionUI()
@@ -2648,7 +2340,7 @@ void CourseView::drawSelectionUI()
                 mLocationItem[selected_item.getIndex()].drawSelectionUI();
                 break;
             case ITEM_TYPE_AREA:
-                mAreaItem[selected_item.getIndex()].drawSelectionUI();
+                mAreaItemPtr[selected_item.getIndex()]->drawSelectionUI();
                 break;
             }
         }

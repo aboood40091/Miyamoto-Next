@@ -1,7 +1,6 @@
 #pragma once
 
 #include <course/Constants.h>
-#include <distant_view/DistantViewMgr.h>
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
@@ -34,23 +33,6 @@ private:
     {
     public:
         DrawCallback3D(CourseView& course_view)
-            : mCourseView(course_view)
-        {
-        }
-
-        void preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
-        void preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
-        void postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
-        void postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info) override;
-
-    private:
-        CourseView& mCourseView;
-    };
-
-    class DrawCallbackDV : public RenderMgr::CallbackBase
-    {
-    public:
-        DrawCallbackDV(CourseView& course_view)
             : mCourseView(course_view)
         {
         }
@@ -173,16 +155,6 @@ public:
         return mCamera.getZoomScale() * 16.f;
     }
 
-    RenderObjLayer* getDistantViewLayer()
-    {
-        return static_cast<RenderObjLayer*>(mpLayerDV);
-    }
-
-    const RenderObjLayer* getDistantViewLayer() const
-    {
-        return static_cast<const RenderObjLayer*>(mpLayerDV);
-    }
-
     RenderObjLayer* get3DLayer()
     {
         return static_cast<RenderObjLayer*>(mpLayer3D);
@@ -210,7 +182,28 @@ public:
 
     rio::BaseVec2f getCenterWorldPos() const
     {
-        return viewToWorldPos(mSize * 0.5f);
+      //return viewToWorldPos(mSize * 0.5f);
+        return getCameraCenterWorldPos();
+    }
+
+    f32 getScreenWorldWidth() const
+    {
+        return /* mSize.x / mCamera.getZoomScale() */ getScreenWorldHeight() * mAspect;
+    }
+
+    f32 getScreenWorldHeight() const
+    {
+        return /* mSize.y / mCamera.getZoomScale() */ 224 * mBgZoom;
+    }
+
+    f32 getScreenWorldHalfWidth() const
+    {
+        return /* mSize.x / (2 * mCamera.getZoomScale()) */ getScreenWorldHalfHeight() * mAspect;
+    }
+
+    f32 getScreenWorldHalfHeight() const
+    {
+        return /* mSize.y / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
     }
 
     const rio::Texture2D* getColorTexture() const
@@ -324,9 +317,9 @@ public:
         return mNextGotoItem;
     }
 
-    const std::vector<AreaItem>& getAreaItem() const
+    const std::vector< std::unique_ptr<AreaItem> >& getAreaItem() const
     {
-        return mAreaItem;
+        return mAreaItemPtr;
     }
 
     bool* getLayerVisibility(u8 layer)
@@ -369,6 +362,7 @@ public:
     }
 
     void setCameraCenterWorldPos(const rio::BaseVec2f& center_pos);
+    rio::BaseVec2f getCameraCenterWorldPos() const;
 
     void updateCursorPos(const rio::BaseVec2f& window_pos);
     bool processMouseInput(bool focused, bool hovered);
@@ -398,10 +392,11 @@ public:
 
     void selectItem(const ItemID& item_id);
 
+    void bindRenderBuffer(bool with_item_id);
+    void unbindRenderBuffer();
+
 private:
     void createRenderBuffer_(s32 width, s32 height);
-    void bindRenderBuffer_(bool with_item_id);
-    void unbindRenderBuffer_();
     void clearItemIDTexture_();
 
     void onCursorPress_L_();
@@ -462,9 +457,6 @@ private:
 
     s32 findNearestArea_(s32 x, s32 y);
 
-    void calcDistantViewScissor_();
-    void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
-
 private:
     bool                        mIsFocused,
                                 mIsHovered;
@@ -473,17 +465,11 @@ private:
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
     DrawCallback3D              mDrawCallback3D;
-    DrawCallbackDV              mDrawCallbackDV;
-    RenderMgr                   mRenderMgr3D,
-                                mRenderMgrDV;
-    rio::lyr::Layer::iterator   mLayerItr3D,
-                                mLayerItrDV;
-    rio::lyr::Layer            *mpLayer3D,
-                               *mpLayerDV;
+    RenderMgr                   mRenderMgr3D;
+    rio::lyr::Layer::iterator   mLayerItr3D;
+    rio::lyr::Layer*            mpLayer3D;
     CourseDataFile*             mpCourseDataFile;
-    s32                         mDVControlArea;
-    f32                         mBgZoom,
-                                mRealBgZoom;
+    f32                         mBgZoom;
     PaintContext                mPaintCurrent,
                                 mPaintNext;
     rio::Vector2f               mCursorPos;
@@ -501,7 +487,8 @@ private:
     std::vector<NextGotoItem>   mNextGotoItem;
     std::vector< std::unique_ptr<MapActorItem> >
                                 mMapActorItemPtr;
-    std::vector<AreaItem>       mAreaItem;
+    std::vector< std::unique_ptr<AreaItem> >
+                                mAreaItemPtr;
     std::vector<LocationItem>   mLocationItem;
     u8*                         mpItemIDReadBuffer;
 #if RIO_IS_WIN
@@ -517,9 +504,7 @@ private:
     rio::RenderTargetColor      mItemIDTarget;
     rio::RenderBuffer           mRenderBuffer;
     agl::RenderBuffer           mRenderBufferDV;
-    DistantViewMgr              mDistantViewMgr;
-    bool                        mDrawDV,
-                                mLayerShown[CD_FILE_LAYER_MAX_NUM],
+    bool                        mLayerShown[CD_FILE_LAYER_MAX_NUM],
                                 mActorShown,
                                 mActorGraphicsShown,
                                 mNextGotoShown,

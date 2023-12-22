@@ -886,12 +886,12 @@ void MainWindow::drawPaletteUI_()
 
         if (ImGui::BeginListBox("##AreaList", ImVec2(-1, -1)))
         {
-            const std::vector<AreaItem>& item_vec = mpCourseView->getAreaItem();
+            const std::vector< std::unique_ptr<AreaItem> >& item_vec = mpCourseView->getAreaItem();
             std::vector<AreaData>& data_vec = mpCourseView->getCourseDataFile().getAreaData();
 
             for (u32 i = 0; i < data_vec.size(); i++)
             {
-                const AreaItem& area_item = item_vec[i];
+                const AreaItem& area_item = *(item_vec[i]);
                 const AreaData& area_data = data_vec[i];
 
                 const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", area_data.id, area_data.offset.x, area_data.offset.y);

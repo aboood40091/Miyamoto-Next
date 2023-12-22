@@ -1,8 +1,12 @@
 #include <CourseView.h>
+#include <Globals.h>
 #include <action/ActionItemDataChange.h>
 #include <action/ActionMgr.h>
+#include <graphics/LayerID.h>
 #include <graphics/QuadRenderer.h>
 #include <item/AreaItem.h>
+
+#include <gfx/lyr/rio_Renderer.h>
 
 #include <imgui.h>
 
@@ -20,9 +24,197 @@ static const rio::Color4f sMaskColor{
      48 / 255.f
 };
 
-AreaItem::AreaItem(const AreaData& area_data, u32 index)
-    : ItemBase(ITEM_TYPE_AREA, index, area_data.offset.x, area_data.offset.y)
+static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
 {
+    static const SafeArray<f32, 12> FLOAT_ARRAY_1022ced0 = {
+        1.0000000f,
+        1.0000000f,
+        1.0000000f,
+        1.4285715f,
+        1.3571428f,
+        1.2142857f,
+        1.2142857f,
+        1.2142857f,
+        0.5000000f,
+        1.2142857f,
+        1.2142857f,
+        1.4285715f
+    };
+
+    static const SafeArray<f32, 9> FLOAT_ARRAY_1022d020 = {
+        1.0f,
+        1.0f,
+        1.0f,
+        1.3571428f,
+        1.3571428f,
+        1.3571428f,
+        1.2142857f,
+        1.2142857f,
+        1.2142857f
+    };
+
+    static const SafeArray<f32, 10> FLOAT_ARRAY_1022cea8 = {
+        1.0000000f,
+        1.3571428f,
+        1.7142857f,
+        2.0000000f,
+        1.2142857f,
+        1.4285715f,
+        1.1428572f,
+        2.0000000f,
+        0.5000000f,
+        0.7500000f
+    };
+
+    switch (zoom_type)
+    {
+    case 0:
+    case 1:
+    case 6:
+    case 7:
+        return FLOAT_ARRAY_1022ced0[zoom_id];
+    case 2:
+        return FLOAT_ARRAY_1022d020[zoom_id];
+    case 3:
+    case 4:
+    case 5:
+    default:
+        return FLOAT_ARRAY_1022cea8[zoom_id];
+    }
+}
+
+AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer& render_buffer)
+    : ItemBase(ITEM_TYPE_AREA, index, area_data.offset.x, area_data.offset.y)
+    , mpRenderBufferDV(&render_buffer)
+    , mDrawCallbackDV(index)
+    , mpLayerDV(nullptr)
+    , mDrawDV(true)
+{
+    const f32 x =  s32(area_data.offset.x);
+    const f32 y = -s32(area_data.offset.y);
+    const f32 w =  s32(area_data.  size.x);
+    const f32 h =  s32(area_data.  size.y);
+
+    mRealBgZoom =
+        std::min<f32>(
+            std::min<f32>(
+                std::min<f32>(
+                    w / 398.22222222222222f,
+                    h / 224.0f
+                ),
+                2.0f
+            ),
+            GetZoomMult(area_data.zoom_type, area_data.zoom_id)
+        );
+
+    const DistantViewData* p_dv_data = CourseView::instance()->getCourseDataFile().getDistantViewDataByID(area_data.bg2);
+  //RIO_ASSERT(p_dv_data != nullptr);
+    if (p_dv_data == nullptr)
+        return;
+
+    RIO_ASSERT(index < 64);
+    mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW_0 - index);
+    mpLayerDV = rio::lyr::Layer::peelIterator(mLayerItrDV);
+    getDistantViewLayer()->initialize();
+    getDistantViewLayer()->addDrawMethod(RenderObjLayer::cRenderStep_PostFx, rio::lyr::DrawMethod(this, &AreaItem::dv_PostFx_));
+    getDistantViewLayer()->setRenderMgr(&mRenderMgrDV);
+    mRenderMgrDV.setDrawCallback(&mDrawCallbackDV);
+
+    const std::string& dv_name = p_dv_data->name;
+    const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
+    RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name.c_str());
+
+    const rio::BaseVec2f bg_pos {
+        x + w * 0.5f,
+        (y - h) + 0.5f * mRealBgZoom * 224.0f
+    };
+
+    const rio::BaseVec2f& center_pos = CourseView::instance()->getCenterWorldPos();
+
+    const rio::BaseVec2f bg_screen_center {
+        std::clamp<f32>(center_pos.x, x, x + w),
+        std::clamp<f32>(center_pos.y, y - h, y)
+    };
+    const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - CourseView::instance()->getScreenWorldHalfHeight(), y - h, y);
+
+    f32 bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
+        screen_world_bottom - (y - h),
+        0.0f, h
+    );
+
+    mpDistantViewMgr = std::make_unique<DistantViewMgr>(*mpRenderBufferDV);
+    mpDistantViewMgr->initialize(
+        dv_name, dv_path,
+        Globals::forceSharcfb(),
+        bg_pos,
+        bg_screen_center,
+        bg_offset_area_bottom_to_screen_bottom,
+        mRealBgZoom
+    );
+
+  //RIO_LOG("Initialized DistantViewMgr\n");
+}
+
+AreaItem::~AreaItem()
+{
+    if (mpLayerDV != nullptr)
+    {
+        rio::lyr::Renderer::instance()->removeLayer(mLayerItrDV);
+        mpLayerDV = nullptr;
+    }
+}
+
+void AreaItem::onSceneUpdate()
+{
+    if (!mpDistantViewMgr)
+        return;
+
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+
+    const f32 x =  s32(area_data.offset.x);
+    const f32 y = -s32(area_data.offset.y);
+    const f32 w =  s32(area_data.  size.x);
+    const f32 h =  s32(area_data.  size.y);
+
+    const rio::BaseVec2f& center_pos = CourseView::instance()->getCenterWorldPos();
+
+    const rio::BaseVec2f bg_screen_center {
+        std::clamp<f32>(center_pos.x, x, x + w),
+        std::clamp<f32>(center_pos.y, y - h, y)
+    };
+    const f32 screen_world_bottom = std::clamp<f32>(center_pos.y - CourseView::instance()->getScreenWorldHalfHeight(), y - h, y);
+
+    f32 bg_offset_area_bottom_to_screen_bottom = std::clamp<f32>(
+        screen_world_bottom - (y - h),
+        0.0f, h
+    );
+
+    mpDistantViewMgr->update(
+        getDistantViewLayer(),
+        bg_screen_center,
+        bg_offset_area_bottom_to_screen_bottom,
+        mRealBgZoom
+    );
+}
+
+void AreaItem::gather()
+{
+    if (mpDistantViewMgr)
+    {
+        if (Globals::applyDistantViewScissor())
+            calcDistantViewScissor_();
+
+        if (mDrawDV)
+        {
+            mpDistantViewMgr->draw(getDistantViewLayer());
+            mRenderMgrDV.calc();
+        }
+    }
+}
+
+void AreaItem::dispose()
+{
+    mRenderMgrDV.clear();
 }
 
 void AreaItem::move(s16 dx, s16 dy, bool commit)
@@ -207,4 +399,106 @@ void AreaItem::drawSelectionUI()
 
     if (ImGui::Button("Discard"))
         mSelectionData = area_data;
+}
+
+void AreaItem::calcDistantViewScissor_()
+{
+    mDrawDV = false;
+
+    const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
+
+    const f32 x =  s32(area_data.offset.x);
+    const f32 y = -s32(area_data.offset.y);
+    const f32 w =  s32(area_data.  size.x);
+    const f32 h =  s32(area_data.  size.y);
+
+    const rio::BaseVec2f& center_pos = CourseView::instance()->getCenterWorldPos();
+
+    const f32 screen_world_w_half = CourseView::instance()->getScreenWorldHalfWidth();
+    const f32 screen_world_h_half = CourseView::instance()->getScreenWorldHalfHeight();
+
+    const rio::BaseVec2f screen_world_min {
+        center_pos.x - screen_world_w_half,
+        center_pos.y - screen_world_h_half
+    };
+
+    const rio::BaseVec2f screen_world_max {
+        center_pos.x + screen_world_w_half,
+        center_pos.y + screen_world_h_half
+    };
+
+    const rio::BaseVec2f area_world_min {
+        x,
+        y - h
+    };
+
+    const rio::BaseVec2f area_world_max {
+        x + w,
+        y
+    };
+
+    if (screen_world_min.x < area_world_max.x && area_world_min.x < screen_world_max.x &&
+        screen_world_min.y < area_world_max.y && area_world_min.y < screen_world_max.y)
+    {
+        const rio::BaseVec2f visible_area_world_min {
+            std::max<f32>(screen_world_min.x, area_world_min.x),
+            std::max<f32>(screen_world_min.y, area_world_min.y)
+        };
+
+        const rio::BaseVec2f visible_area_world_max {
+            std::min<f32>(screen_world_max.x, area_world_max.x),
+            std::min<f32>(screen_world_max.y, area_world_max.y)
+        };
+
+        const rio::BaseVec2f& visible_area_min = CourseView::instance()->worldToViewPos(visible_area_world_min);
+        const rio::BaseVec2f& visible_area_max = CourseView::instance()->worldToViewPos(visible_area_world_max);
+
+        s32 scissor_min_x = std::max<s32>(visible_area_min.x, 0);
+        s32 scissor_min_y = std::max<s32>(visible_area_max.y, 0);
+
+        s32 scissor_max_x = std::min<s32>(visible_area_max.x, mpRenderBufferDV->getSize().x);
+        s32 scissor_max_y = std::min<s32>(visible_area_min.y, mpRenderBufferDV->getSize().y);
+
+        s32 scissor_w = scissor_max_x - scissor_min_x;
+        s32 scissor_h = scissor_max_y - scissor_min_y;
+
+        if (scissor_w > 0 && scissor_h > 0)
+        {
+            mScissorMin.x = scissor_min_x;
+            mScissorMin.y = scissor_min_y;
+            mScissorSize.x = scissor_w;
+            mScissorSize.y = scissor_h;
+            mDrawDV = true;
+        }
+    }
+}
+
+void AreaItem::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
+{
+    if (mDrawDV && mpDistantViewMgr)
+        mpDistantViewMgr->applyDepthOfField();
+}
+
+void AreaItem::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+    CourseView::instance()->bindRenderBuffer(false);
+
+    if (Globals::applyDistantViewScissor())
+    {
+        const AreaItem& item = *(CourseView::instance()->getAreaItem()[mIndex]);
+        rio::Graphics::setScissor(item.mScissorMin.x, item.mScissorMin.y, item.mScissorSize.x, item.mScissorSize.y, item.mpRenderBufferDV->getSize().y);
+    }
+}
+
+void AreaItem::DrawCallbackDV::preDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+}
+
+void AreaItem::DrawCallbackDV::postDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+}
+
+void AreaItem::DrawCallbackDV::postDrawXlu(s32 view_index, const rio::lyr::DrawInfo& draw_info)
+{
+    CourseView::instance()->unbindRenderBuffer();
 }

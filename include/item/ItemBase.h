@@ -13,6 +13,10 @@ protected:
         mBasePosition.y = y;
     }
 
+    virtual ~ItemBase()
+    {
+    }
+
 public:
     const ItemID& getItemID() const
     {
