@@ -11,7 +11,7 @@
 #include <ninTexUtils/gfd/gfdStruct.h>
 #endif
 
-Texture2DUtil::GTXError Texture2DUtil::createFromGTX(std::span<const u8> file, rio::Texture2D** pp_texture)
+Texture2DUtil::GTXError Texture2DUtil::createFromGTX(std::span<const u8> file, std::unique_ptr<rio::Texture2D>* pp_texture)
 {
     if (file.data() == nullptr || file.size() < sizeof(GFDHeader))
         return GTX_ERROR_SRC_TOO_SHORT;
@@ -19,10 +19,10 @@ Texture2DUtil::GTXError Texture2DUtil::createFromGTX(std::span<const u8> file, r
     return createFromGTX(file.data(), pp_texture);
 }
 
-Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, rio::Texture2D** pp_texture)
+Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, std::unique_ptr<rio::Texture2D>* pp_texture)
 {
     RIO_ASSERT(pp_texture);
-    rio::Texture2D*& p_texture = *pp_texture;
+    std::unique_ptr<rio::Texture2D>& p_texture = *pp_texture;
 
     if (file_data == nullptr)
         return GTX_ERROR_SRC_TOO_SHORT;
@@ -119,14 +119,14 @@ Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, rio::T
     native_texture.surface.mipLevelOffset[0] = 0;
 #endif
 
-    p_texture = new rio::Texture2D(native_texture);
+    p_texture = std::make_unique<rio::Texture2D>(native_texture);
     return GTX_ERROR_OK;
 }
 
-void Texture2DUtil::destroy(rio::Texture2D** pp_texture)
+void Texture2DUtil::destroy(std::unique_ptr<rio::Texture2D>* pp_texture)
 {
     RIO_ASSERT(pp_texture);
-    rio::Texture2D*& p_texture = *pp_texture;
+    std::unique_ptr<rio::Texture2D>& p_texture = *pp_texture;
 
     if (p_texture)
     {
@@ -135,7 +135,6 @@ void Texture2DUtil::destroy(rio::Texture2D** pp_texture)
         if (native_surface.mipmaps)
             rio::MemUtil::free(native_surface.mipmaps);
 
-        delete p_texture;
-        p_texture = nullptr;
+        p_texture.reset();
     }
 }

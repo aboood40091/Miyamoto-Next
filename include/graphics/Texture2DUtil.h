@@ -2,6 +2,7 @@
 
 #include <gpu/rio_Texture.h>
 
+#include <memory>
 #include <span>
 
 class Texture2DUtil
@@ -16,7 +17,7 @@ public:
         GTX_ERROR_UNSUPPORTED_FORMAT
     };
 public:
-    static GTXError createFromGTX(std::span<const u8> file, rio::Texture2D** pp_texture);
-    static GTXError createFromGTX(const u8* file_data, rio::Texture2D** pp_texture);
-    static void destroy(rio::Texture2D** pp_texture);
+    static GTXError createFromGTX(std::span<const u8> file, std::unique_ptr<rio::Texture2D>* pp_texture);
+    static GTXError createFromGTX(const u8* file_data, std::unique_ptr<rio::Texture2D>* pp_texture);
+    static void destroy(std::unique_ptr<rio::Texture2D>* pp_texture);
 };

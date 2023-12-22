@@ -12,8 +12,37 @@ class BgUnitFile
 {
     struct TextureFile
     {
-        rio::Texture2D* p_tex = nullptr;
-        std::span<u8>   data;
+        std::unique_ptr<rio::Texture2D> p_tex;
+        std::span<u8>                   data;
+
+        TextureFile() = default;
+        ~TextureFile() = default;
+
+        TextureFile(const TextureFile&) = delete;
+        TextureFile& operator=(const TextureFile&) = delete;
+
+        TextureFile(TextureFile&& other)
+            : p_tex(std::move(other.p_tex))
+            , data(other.data)
+        {
+            other.data = std::span<u8>();
+        }
+
+        TextureFile& operator=(TextureFile&& other)
+        {
+            if (this != &other)
+            {
+                destroy();
+
+                p_tex = std::move(other.p_tex);
+                data = other.data;
+
+                other.data = std::span<u8>();
+            }
+            return *this;
+        }
+
+        void destroy();
     };
 
 public:
@@ -49,17 +78,17 @@ public:
 
     const rio::Texture2D* getTexture() const
     {
-        return mTextureFile.p_tex;
+        return mTextureFile.p_tex.get();
     }
 
     const rio::Texture2D* getNormalTexture() const
     {
-        return mNormalTextureFile.p_tex;
+        return mNormalTextureFile.p_tex.get();
     }
 
     const rio::Texture2D* getAnimeTexture(AnimeType type) const
     {
-        return mAnimeTextureFile[type].p_tex;
+        return mAnimeTextureFile[type].p_tex.get();
     }
 
 private:

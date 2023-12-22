@@ -46,20 +46,22 @@ BgUnitFile::~BgUnitFile()
     unload();
 }
 
+void BgUnitFile::TextureFile::destroy()
+{
+    Texture2DUtil::destroy(&p_tex);
+    destroySpan(&data);
+}
+
 void BgUnitFile::unload()
 {
     rio::MemUtil::set(mBgCheck, 0, sizeof(u64) * BG_MAX_PER_UNIT_NUM);
 
     mObj.clear();
 
-    Texture2DUtil::destroy(&mTextureFile.p_tex);        destroySpan(&mTextureFile.data);
-    Texture2DUtil::destroy(&mNormalTextureFile.p_tex);  destroySpan(&mNormalTextureFile.data);
-
+    mTextureFile.destroy();
+    mNormalTextureFile.destroy();
     for (s32 i = 0; i < ANIME_TYPE_MAX; i++)
-    {
-        Texture2DUtil::destroy(&mAnimeTextureFile[i].p_tex);
-        destroySpan(&mAnimeTextureFile[i].data);
-    }
+        mAnimeTextureFile[i].destroy();
 }
 
 bool BgUnitFile::load(std::span<const u8> data)
