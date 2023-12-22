@@ -85,7 +85,7 @@ private:
     bool                    mCourseViewCameraMoved;
     RenderMgr               mRenderMgrBgPrepare;
     std::string             mCoursePath;
-    s32                     mCurrentFile;
+    u32                     mCurrentFile;
     ItemType                mPaintType;
     u16                     mEnvSelectedObj;
     s32                     mEnvPaintLayer;
