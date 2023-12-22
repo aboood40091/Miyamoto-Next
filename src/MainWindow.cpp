@@ -1201,7 +1201,7 @@ void MainWindow::drawMainMenuBarUI_()
 
         if (ImGui::BeginMenu("Course"))
         {
-            if (ImGui::MenuItem("Options") && !mCourseFileOptionsOpen)
+            if (ImGui::MenuItem("Options", nullptr, mCourseFileOptionsOpen, !mCourseFileOptionsOpen))
             {
                 mCourseFileOptionsOpen = true;
                 mCourseFileOptions = mpCourseView->getCourseDataFile().getOptions();
@@ -1277,10 +1277,7 @@ void MainWindow::drawFileOptionsUI_()
         ImGui::SameLine();
 
         if (ImGui::Button("Discard"))
-        {
-            mCourseFileOptions = options;
             mCourseFileOptionsOpen = false;
-        }
     }
     ImGui::End();
 }
