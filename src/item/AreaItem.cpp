@@ -154,6 +154,7 @@ void AreaItem::loadDistantView_(f32 x, f32 y, f32 w, f32 h, const DistantViewDat
     );
 
     mpDistantViewMgr = std::make_unique<DistantViewMgr>(*mpRenderBufferDV);
+    mpDistantViewMgr->setFlickerEnable(false);
     mpDistantViewMgr->initialize(
         mDVName, dv_path,
         Globals::forceSharcfb(),

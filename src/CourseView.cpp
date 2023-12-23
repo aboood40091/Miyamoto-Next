@@ -103,8 +103,6 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 
     createRenderBuffer_(width, height);
 
-  //mDistantViewMgr.setFlickerEnable(false);
-
     BgRenderer::createSingleton();
     BgRenderer::instance()->setCamera(&mCamera);
     BgRenderer::instance()->setProjection(&mProjection);
