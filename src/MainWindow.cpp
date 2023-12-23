@@ -1153,6 +1153,8 @@ void MainWindow::drawFileOptionsMenuItemUI_()
 
 void MainWindow::drawMainMenuBarUI_()
 {
+    bool open_settings = false;
+
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
@@ -1168,6 +1170,11 @@ void MainWindow::drawMainMenuBarUI_()
 
             if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
                 courseSaveAs();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Settings"))
+                open_settings = true;
 
             ImGui::EndMenu();
         }
@@ -1236,6 +1243,31 @@ void MainWindow::drawMainMenuBarUI_()
         }
 
         ImGui::EndMainMenuBar();
+    }
+
+    if (open_settings)
+        ImGui::OpenPopup("Settings");
+
+    if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        static int thing = 0;
+        ImGui::InputInt("Test 1", &thing);
+
+        static int thing2 = 0;
+        ImGui::InputInt("Test 2", &thing2);
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Apply"))
+            ImGui::CloseCurrentPopup();
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Discard"))
+            ImGui::CloseCurrentPopup();
+        ImGui::SetItemDefaultFocus();
+
+        ImGui::EndPopup();
     }
 }
 
