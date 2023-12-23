@@ -1250,11 +1250,21 @@ void MainWindow::drawMainMenuBarUI_()
 
     if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        static int thing = 0;
-        ImGui::InputInt("Test 1", &thing);
+        std::string contentPath = Globals::getContentPath();
+        bool forceSharcfb = Globals::forceSharcfb();
+        float bigItemScale = Globals::getBigItemScale();
+        bool useRealZoom = Globals::useRealZoom();
+        bool preserveUnitSize = Globals::preserveUnitSize();
+        bool applyDistantViewScissor = Globals::applyDistantViewScissor();
 
-        static int thing2 = 0;
-        ImGui::InputInt("Test 2", &thing2);
+        ImGui::BeginDisabled();
+        ImGui::InputText("Content Path", const_cast<char*>(contentPath.c_str()), contentPath.length());
+        ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
+        ImGui::InputFloat("Big Item Scale", &bigItemScale);
+        ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
+        ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
+        ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
+        ImGui::EndDisabled();
 
         ImGui::Separator();
 
