@@ -90,6 +90,11 @@ public:
         return static_cast<const RenderObjLayer*>(mpLayerDV);
     }
 
+    void SetDrawDV(bool drawDV)
+    {
+        mDrawDV = drawDV;
+    }
+
     void onResizeRenderBuffer()
     {
         if (mpDistantViewMgr)

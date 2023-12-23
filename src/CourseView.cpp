@@ -1767,6 +1767,17 @@ void CourseView::update()
 
     if (isInitialized())
     {
+        if (!Globals::applyDistantViewScissor())
+        {
+            rio::BaseVec2f center_pos = getCenterWorldPos();
+            s32 area_index = findNearestArea_(center_pos.x, -center_pos.y);
+            if (area_index >= 0)
+            {
+                for (s32 i = 0; i < (s32)mAreaItemPtr.size(); i++)
+                    mAreaItemPtr[i]->SetDrawDV(i == area_index);
+            }
+        }
+
         for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
             p_item->onSceneUpdate();
 
