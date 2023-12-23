@@ -1775,8 +1775,13 @@ void CourseView::update()
             s32 area_index = findNearestArea_(center_pos.x, -center_pos.y);
             if (area_index >= 0)
             {
-                for (s32 i = 0; i < (s32)mAreaItemPtr.size(); i++)
-                    mAreaItemPtr[i]->SetDrawDV(i == area_index);
+                for (u32 i = 0; i < (u32)area_index; i++)
+                    mAreaItemPtr[i]->SetDrawDV(false);
+
+                mAreaItemPtr[area_index]->SetDrawDV(true);
+
+                for (u32 i = area_index + 1; i < mAreaItemPtr.size(); i++)
+                    mAreaItemPtr[i]->SetDrawDV(false);
             }
         }
 
