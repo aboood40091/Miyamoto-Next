@@ -1,6 +1,6 @@
 #pragma once
 
-#include <course/Constants.h>
+#include <course/CourseDataFile.h>
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
@@ -14,16 +14,10 @@
 #include <array>
 #include <memory>
 
-struct  AreaData;
-struct  BgCourseData;
-class   BgUnitItem;
 class   AreaItem;
-class   CourseDataFile;
-struct  Location;
+class   BgUnitItem;
 class   LocationItem;
-struct  MapActorData;
 class   MapActorItem;
-struct  NextGoto;
 class   NextGotoItem;
 
 class CourseView : public rio::lyr::IDrawable
@@ -212,6 +206,8 @@ public:
     }
 
     void drawSelectionUI();
+    void drawFileOptionsUI();
+    void drawFileOptionsMenuItemUI();
 
     void resize(s32 width, s32 height, bool preserve_unit_size = false);
 
@@ -470,6 +466,8 @@ private:
     rio::lyr::Layer*            mpLayer3D;
     CourseDataFile*             mpCourseDataFile;
     f32                         mBgZoom;
+    bool                        mOptionsOpen;
+    Options                     mOptions;
     PaintContext                mPaintCurrent,
                                 mPaintNext;
     rio::Vector2f               mCursorPos;

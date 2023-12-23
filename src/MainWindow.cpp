@@ -2,7 +2,6 @@
 #include <Globals.h>
 #include <MainWindow.h>
 #include <action/ActionMgr.h>
-#include <action/ActionOptionsDataChange.h>
 #include <actor/ActorCreateMgr.h>
 #include <course/BgTexMgr.h>
 #include <course/CoinOrigin.h>
@@ -69,7 +68,6 @@ MainWindow::MainWindow()
     , mCourseViewHovered(false)
     , mCourseViewFocused(false)
     , mCourseViewCameraMoved(false)
-    , mCourseFileOptionsOpen(false)
     , mPaintType(ITEM_TYPE_MAX_NUM)
     , mEnvSelectedObj(u16(-1))
     , mEnvPaintLayer(LAYER_1)
@@ -367,7 +365,6 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
 {
     BgTexMgr::instance()->destroy(getBgPrepareLayer());
 
-    mCourseFileOptionsOpen = false;
     mEnvSelectedObj = u16(-1);
 
     CourseDataFile& cd_file = CourseData::instance()->getCourseDataFile(id);
@@ -1136,6 +1133,24 @@ void MainWindow::drawSelectionUI_()
     mpCourseView->drawSelectionUI();
 }
 
+void MainWindow::drawFileOptionsUI_()
+{
+    if (!mpCourseView)
+        return;
+
+    mpCourseView->drawFileOptionsUI();
+}
+
+void MainWindow::drawFileOptionsMenuItemUI_()
+{
+    if (!mpCourseView)
+        return;
+
+    mpCourseView->drawFileOptionsMenuItemUI();
+
+    ImGui::Separator();
+}
+
 void MainWindow::drawMainMenuBarUI_()
 {
     if (ImGui::BeginMainMenuBar())
@@ -1201,13 +1216,7 @@ void MainWindow::drawMainMenuBarUI_()
 
         if (ImGui::BeginMenu("Course"))
         {
-            if (ImGui::MenuItem("File Options", nullptr, mCourseFileOptionsOpen, !mCourseFileOptionsOpen))
-            {
-                mCourseFileOptionsOpen = true;
-                mCourseFileOptions = mpCourseView->getCourseDataFile().getOptions();
-            }
-
-            ImGui::Separator();
+            drawFileOptionsMenuItemUI_();
 
             for (u32 i = 0; i < CD_FILE_MAX_NUM; i++)
             {
@@ -1228,58 +1237,6 @@ void MainWindow::drawMainMenuBarUI_()
 
         ImGui::EndMainMenuBar();
     }
-}
-
-void MainWindow::drawFileOptionsUI_()
-{
-    if (!mCourseFileOptionsOpen)
-        return;
-
-    if (ImGui::Begin("Options", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        const Options& options = mpCourseView->getCourseDataFile().getOptions();
-
-        const u8 single_step = 1; //Needed for +/- buttons to appear.
-
-        ImGui::InputScalarN("Events", ImGuiDataType_U32, mCourseFileOptions.def_events, 2, nullptr, nullptr, "%08X");
-        ImGui::Separator();
-        ImGui::InputScalar("Flags", ImGuiDataType_U16, &mCourseFileOptions.loop, nullptr, nullptr, "%04X");
-        ImGui::Separator();
-        ImGui::InputScalar("Time", ImGuiDataType_U16, &mCourseFileOptions.time_0);
-        ImGui::InputScalar("Time (Checkpoint 1)", ImGuiDataType_U16, &mCourseFileOptions.time_1);
-        ImGui::InputScalar("Time (Checkpoint 2)", ImGuiDataType_U16, &mCourseFileOptions.time_2);
-        ImGui::Separator();
-        ImGui::InputScalar("Start Next Goto", ImGuiDataType_U8, &mCourseFileOptions.start_next_goto, &single_step);
-        ImGui::InputScalar("Start Next Goto (Coin Boost)", ImGuiDataType_U8, &mCourseFileOptions.start_next_goto_coin_boost, &single_step);
-        ImGui::Separator();
-        ImGui::InputScalar("Unused 0xC", ImGuiDataType_U8, &mCourseFileOptions._unused0[0]);
-        ImGui::InputScalar("Unused 0xD", ImGuiDataType_U8, &mCourseFileOptions._unused0[1]);
-        ImGui::InputScalar("Unused 0xE", ImGuiDataType_U8, &mCourseFileOptions._unused0[2]);
-        ImGui::InputScalar("Unused 0xF", ImGuiDataType_U8, &mCourseFileOptions._unused0[3]);
-        ImGui::InputScalar("Unused 0x11", ImGuiDataType_U8, &mCourseFileOptions._unused1[0]);
-        ImGui::InputScalar("Unused 0x12", ImGuiDataType_U8, &mCourseFileOptions._unused1[1]);
-
-        ImGui::Separator();
-
-        if (ImGui::Button("Apply"))
-        {
-            const bool anything_modified = memcmp(&mCourseFileOptions, &options, sizeof(Options)) != 0;
-
-            if (anything_modified)
-            {
-                ActionOptionsDataChange::Context context { options, mCourseFileOptions };
-                ActionMgr::instance()->pushAction<ActionOptionsDataChange>(&context);
-            }
-
-            mCourseFileOptionsOpen = false;
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Discard"))
-            mCourseFileOptionsOpen = false;
-    }
-    ImGui::End();
 }
 
 void MainWindow::setupUiStyle_()

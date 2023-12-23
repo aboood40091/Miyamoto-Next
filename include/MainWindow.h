@@ -1,6 +1,5 @@
 #pragma once
 
-#include <course/CourseDataFile.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <item/ItemType.h>
@@ -50,6 +49,7 @@ private:
     void drawSelectionUI_();
     void drawMainMenuBarUI_();
     void drawFileOptionsUI_();
+    void drawFileOptionsMenuItemUI_();
     void setupUiStyle_();
 
     void gather_ (const rio::lyr::DrawInfo&);
@@ -85,8 +85,6 @@ private:
     bool                    mCourseViewHovered;
     bool                    mCourseViewFocused;
     bool                    mCourseViewCameraMoved;
-    bool                    mCourseFileOptionsOpen;
-    Options                 mCourseFileOptions;
     RenderMgr               mRenderMgrBgPrepare;
     std::string             mCoursePath;
     u32                     mCurrentFile;

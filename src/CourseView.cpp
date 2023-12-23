@@ -5,6 +5,7 @@
 #include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
 #include <action/ActionMgr.h>
+#include <action/ActionOptionsDataChange.h>
 #include <actor/ActorCreateMgr.h>
 #include <course/Bg.h>
 #include <course/BgRenderer.h>
@@ -58,6 +59,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mIsHovered(false)
     , mDrawCallback3D(*this)
     , mpCourseDataFile(nullptr)
+    , mOptionsOpen(false)
     , mCursorAction(CURSOR_ACTION_NONE)
     , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
     , mCursorState(CURSOR_STATE_RELEASE)
@@ -410,6 +412,7 @@ void CourseView::uninitialize()
     mAreaItemPtr.clear();
 
     mpCourseDataFile = nullptr;
+    mOptionsOpen = false;
 
     mCursorAction = CURSOR_ACTION_NONE;
 }
@@ -2346,4 +2349,65 @@ void CourseView::drawSelectionUI()
         }
     }
     ImGui::End();
+}
+
+void CourseView::drawFileOptionsUI()
+{
+    if (!mOptionsOpen)
+        return;
+
+    if (ImGui::Begin("Options", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        const Options& options = getCourseDataFile().getOptions();
+
+        const u8 single_step = 1; //Needed for +/- buttons to appear.
+
+        ImGui::InputScalarN("Events", ImGuiDataType_U32, mOptions.def_events, 2, nullptr, nullptr, "%08X");
+        ImGui::Separator();
+        ImGui::InputScalar("Flags", ImGuiDataType_U16, &mOptions.loop, nullptr, nullptr, "%04X");
+        ImGui::Separator();
+        ImGui::InputScalar("Time", ImGuiDataType_U16, &mOptions.time_0);
+        ImGui::InputScalar("Time (Checkpoint 1)", ImGuiDataType_U16, &mOptions.time_1);
+        ImGui::InputScalar("Time (Checkpoint 2)", ImGuiDataType_U16, &mOptions.time_2);
+        ImGui::Separator();
+        ImGui::InputScalar("Start Next Goto", ImGuiDataType_U8, &mOptions.start_next_goto, &single_step);
+        ImGui::InputScalar("Start Next Goto (Coin Boost)", ImGuiDataType_U8, &mOptions.start_next_goto_coin_boost, &single_step);
+        ImGui::Separator();
+        ImGui::InputScalar("Unused 0xC", ImGuiDataType_U8, &mOptions._unused0[0]);
+        ImGui::InputScalar("Unused 0xD", ImGuiDataType_U8, &mOptions._unused0[1]);
+        ImGui::InputScalar("Unused 0xE", ImGuiDataType_U8, &mOptions._unused0[2]);
+        ImGui::InputScalar("Unused 0xF", ImGuiDataType_U8, &mOptions._unused0[3]);
+        ImGui::InputScalar("Unused 0x11", ImGuiDataType_U8, &mOptions._unused1[0]);
+        ImGui::InputScalar("Unused 0x12", ImGuiDataType_U8, &mOptions._unused1[1]);
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Apply"))
+        {
+            const bool anything_modified = memcmp(&mOptions, &options, sizeof(Options)) != 0;
+
+            if (anything_modified)
+            {
+                ActionOptionsDataChange::Context context { options, mOptions };
+                ActionMgr::instance()->pushAction<ActionOptionsDataChange>(&context);
+            }
+
+            mOptionsOpen = false;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Discard"))
+            mOptionsOpen = false;
+    }
+    ImGui::End();
+}
+
+void CourseView::drawFileOptionsMenuItemUI()
+{
+    if (ImGui::MenuItem("File Options", nullptr, mOptionsOpen, !mOptionsOpen))
+    {
+        mOptionsOpen = true;
+        mOptions = getCourseDataFile().getOptions();
+    }
 }
