@@ -600,6 +600,7 @@ void CourseView::undo()
     if (!ActionMgr::instance()->canUndo())
         return;
 
+    mOptionsOpen = false;
     clearSelection();
     ActionMgr::instance()->undo();
 }
@@ -609,6 +610,7 @@ void CourseView::redo()
     if (!ActionMgr::instance()->canRedo())
         return;
 
+    mOptionsOpen = false;
     clearSelection();
     ActionMgr::instance()->redo();
 }
