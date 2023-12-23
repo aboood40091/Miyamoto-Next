@@ -691,7 +691,11 @@ void CourseView::setItemData(const ItemID& item_id, const void* data, u32 data_c
         getCourseDataFile().getLocation()[item_id.getIndex()] = *static_cast<const Location*>(data);
         break;
     case ITEM_TYPE_AREA:
-        getCourseDataFile().getAreaData()[item_id.getIndex()] = *static_cast<const AreaData*>(data);
+        {
+            const AreaData& area_data = *static_cast<const AreaData*>(data);
+            getCourseDataFile().getAreaData()[item_id.getIndex()] = area_data;
+            mAreaItemPtr[item_id.getIndex()]->onDataChange(area_data, (AreaItem::DataChangeFlag)data_change_flag);
+        }
         break;
     }
 }
@@ -1477,6 +1481,8 @@ void CourseView::onCursorHold_Paint_Area_()
     data.offset.y = y1;
     data.size.x = w;
     data.size.y = h;
+
+    mAreaItemPtr[vec.size() - 1]->onDataChange(data, AreaItem::DATA_CHANGE_FLAG_OFFSET | AreaItem::DATA_CHANGE_FLAG_SIZE);
 }
 
 void CourseView::onCursorRelease_Paint_Area_()

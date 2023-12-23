@@ -83,6 +83,20 @@ static f32 GetZoomMult(u32 zoom_type, u8 zoom_id)
     }
 }
 
+static f32 GetRealBgZoom(f32 w, f32 h, u32 zoom_type, u8 zoom_id)
+{
+    return std::min<f32>(
+        std::min<f32>(
+            std::min<f32>(
+                w / 398.22222222222222f,
+                h / 224.0f
+            ),
+            2.0f
+        ),
+        GetZoomMult(zoom_type, zoom_id)
+    );
+}
+
 AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer& render_buffer)
     : ItemBase(ITEM_TYPE_AREA, index, area_data.offset.x, area_data.offset.y)
     , mpRenderBufferDV(&render_buffer)
@@ -95,22 +109,20 @@ AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer
     const f32 w =  s32(area_data.  size.x);
     const f32 h =  s32(area_data.  size.y);
 
-    mRealBgZoom =
-        std::min<f32>(
-            std::min<f32>(
-                std::min<f32>(
-                    w / 398.22222222222222f,
-                    h / 224.0f
-                ),
-                2.0f
-            ),
-            GetZoomMult(area_data.zoom_type, area_data.zoom_id)
-        );
+    mRealBgZoom = GetRealBgZoom(w, h, area_data.zoom_type, area_data.zoom_id);
 
     const DistantViewData* p_dv_data = CourseView::instance()->getCourseDataFile().getDistantViewDataByID(area_data.bg2);
   //RIO_ASSERT(p_dv_data != nullptr);
     if (p_dv_data == nullptr)
         return;
+
+    loadDistantView_(x, y, w, h, *p_dv_data);
+}
+
+void AreaItem::loadDistantView_(f32 x, f32 y, f32 w, f32 h, const DistantViewData& dv_data)
+{
+    if (mpDistantViewMgr)
+        destroyDV_();
 
     mLayerItrDV = rio::lyr::Renderer::instance()->addLayer<RenderObjLayer>("DistantView", LAYER_ID_DISTANT_VIEW);
     mpLayerDV = rio::lyr::Layer::peelIterator(mLayerItrDV);
@@ -119,9 +131,9 @@ AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer
     getDistantViewLayer()->setRenderMgr(&mRenderMgrDV);
     mRenderMgrDV.setDrawCallback(&mDrawCallbackDV);
 
-    const std::string& dv_name = p_dv_data->name;
+    mDVName = dv_data.name;
     const std::string& dv_path = Globals::getContentPath() + "/Common/distant_view";
-    RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), dv_name.c_str());
+    RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), mDVName.c_str());
 
     const rio::BaseVec2f bg_pos {
         x + w * 0.5f,
@@ -143,7 +155,7 @@ AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer
 
     mpDistantViewMgr = std::make_unique<DistantViewMgr>(*mpRenderBufferDV);
     mpDistantViewMgr->initialize(
-        dv_name, dv_path,
+        mDVName, dv_path,
         Globals::forceSharcfb(),
         bg_pos,
         bg_screen_center,
@@ -156,10 +168,70 @@ AreaItem::AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer
 
 AreaItem::~AreaItem()
 {
+    destroyDV_();
+}
+
+void AreaItem::destroyDV_()
+{
     if (mpLayerDV != nullptr)
     {
         rio::lyr::Renderer::instance()->removeLayer(mLayerItrDV);
         mpLayerDV = nullptr;
+    }
+
+    mpDistantViewMgr.reset();
+    mRenderMgrDV.clear();
+    mRenderMgrDV.clearView();
+    mRenderMgrDV.setDrawCallback(nullptr);
+}
+
+void AreaItem::onDataChange(const AreaData& area_data, DataChangeFlag flag)
+{
+    const f32 x =  s32(area_data.offset.x);
+    const f32 y = -s32(area_data.offset.y);
+    const f32 w =  s32(area_data.  size.x);
+    const f32 h =  s32(area_data.  size.y);
+
+    bool real_bg_zoom_changed = false;
+
+    if (flag & DATA_CHANGE_FLAG_SIZE ||
+        flag & DATA_CHANGE_FLAG_ZOOM_TYPE ||
+        flag & DATA_CHANGE_FLAG_ZOOM_ID)
+    {
+        f32 real_bg_zoom = GetRealBgZoom(w, h, area_data.zoom_type, area_data.zoom_id);
+        if (real_bg_zoom != mRealBgZoom)
+        {
+            mRealBgZoom = real_bg_zoom;
+            real_bg_zoom_changed = true;
+        }
+    }
+
+    const DistantViewData* p_dv_data = nullptr;
+    bool dv_changed = false;
+
+    if (flag & DATA_CHANGE_FLAG_BG2)
+    {
+        p_dv_data = CourseView::instance()->getCourseDataFile().getDistantViewDataByID(area_data.bg2);
+      //RIO_ASSERT(p_dv_data != nullptr);
+        if (p_dv_data)
+            dv_changed = !mpDistantViewMgr || (mpDistantViewMgr && mDVName != p_dv_data->name);
+        else if (mpDistantViewMgr)
+            destroyDV_();
+    }
+
+    if (dv_changed)
+    {
+        RIO_ASSERT(p_dv_data);
+        loadDistantView_(x, y, w, h, *p_dv_data);
+    }
+    else if (mpDistantViewMgr &&
+             (real_bg_zoom_changed ||
+              flag & DATA_CHANGE_FLAG_OFFSET ||
+              flag & DATA_CHANGE_FLAG_SIZE))
+    {
+        rio::Vector2f& bg_pos = mpDistantViewMgr->bgPos();
+        bg_pos.x = x + w * 0.5f;
+        bg_pos.y = (y - h) + 0.5f * mRealBgZoom * 224.0f;
     }
 }
 
@@ -377,9 +449,63 @@ void AreaItem::drawSelectionUI()
 
     if (ImGui::Button("Apply"))
     {
-        const bool anything_modified = memcmp(&mSelectionData, &area_data, sizeof(AreaData)) != 0;
+        DataChangeFlag data_change_flag = DATA_CHANGE_FLAG_NONE;
 
-        if (anything_modified)
+        if (mSelectionData.id != area_data.id)
+            data_change_flag |= DATA_CHANGE_FLAG_ID;
+
+        if (mSelectionData.offset.x != area_data.offset.x || mSelectionData.offset.y != area_data.offset.y)
+            data_change_flag |= DATA_CHANGE_FLAG_OFFSET;
+
+        if (mSelectionData.size.x != area_data.size.x || mSelectionData.size.y != area_data.size.y)
+            data_change_flag |= DATA_CHANGE_FLAG_SIZE;
+
+        if (mSelectionData.color_obj != area_data.color_obj)
+            data_change_flag |= DATA_CHANGE_FLAG_COLOR_OBJ;
+
+        if (mSelectionData.color_bg != area_data.color_bg)
+            data_change_flag |= DATA_CHANGE_FLAG_COLOR_BG;
+
+        if (mSelectionData.scroll != area_data.scroll)
+            data_change_flag |= DATA_CHANGE_FLAG_SCROLL;
+
+        if (mSelectionData.zoom_type != area_data.zoom_type)
+            data_change_flag |= DATA_CHANGE_FLAG_ZOOM_TYPE;
+
+        if (mSelectionData.zoom_id != area_data.zoom_id)
+            data_change_flag |= DATA_CHANGE_FLAG_ZOOM_ID;
+
+        if (mSelectionData.zoom_change != area_data.zoom_change)
+            data_change_flag |= DATA_CHANGE_FLAG_ZOOM_CHANGE;
+
+        if (mSelectionData.mask != area_data.mask)
+            data_change_flag |= DATA_CHANGE_FLAG_MASK;
+
+        if (mSelectionData.bg2 != area_data.bg2)
+            data_change_flag |= DATA_CHANGE_FLAG_BG2;
+
+        if (mSelectionData.bg3 != area_data.bg3)
+            data_change_flag |= DATA_CHANGE_FLAG_BG3;
+
+        if (mSelectionData.direction != area_data.direction)
+            data_change_flag |= DATA_CHANGE_FLAG_DIRECTION;
+
+        if (mSelectionData._15 != area_data._15)
+            data_change_flag |= DATA_CHANGE_FLAG_UNK_15;
+
+        if (mSelectionData.bgm != area_data.bgm)
+            data_change_flag |= DATA_CHANGE_FLAG_BGM;
+
+        if (mSelectionData.bgm_mode != area_data.bgm_mode)
+            data_change_flag |= DATA_CHANGE_FLAG_BGM_MODE;
+
+        if (mSelectionData.dv != area_data.dv)
+            data_change_flag |= DATA_CHANGE_FLAG_DV;
+
+        if (mSelectionData.flag != area_data.flag)
+            data_change_flag |= DATA_CHANGE_FLAG_FLAG;
+
+        if (data_change_flag)
         {
             ActionItemDataChange::Context context {
                 mItemID,
@@ -388,7 +514,8 @@ void AreaItem::drawSelectionUI()
                 ),
                 std::static_pointer_cast<const void>(
                     std::make_shared<const AreaData>(mSelectionData)
-                )
+                ),
+                data_change_flag
             };
             ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
         }

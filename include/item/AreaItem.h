@@ -31,6 +31,42 @@ class AreaItem : public ItemBase, public rio::lyr::IDrawable
     };
 
 public:
+    enum DataChangeFlag
+    {
+        DATA_CHANGE_FLAG_NONE           = 0,
+
+        DATA_CHANGE_FLAG_ID             = 1 << 0,
+        DATA_CHANGE_FLAG_OFFSET         = 1 << 1,
+        DATA_CHANGE_FLAG_SIZE           = 1 << 2,
+        DATA_CHANGE_FLAG_COLOR_OBJ      = 1 << 3,
+        DATA_CHANGE_FLAG_COLOR_BG       = 1 << 4,
+        DATA_CHANGE_FLAG_SCROLL         = 1 << 5,
+        DATA_CHANGE_FLAG_ZOOM_TYPE      = 1 << 6,
+        DATA_CHANGE_FLAG_ZOOM_ID        = 1 << 7,
+        DATA_CHANGE_FLAG_ZOOM_CHANGE    = 1 << 8,
+        DATA_CHANGE_FLAG_MASK           = 1 << 9,
+        DATA_CHANGE_FLAG_BG2            = 1 << 10,
+        DATA_CHANGE_FLAG_BG3            = 1 << 11,
+        DATA_CHANGE_FLAG_DIRECTION      = 1 << 12,
+        DATA_CHANGE_FLAG_UNK_15         = 1 << 13,
+        DATA_CHANGE_FLAG_BGM            = 1 << 14,
+        DATA_CHANGE_FLAG_BGM_MODE       = 1 << 15,
+        DATA_CHANGE_FLAG_DV             = 1 << 16,
+        DATA_CHANGE_FLAG_FLAG           = 1 << 17   // (lol)
+    };
+
+    friend DataChangeFlag operator|(const DataChangeFlag& lhs, const DataChangeFlag& rhs)
+    {
+        return (DataChangeFlag)((u32)lhs | (u32)rhs);
+    }
+
+    friend DataChangeFlag& operator|=(DataChangeFlag& lhs, const DataChangeFlag& rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+public:
     AreaItem(const AreaData& area_data, u32 index, const agl::RenderBuffer& render_buffer);
     virtual ~AreaItem();
 
@@ -60,6 +96,8 @@ public:
             mpDistantViewMgr->onResizeRenderBuffer();
     }
 
+    void onDataChange(const AreaData& area_data, DataChangeFlag flag);
+
     void onSceneUpdate();
 
     void gather();
@@ -84,6 +122,9 @@ private:
         mDrawCallbackDV.setIndex(mItemID.getIndex());
     }
 
+    void loadDistantView_(f32 x, f32 y, f32 w, f32 h, const DistantViewData& dv_data);
+    void destroyDV_();
+
     void calcDistantViewScissor_();
     void dv_PostFx_(const rio::lyr::DrawInfo& draw_info);
 
@@ -92,6 +133,7 @@ private:
     const agl::RenderBuffer*        mpRenderBufferDV;
     f32                             mRealBgZoom;
     std::unique_ptr<DistantViewMgr> mpDistantViewMgr;
+    std::string                     mDVName;
     DrawCallbackDV                  mDrawCallbackDV;
     RenderMgr                       mRenderMgrDV;
     rio::lyr::Layer::iterator       mLayerItrDV;
