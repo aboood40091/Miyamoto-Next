@@ -3,7 +3,7 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/ObjDokan.h>
-#include <resource/ResMgr.h>
+#include <system/ResMgr.h>
 
 static const std::string cResName[ObjDokan::TYPE_MAX] = {
     "obj_dokan",
@@ -151,7 +151,7 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     if (archive_res == nullptr)
         return false;
 
-    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::forceSharcfb());
     RIO_ASSERT(mpModelResource);
 
     const char* const model_name_a = cModelNameA[mType];

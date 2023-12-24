@@ -16,10 +16,10 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
-#include <resource/ResMgr.h>
 #include <graphics/ShaderHolder.h>
 #include <resource/SZSCompressor.h>
 #include <resource/SZSDecompressor.h>
+#include <system/ResMgr.h>
 #include <ui/ImGuiUtil.h>
 
 #include <controller/rio_ControllerMgr.h>

@@ -6,7 +6,7 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
-#include <resource/ResMgr.h>
+#include <system/ResMgr.h>
 
 #include <gfx/rio_PrimitiveRenderer.h>
 #include <gfx/rio_Window.h>
@@ -71,7 +71,7 @@ bool CoinOrigin::initialize()
     if (archive_res == nullptr)
         return false;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Globals::forceSharcfb());
     RIO_ASSERT(model_res);
 
     mpModelCoin = Model::createG3d(

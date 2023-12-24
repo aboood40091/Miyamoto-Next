@@ -3,7 +3,7 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <enemy/Kuribo.h>
-#include <resource/ResMgr.h>
+#include <system/ResMgr.h>
 
 static const std::string cResName[2] = {
     "kuribo",
@@ -28,7 +28,7 @@ Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::forceSharcfb());
     RIO_ASSERT(model_res);
 
     const char* model_name = res_name.c_str();

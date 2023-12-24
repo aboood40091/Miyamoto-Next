@@ -4,7 +4,7 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <enemy/Nokonoko.h>
-#include <resource/ResMgr.h>
+#include <system/ResMgr.h>
 
 static const std::string cResName[2] = {
     "nokonokoA",
@@ -49,7 +49,7 @@ Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str());
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::forceSharcfb());
     RIO_ASSERT(mpModelResource);
 
     const char* model_name = res_name.c_str();

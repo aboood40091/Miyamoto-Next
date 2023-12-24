@@ -4,7 +4,7 @@
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/CollectionCoin.h>
-#include <resource/ResMgr.h>
+#include <system/ResMgr.h>
 
 static const std::string cResName = "star_coin";
 
@@ -17,7 +17,7 @@ CollectionCoin::CollectionCoin(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Globals::forceSharcfb());
     RIO_ASSERT(model_res);
 
     mpModel = Model::createG3d(
