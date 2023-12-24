@@ -602,8 +602,33 @@ void AreaItem::calcDistantViewScissor_()
 
 void AreaItem::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
 {
-    if (mDrawDV && mpDistantViewMgr)
+    if (!mDrawDV || !mpDistantViewMgr)
+        return;
+
+    if (Globals::applyDistantViewScissor())
+    {
+        const rio::BaseVec2f scissor_pos = mpRenderBufferDV->getScissorPos();
+        const rio::BaseVec2f scissor_size = mpRenderBufferDV->getScissorSize();
+
+        const rio::BaseVec2i& size_i = mpRenderBufferDV->getSize();
+        const f32 size_x = f32(size_i.x);
+        const f32 size_y = f32(size_i.y);
+
+        const_cast<agl::RenderBuffer*>(mpRenderBufferDV)->setScissor(
+            mScissorMin.x / size_x,
+            mScissorMin.y / size_y,
+            mScissorSize.x / size_x,
+            mScissorSize.y / size_y
+        );
+
         mpDistantViewMgr->applyDepthOfField();
+
+        const_cast<agl::RenderBuffer*>(mpRenderBufferDV)->setScissor(scissor_pos, scissor_size);
+    }
+    else
+    {
+        mpDistantViewMgr->applyDepthOfField();
+    }
 }
 
 void AreaItem::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawInfo& draw_info)
