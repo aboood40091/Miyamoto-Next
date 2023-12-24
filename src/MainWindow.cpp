@@ -52,6 +52,7 @@
 #include <imgui_internal.h>
 
 #include <format>
+#include <functional>
 
 static const char* level_fname = "1-1.szs";
 static const std::string nsmbu_content_path = "game/nsmbu";
@@ -512,6 +513,12 @@ void MainWindow::courseSaveAs()
 
     rio::MemUtil::free(out.data());
 #endif // RIO_IS_WIN
+}
+
+void MainWindow::courseFileSwitch(u32 file_index)
+{
+    ActionMgr::instance()->discard(ActionMgr::instance()->isDirty());
+    setCurrentCourseDataFile_(file_index);
 }
 
 void MainWindow::processMouseInput_()
@@ -1154,16 +1161,39 @@ void MainWindow::drawFileOptionsMenuItemUI_()
 void MainWindow::drawMainMenuBarUI_()
 {
     bool open_settings = false;
+    bool open_discard_reminder = false;
+    bool open_save_reminder = false;
+    static std::function<void()> reminder_callback = nullptr;
 
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("New", "Ctrl+N"))
-                courseNew();
+            {
+                if (ActionMgr::instance()->isDirty())
+                {
+                    open_save_reminder = true;
+                    reminder_callback = [this](){ courseNew(); };
+                }
+                else
+                {
+                    courseNew();
+                }
+            }
 
             if (ImGui::MenuItem("Open...", "Ctrl+O"))
-                courseOpen();
+            {
+                if (ActionMgr::instance()->isDirty())
+                {
+                    open_save_reminder = true;
+                    reminder_callback = [this](){ courseOpen(); };
+                }
+                else
+                {
+                    courseOpen();
+                }
+            }
 
             if (ImGui::MenuItem("Save", "Ctrl+S"))
                 courseSave();
@@ -1234,8 +1264,15 @@ void MainWindow::drawMainMenuBarUI_()
 
                 if (ImGui::MenuItem(str.c_str(), nullptr, false, mCurrentFile != i))
                 {
-                    ActionMgr::instance()->discard(true);
-                    setCurrentCourseDataFile_(i);
+                    if (ActionMgr::instance()->canUndo() || ActionMgr::instance()->canRedo())
+                    {
+                        open_discard_reminder = true;
+                        reminder_callback = [this, i](){ courseFileSwitch(i); };
+                    }
+                    else
+                    {
+                        courseFileSwitch(i);
+                    }
                 }
             }
 
@@ -1274,6 +1311,56 @@ void MainWindow::drawMainMenuBarUI_()
         ImGui::SameLine();
 
         if (ImGui::Button("Discard"))
+            ImGui::CloseCurrentPopup();
+        ImGui::SetItemDefaultFocus();
+
+        ImGui::EndPopup();
+    }
+
+    if (open_discard_reminder)
+        ImGui::OpenPopup("Discard undo/redo stack?");
+
+    if (ImGui::BeginPopupModal("Discard undo/redo stack?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Completing this action discards your undo/redo stack.");
+        ImGui::Text("Are you sure you want to proceed?");
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Yes"))
+        {
+            ImGui::CloseCurrentPopup();
+            reminder_callback();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("No"))
+            ImGui::CloseCurrentPopup();
+        ImGui::SetItemDefaultFocus();
+
+        ImGui::EndPopup();
+    }
+
+    if (open_save_reminder)
+        ImGui::OpenPopup("Discard unsaved changes?");
+
+    if (ImGui::BeginPopupModal("Discard unsaved changes?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Completing this action discards all unsaved changes to your course.");
+        ImGui::Text("Are you sure you want to proceed?");
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Yes"))
+        {
+            ImGui::CloseCurrentPopup();
+            reminder_callback();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("No"))
             ImGui::CloseCurrentPopup();
         ImGui::SetItemDefaultFocus();
 

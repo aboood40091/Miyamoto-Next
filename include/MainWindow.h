@@ -27,6 +27,7 @@ public:
     void courseOpen();
     void courseSave();
     void courseSaveAs();
+    void courseFileSwitch(u32 file_index);
 
 private:
     void prepare_() override;
