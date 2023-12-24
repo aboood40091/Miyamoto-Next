@@ -583,6 +583,35 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
         return true;
     }
+    else if (focused && hovered && ImGui::IsKeyDown(ImGuiKey_MouseWheelY))
+    {
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+        {
+            //TODO: Add zoom in/out using mouse wheel
+        }
+        else
+        {
+            rio::BaseVec2f wheel_delta;
+            const f32 wheel_multiplier = 200;
+
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
+                wheel_delta = rio::BaseVec2f(ImGui::GetIO().MouseWheel * wheel_multiplier, 0);
+            else
+                wheel_delta = rio::BaseVec2f(0, ImGui::GetIO().MouseWheel * wheel_multiplier);
+
+            if (wheel_delta.x != 0.0f || wheel_delta.y != 0.0f)
+            {
+                const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(zero);
+                const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(wheel_delta);
+
+                static_cast<rio::Vector2f&>(mCamera.pos()) +=
+                    static_cast<const rio::Vector2f&>(last_cursor_pos_world)
+                    - static_cast<const rio::Vector2f&>(cursor_pos_world);
+            }
+
+            return true;
+        }
+    }
 
     return false;
 }
