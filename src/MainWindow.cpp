@@ -1206,8 +1206,6 @@ void MainWindow::drawFileOptionsMenuItemUI_()
         return;
 
     mpCourseView->drawFileOptionsMenuItemUI();
-
-    ImGui::Separator();
 }
 
 void MainWindow::drawMainMenuBarUI_()
@@ -1285,6 +1283,18 @@ void MainWindow::drawMainMenuBarUI_()
         if (ImGui::BeginMenu("Course"))
         {
             drawFileOptionsMenuItemUI_();
+
+            if (ImGui::MenuItem("Create File", nullptr, false, false))
+            {
+                //TODO
+            }
+
+            if (ImGui::MenuItem("Delete File", nullptr, false, false))
+            {
+                //TODO
+            }
+
+            ImGui::Separator();
 
             for (u32 i = 0; i < CD_FILE_MAX_NUM; i++)
             {
