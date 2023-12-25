@@ -501,8 +501,6 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
 
 bool CourseView::processMouseInput(bool focused, bool hovered)
 {
-    static const rio::BaseVec2f zero { 0.0f, 0.0f };
-
     mIsFocused = focused;
     mIsHovered = hovered;
 
@@ -573,7 +571,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
         const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
         {
-            const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(zero);
+            const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
             const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(mouse_delta);
 
             static_cast<rio::Vector2f&>(mCamera.pos()) +=
@@ -601,7 +599,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
             if (wheel_delta.x != 0.0f || wheel_delta.y != 0.0f)
             {
-                const rio::BaseVec2f& last_cursor_pos_world = viewToWorldPos(zero);
+                const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
                 const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(wheel_delta);
 
                 static_cast<rio::Vector2f&>(mCamera.pos()) +=
