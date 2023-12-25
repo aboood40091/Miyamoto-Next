@@ -27,7 +27,6 @@ public:
     void courseOpen();
     void courseSave();
     void courseSaveAs();
-    void courseFileSwitch(u32 file_index);
 
 private:
     void prepare_() override;
@@ -38,6 +37,12 @@ private:
     void resize_(s32 width, s32 height);
     static void onResizeCallback_(s32 width, s32 height);
 #endif // RIO_IS_WIN
+
+    void courseNew_();
+    void courseOpen_();
+    void courseFileSwitch_(u32 file_index);
+
+    void handlePopupCallback_();
 
     void setCurrentCourseDataFile_(u32 id);
 
@@ -79,6 +84,22 @@ private:
         SharcArchiveRes archive_res;
     } mAglRes, mJyotyuActorPack, mCobPack;
 
+    enum PopupType
+    {
+        POPUP_TYPE_NONE = 0,
+        POPUP_TYPE_SETTINGS = 0,
+        POPUP_TYPE_ACTION_DISCARD,
+        POPUP_TYPE_SAVE
+    };
+
+    enum PopupCallbackType
+    {
+        POPUP_CALLBACK_TYPE_NONE = 0,
+        POPUP_CALLBACK_TYPE_COURSE_NEW,
+        POPUP_CALLBACK_TYPE_COURSE_OPEN,
+        POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH
+    };
+
     CourseView*             mpCourseView;
     rio::BaseVec2f          mCourseViewPos;
     rio::BaseVec2i          mCourseViewSize;
@@ -93,6 +114,10 @@ private:
     u16                     mEnvSelectedObj;
     s32                     mEnvPaintLayer;
     u16                     mMapActorSelectedType;
+    bool                    mPopupOpen;
+    PopupType               mPopupType;
+    PopupCallbackType       mPopupCallbackType;
+    u32                     mNextFile;
     s32                     mMetricsLocation;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;

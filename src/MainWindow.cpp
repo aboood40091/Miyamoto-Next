@@ -73,6 +73,10 @@ MainWindow::MainWindow()
     , mEnvSelectedObj(u16(-1))
     , mEnvPaintLayer(LAYER_1)
     , mMapActorSelectedType(u16(-1))
+    , mPopupOpen(false)
+    , mPopupType(POPUP_TYPE_NONE)
+    , mPopupCallbackType(POPUP_CALLBACK_TYPE_NONE)
+    , mNextFile(0)
     , mMetricsLocation(0)
 {
 }
@@ -379,7 +383,7 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
     mpCourseView->initialize(cd_file, Globals::useRealZoom());
 }
 
-void MainWindow::courseNew()
+void MainWindow::courseNew_()
 {
     CourseData::instance()->createNew();
     mCoursePath.clear();
@@ -388,7 +392,22 @@ void MainWindow::courseNew()
     setCurrentCourseDataFile_(0);
 }
 
-void MainWindow::courseOpen()
+void MainWindow::courseNew()
+{
+    if (ActionMgr::instance()->isDirty())
+    {
+        RIO_ASSERT(mPopupType == POPUP_TYPE_NONE);
+        mPopupOpen = true;
+        mPopupType = POPUP_TYPE_SAVE;
+        mPopupCallbackType = POPUP_CALLBACK_TYPE_COURSE_NEW;
+    }
+    else
+    {
+        courseNew_();
+    }
+}
+
+void MainWindow::courseOpen_()
 {
 #if RIO_IS_WIN
     const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
@@ -424,6 +443,21 @@ void MainWindow::courseOpen()
     ActionMgr::instance()->discard(false);
     setCurrentCourseDataFile_(0);
 #endif // RIO_IS_WIN
+}
+
+void MainWindow::courseOpen()
+{
+    if (ActionMgr::instance()->isDirty())
+    {
+        RIO_ASSERT(mPopupType == POPUP_TYPE_NONE);
+        mPopupOpen = true;
+        mPopupType = POPUP_TYPE_SAVE;
+        mPopupCallbackType = POPUP_CALLBACK_TYPE_COURSE_OPEN;
+    }
+    else
+    {
+        courseOpen_();
+    }
 }
 
 void MainWindow::courseSave()
@@ -515,10 +549,28 @@ void MainWindow::courseSaveAs()
 #endif // RIO_IS_WIN
 }
 
-void MainWindow::courseFileSwitch(u32 file_index)
+void MainWindow::courseFileSwitch_(u32 file_index)
 {
     ActionMgr::instance()->discard(ActionMgr::instance()->isDirty());
     setCurrentCourseDataFile_(file_index);
+}
+
+void MainWindow::handlePopupCallback_()
+{
+    switch (mPopupCallbackType)
+    {
+    default:
+        break;
+    case POPUP_CALLBACK_TYPE_COURSE_NEW:
+        courseNew_();
+        break;
+    case POPUP_CALLBACK_TYPE_COURSE_OPEN:
+        courseOpen_();
+        break;
+    case POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH:
+        courseFileSwitch_(mNextFile);
+        break;
+    }
 }
 
 void MainWindow::processMouseInput_()
@@ -1160,40 +1212,15 @@ void MainWindow::drawFileOptionsMenuItemUI_()
 
 void MainWindow::drawMainMenuBarUI_()
 {
-    bool open_settings = false;
-    bool open_discard_reminder = false;
-    bool open_save_reminder = false;
-    static std::function<void()> reminder_callback = nullptr;
-
     if (ImGui::BeginMainMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("New", "Ctrl+N"))
-            {
-                if (ActionMgr::instance()->isDirty())
-                {
-                    open_save_reminder = true;
-                    reminder_callback = [this](){ courseNew(); };
-                }
-                else
-                {
-                    courseNew();
-                }
-            }
+                courseNew();
 
             if (ImGui::MenuItem("Open...", "Ctrl+O"))
-            {
-                if (ActionMgr::instance()->isDirty())
-                {
-                    open_save_reminder = true;
-                    reminder_callback = [this](){ courseOpen(); };
-                }
-                else
-                {
-                    courseOpen();
-                }
-            }
+                courseOpen();
 
             if (ImGui::MenuItem("Save", "Ctrl+S"))
                 courseSave();
@@ -1204,7 +1231,11 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::Separator();
 
             if (ImGui::MenuItem("Settings"))
-                open_settings = true;
+            {
+                RIO_ASSERT(mPopupType == POPUP_TYPE_NONE);
+                mPopupOpen = true;
+                mPopupType = POPUP_TYPE_SETTINGS;
+            }
 
             ImGui::EndMenu();
         }
@@ -1266,12 +1297,15 @@ void MainWindow::drawMainMenuBarUI_()
                 {
                     if (ActionMgr::instance()->canUndo() || ActionMgr::instance()->canRedo())
                     {
-                        open_discard_reminder = true;
-                        reminder_callback = [this, i](){ courseFileSwitch(i); };
+                        RIO_ASSERT(mPopupType == POPUP_TYPE_NONE);
+                        mPopupOpen = true;
+                        mPopupType = POPUP_TYPE_ACTION_DISCARD;
+                        mPopupCallbackType = POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH;
+                        mNextFile = i;
                     }
                     else
                     {
-                        courseFileSwitch(i);
+                        courseFileSwitch_(i);
                     }
                 }
             }
@@ -1282,89 +1316,128 @@ void MainWindow::drawMainMenuBarUI_()
         ImGui::EndMainMenuBar();
     }
 
-    if (open_settings)
-        ImGui::OpenPopup("Settings");
-
-    if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    switch (mPopupType)
     {
-        std::string contentPath = Globals::getContentPath();
-        bool forceSharcfb = Globals::forceSharcfb();
-        float bigItemScale = Globals::getBigItemScale();
-        bool useRealZoom = Globals::useRealZoom();
-        bool preserveUnitSize = Globals::preserveUnitSize();
-        bool applyDistantViewScissor = Globals::applyDistantViewScissor();
-
-        ImGui::BeginDisabled();
-        ImGui::InputText("Content Path", const_cast<char*>(contentPath.c_str()), contentPath.length());
-        ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
-        ImGui::InputFloat("Big Item Scale", &bigItemScale);
-        ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
-        ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
-        ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
-        ImGui::EndDisabled();
-
-        ImGui::Separator();
-
-        if (ImGui::Button("Apply"))
-            ImGui::CloseCurrentPopup();
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Discard"))
-            ImGui::CloseCurrentPopup();
-        ImGui::SetItemDefaultFocus();
-
-        ImGui::EndPopup();
-    }
-
-    if (open_discard_reminder)
-        ImGui::OpenPopup("Discard undo/redo stack?");
-
-    if (ImGui::BeginPopupModal("Discard undo/redo stack?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Completing this action discards your undo/redo stack.");
-        ImGui::Text("Are you sure you want to proceed?");
-
-        ImGui::Separator();
-
-        if (ImGui::Button("Yes"))
+    default:
+        break;
+    case POPUP_TYPE_SETTINGS:
+        if (mPopupOpen)
         {
-            ImGui::CloseCurrentPopup();
-            reminder_callback();
+            ImGui::OpenPopup("Settings");
+            mPopupOpen = false;
         }
 
-        ImGui::SameLine();
-
-        if (ImGui::Button("No"))
-            ImGui::CloseCurrentPopup();
-        ImGui::SetItemDefaultFocus();
-
-        ImGui::EndPopup();
-    }
-
-    if (open_save_reminder)
-        ImGui::OpenPopup("Discard unsaved changes?");
-
-    if (ImGui::BeginPopupModal("Discard unsaved changes?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Completing this action discards all unsaved changes to your course.");
-        ImGui::Text("Are you sure you want to proceed?");
-
-        ImGui::Separator();
-
-        if (ImGui::Button("Yes"))
+        if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::CloseCurrentPopup();
-            reminder_callback();
+            std::string contentPath = Globals::getContentPath();
+            bool forceSharcfb = Globals::forceSharcfb();
+            float bigItemScale = Globals::getBigItemScale();
+            bool useRealZoom = Globals::useRealZoom();
+            bool preserveUnitSize = Globals::preserveUnitSize();
+            bool applyDistantViewScissor = Globals::applyDistantViewScissor();
+
+            ImGui::BeginDisabled();
+            ImGui::InputText("Content Path", const_cast<char*>(contentPath.c_str()), contentPath.length());
+            ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
+            ImGui::InputFloat("Big Item Scale", &bigItemScale);
+            ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
+            ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
+            ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
+            ImGui::EndDisabled();
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Apply"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Discard"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+            }
+
+            ImGui::SetItemDefaultFocus();
+
+            ImGui::EndPopup();
+        }
+        break;
+    case POPUP_TYPE_ACTION_DISCARD:
+        if (mPopupOpen)
+        {
+            ImGui::OpenPopup("Discard undo/redo stack?");
+            mPopupOpen = false;
         }
 
-        ImGui::SameLine();
+        if (ImGui::BeginPopupModal("Discard undo/redo stack?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Completing this action discards your undo/redo stack.");
+            ImGui::Text("Are you sure you want to proceed?");
 
-        if (ImGui::Button("No"))
-            ImGui::CloseCurrentPopup();
-        ImGui::SetItemDefaultFocus();
+            ImGui::Separator();
 
-        ImGui::EndPopup();
+            if (ImGui::Button("Yes"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                handlePopupCallback_();
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("No"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SetItemDefaultFocus();
+
+            ImGui::EndPopup();
+        }
+        break;
+    case POPUP_TYPE_SAVE:
+        if (mPopupOpen)
+        {
+            ImGui::OpenPopup("Discard unsaved changes?");
+            mPopupOpen = false;
+        }
+
+        if (ImGui::BeginPopupModal("Discard unsaved changes?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Completing this action discards all unsaved changes to your course.");
+            ImGui::Text("Are you sure you want to proceed?");
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Yes"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                handlePopupCallback_();
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("No"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SetItemDefaultFocus();
+
+            ImGui::EndPopup();
+        }
+        break;
     }
 }
 
