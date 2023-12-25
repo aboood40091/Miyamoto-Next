@@ -467,14 +467,14 @@ void MainWindow::courseSave()
 
     RIO_LOG("Save as file: %s\n", mCoursePath.c_str());
 
-    bool compress = mCoursePath.ends_with(".szs");
+    bool to_compress = mCoursePath.ends_with(".szs");
 
     std::span<u8> out = CourseData::instance()->save();
     RIO_ASSERT(out.data() && out.size());
 
-    if (compress)
+    if (to_compress)
     {
-        const std::span<u8>& out_szs = SZSCompressor::compress(out, SZSCompressor::LEVEL_DEFAULT);
+        const std::span<u8>& out_szs = SZSCompressor::compressFast(out);
         RIO_ASSERT(out_szs.data() && out_szs.size());
         rio::MemUtil::free(out.data());
         out = out_szs;
@@ -522,14 +522,14 @@ void MainWindow::courseSaveAs()
     std::string level_path = "native://";
     level_path += ofn.lpstrFile;
 
-    bool compress = level_path.ends_with(".szs");
+    bool to_compress = level_path.ends_with(".szs");
 
     std::span<u8> out = CourseData::instance()->save();
     RIO_ASSERT(out.data() && out.size());
 
-    if (compress)
+    if (to_compress)
     {
-        const std::span<u8>& out_szs = SZSCompressor::compress(out, SZSCompressor::LEVEL_DEFAULT);
+        const std::span<u8>& out_szs = SZSCompressor::compressFast(out);
         RIO_ASSERT(out_szs.data() && out_szs.size());
         rio::MemUtil::free(out.data());
         out = out_szs;

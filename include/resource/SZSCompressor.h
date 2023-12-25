@@ -16,6 +16,7 @@ public:
 
 public:
     static std::span<u8> compress(std::span<const u8> data, CompressionLevel level = LEVEL_DEFAULT);
+    static std::span<u8> compressFast(std::span<const u8> data);
 
 private:
     static inline std::span<const u8> compressionSearch_(
