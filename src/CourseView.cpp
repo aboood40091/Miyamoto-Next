@@ -548,7 +548,12 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             mCursorState = CURSOR_STATE_RELEASE;
     }
 
-    if (focused && hovered && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
+    if (!(focused && hovered))
+        return false;
+
+    const ImGuiIO& io = ImGui::GetIO();
+
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
     {
         if (!press)
         {
@@ -568,7 +573,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
         mCursorState = CURSOR_STATE_RELEASE;
         mCursorButtonCurrent = CURSOR_BUTTON_NONE;
 
-        const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(ImGui::GetIO().MouseDelta.x);
+        const rio::BaseVec2f& mouse_delta = reinterpret_cast<const rio::BaseVec2f&>(io.MouseDelta.x);
         if (mouse_delta.x != 0.0f || mouse_delta.y != 0.0f)
         {
             const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
@@ -581,33 +586,38 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
         return true;
     }
-    else if (focused && hovered && ImGui::IsKeyDown(ImGuiKey_MouseWheelY))
+    else
     {
-        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+        ImGuiKey wheel_key[2] { ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY };
+        rio::Vector2f wheel { io.MouseWheelH, io.MouseWheel };
+
+        if (io.MouseWheelRequestAxisSwap)
         {
-            //TODO: Add zoom in/out using mouse wheel
+            std::swap(wheel_key[0], wheel_key[1]);
+            std::swap(wheel.x, wheel.y);
         }
-        else
+
+        if ((ImGui::IsKeyDown(wheel_key[0]) && wheel.x != 0.0f) ||
+            (ImGui::IsKeyDown(wheel_key[1]) && wheel.y != 0.0f))
         {
-            rio::BaseVec2f wheel_delta;
-            const f32 wheel_multiplier = 200;
-
-            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
-                wheel_delta = rio::BaseVec2f(ImGui::GetIO().MouseWheel * wheel_multiplier, 0);
-            else
-                wheel_delta = rio::BaseVec2f(0, ImGui::GetIO().MouseWheel * wheel_multiplier);
-
-            if (wheel_delta.x != 0.0f || wheel_delta.y != 0.0f)
+            if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
             {
+                //TODO: Add zoom in/out using mouse wheel
+            }
+            else
+            {
+                const f32 wheel_multiplier = 200;
+                const rio::Vector2f& wheel_delta = wheel * wheel_multiplier;
+
                 const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
                 const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(wheel_delta);
 
                 static_cast<rio::Vector2f&>(mCamera.pos()) +=
                     static_cast<const rio::Vector2f&>(last_cursor_pos_world)
                     - static_cast<const rio::Vector2f&>(cursor_pos_world);
-            }
 
-            return true;
+                return true;
+            }
         }
     }
 
