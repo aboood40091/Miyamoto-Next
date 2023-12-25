@@ -1323,6 +1323,11 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Tileset", false))
+        {
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
     }
 
