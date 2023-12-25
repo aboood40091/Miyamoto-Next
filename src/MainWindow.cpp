@@ -1009,15 +1009,15 @@ void MainWindow::drawPaletteUI_()
 
             for (u32 i = 0; i < item_vec.size(); i++)
             {
-                const NextGotoItem& entrance_item = item_vec[i];
-                const NextGoto& entrance_data = data_vec[i];
+                const NextGotoItem& next_goto_item = item_vec[i];
+                const NextGoto& next_goto = data_vec[i];
 
-                const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", entrance_data.id, entrance_data.offset.x, entrance_data.offset.y);
+                const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", next_goto.id, next_goto.offset.x, next_goto.offset.y);
 
                 if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    mpCourseView->setCameraCenterWorldPos({ f32(entrance_data.offset.x + 8), -f32(entrance_data.offset.y + 8) });
-                    mpCourseView->selectItem(entrance_item.getItemID());
+                    mpCourseView->setCameraCenterWorldPos({ f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8) });
+                    mpCourseView->selectItem(next_goto_item.getItemID());
                 }
             }
             ImGui::EndListBox();
@@ -1323,7 +1323,7 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Tileset", false))
+        if (ImGui::BeginMenu("Environment", false))
         {
             ImGui::EndMenu();
         }
