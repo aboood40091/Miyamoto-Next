@@ -1351,6 +1351,9 @@ void MainWindow::drawMainMenuBarUI_()
         static bool useRealZoom;
         static bool preserveUnitSize;
         static bool applyDistantViewScissor;
+        static float scrollMovementSpeed;
+        static float arrowMovementSpeed;
+        static float fastArrowMovementSpeed;
 
         if (mPopupOpen)
         {
@@ -1362,6 +1365,9 @@ void MainWindow::drawMainMenuBarUI_()
             useRealZoom = Globals::sUseRealZoom;
             preserveUnitSize = Globals::sPreserveUnitSize;
             applyDistantViewScissor = Globals::sApplyDistantViewScissor;
+            scrollMovementSpeed = Globals::sScrollMovementSpeed;
+            arrowMovementSpeed = Globals::sArrowMovementSpeed;
+            fastArrowMovementSpeed = Globals::sFastArrowMovementSpeed;
             mPopupOpen = false;
         }
 
@@ -1373,6 +1379,9 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
             ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
             ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
+            ImGui::InputFloat("Scroll Movement Speed", &scrollMovementSpeed);
+            ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
+            ImGui::InputFloat("Fast Arrow Movement Speed", &fastArrowMovementSpeed);
 
             ImGui::Separator();
 
@@ -1387,6 +1396,9 @@ void MainWindow::drawMainMenuBarUI_()
                 Globals::sUseRealZoom = useRealZoom;
                 Globals::sPreserveUnitSize = preserveUnitSize;
                 Globals::sApplyDistantViewScissor = applyDistantViewScissor;
+                Globals::sScrollMovementSpeed = scrollMovementSpeed;
+                Globals::sArrowMovementSpeed = arrowMovementSpeed;
+                Globals::sFastArrowMovementSpeed = fastArrowMovementSpeed;
 
                 mpCourseView->onApplyDistantViewScissorChange();
             }

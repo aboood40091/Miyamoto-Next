@@ -13,4 +13,7 @@ public:
     static bool         sUseRealZoom;
     static bool         sPreserveUnitSize;          // Ignored if real zoom
     static bool         sApplyDistantViewScissor;
+    static f32          sScrollMovementSpeed;
+    static f32          sArrowMovementSpeed;
+    static f32          sFastArrowMovementSpeed;
 };

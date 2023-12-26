@@ -586,7 +586,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
         return true;
     }
-    else
+    else if (ImGui::IsKeyDown(ImGuiKey_MouseWheelX) || ImGui::IsKeyDown(ImGuiKey_MouseWheelY))
     {
         ImGuiKey wheel_key[2] { ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY };
         rio::Vector2f wheel { io.MouseWheelH, io.MouseWheel };
@@ -606,8 +606,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             }
             else
             {
-                const f32 wheel_multiplier = 200;
-                const rio::Vector2f& wheel_delta = wheel * wheel_multiplier;
+                const rio::Vector2f& wheel_delta = wheel * Globals::sScrollMovementSpeed;
 
                 const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
                 const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(wheel_delta);
@@ -618,6 +617,38 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
 
                 return true;
             }
+        }
+    }
+    else
+    {
+        rio::Vector2f movement = {0, 0};
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftArrow))
+            movement.x += 1.0f;
+        if (ImGui::IsKeyDown(ImGuiKey_RightArrow))
+            movement.x -= 1.0f;
+        if (ImGui::IsKeyDown(ImGuiKey_UpArrow))
+            movement.y += 1.0f;
+        if (ImGui::IsKeyDown(ImGuiKey_DownArrow))
+            movement.y -= 1.0f;
+
+        if (movement.x != 0.0f || movement.y != 0.0f)
+        {
+            rio::Vector2f movement_delta;
+
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
+                movement_delta = movement * Globals::sFastArrowMovementSpeed;
+            else
+                movement_delta = movement * Globals::sArrowMovementSpeed;
+
+            const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
+            const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(movement_delta);
+
+            static_cast<rio::Vector2f&>(mCamera.pos()) +=
+                static_cast<const rio::Vector2f&>(last_cursor_pos_world)
+                - static_cast<const rio::Vector2f&>(cursor_pos_world);
+
+            return true;
         }
     }
 
