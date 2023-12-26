@@ -389,6 +389,8 @@ public:
     void selectItem(const ItemID& item_id);
     void selectItems(u32 flag);
 
+    void onApplyDistantViewScissorChange();
+
     void bindRenderBuffer(bool with_item_id);
     void unbindRenderBuffer();
 

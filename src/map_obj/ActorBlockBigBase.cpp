@@ -126,7 +126,7 @@ void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
             .setItemID(mItemID)
             .setSelection(mIsSelected)
             .setCenter({ mPosition.x + 16, mPosition.y - 16, mPosition.z })
-            .setSize({ Globals::getBigItemScale(), Globals::getBigItemScale() }),
+            .setSize({ Globals::sBigItemScale, Globals::sBigItemScale }),
         { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
         0.0f,
         { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f }

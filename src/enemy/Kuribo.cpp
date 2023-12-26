@@ -17,8 +17,8 @@ Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
     , mIsLayer2(false)
 {
     static const std::string cArchivePath[2] = {
-        Globals::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
-        Globals::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
+        Globals::sContentPath + "/Common/actor/" + cResName[0] + ".szs",
+        Globals::sContentPath + "/Common/actor/" + cResName[1] + ".szs"
     };
 
     const std::string& res_name = cResName[cIsKakibo];
@@ -28,7 +28,7 @@ Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::forceSharcfb());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::sForceSharcfb);
     RIO_ASSERT(model_res);
 
     const char* model_name = res_name.c_str();

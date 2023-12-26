@@ -11,13 +11,13 @@ DokanJoint::DokanJoint(const MapActorData& map_actor_data, u32 index)
     : MapActorItem(map_actor_data, index)
     , mpModel(nullptr)
 {
-    static const std::string archive_path = Globals::getContentPath() + "/Common/actor/" + cResName + ".szs";
+    static const std::string archive_path = Globals::sContentPath + "/Common/actor/" + cResName + ".szs";
 
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, true);
     if (archive_res == nullptr)
         return;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Globals::forceSharcfb());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Globals::sForceSharcfb);
     RIO_ASSERT(model_res);
 
     mpModel = ModelG3d::createG3d(

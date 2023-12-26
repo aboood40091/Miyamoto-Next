@@ -1810,7 +1810,7 @@ void CourseView::update()
 
     if (isInitialized())
     {
-        if (!Globals::applyDistantViewScissor())
+        if (!Globals::sApplyDistantViewScissor)
         {
             rio::BaseVec2f center_pos = getCenterWorldPos();
             s32 area_index = findNearestArea_(center_pos.x, -center_pos.y);
@@ -1832,6 +1832,13 @@ void CourseView::update()
         for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
             p_item->onSceneUpdate();
     }
+}
+
+void CourseView::onApplyDistantViewScissorChange()
+{
+    if (Globals::sApplyDistantViewScissor)
+        for (std::unique_ptr<AreaItem>& item : mAreaItemPtr)
+            item->SetDrawDV(true);
 }
 
 void CourseView::gather()

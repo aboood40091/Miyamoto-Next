@@ -55,12 +55,6 @@
 #include <functional>
 
 static const char* level_fname = "1-1.szs";
-static const std::string nsmbu_content_path = "game/nsmbu";
-
-const std::string& Globals::getContentPath()
-{
-    return nsmbu_content_path;
-}
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
@@ -178,7 +172,7 @@ void MainWindow::prepare_()
         rio::FileDevice::LoadArg arg;
         arg.path =
 #if RIO_IS_CAFE
-            Globals::getContentPath() + "/CAFE/agl_resource_cafe.sarc";
+            Globals::sContentPath + "/CAFE/agl_resource_cafe.sarc";
 #else
             "agl_resource_cafe_dev.sarc";
 #endif
@@ -201,7 +195,7 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized agl!\n");
 
     ShaderHolder::createSingleton();
-    ShaderHolder::instance()->initialize(Globals::getContentPath() + "/Common/shader/shaderfb");
+    ShaderHolder::instance()->initialize(Globals::sContentPath + "/Common/shader/shaderfb");
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
@@ -211,7 +205,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = Globals::getContentPath() + "/Common/actor/jyotyuActorPack.szs";
+        arg.path = Globals::sContentPath + "/Common/actor/jyotyuActorPack.szs";
         arg.alignment = 0x2000;
 
         mJyotyuActorPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -228,7 +222,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = Globals::getContentPath() + "/Common/actor/cobPack.szs";
+        arg.path = Globals::sContentPath + "/Common/actor/cobPack.szs";
         arg.alignment = 0x2000;
 
         mCobPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -269,7 +263,7 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created CourseView\n");
 
-    const std::string& level_path = Globals::getContentPath() + "/Common/course_res_pack/" + level_fname;
+    const std::string& level_path = Globals::sContentPath + "/Common/course_res_pack/" + level_fname;
     if (CourseData::instance()->loadFromPack(level_path))
     {
         mCoursePath = level_path;
@@ -381,7 +375,7 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
     BgTexMgr::instance()->initialize(cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(cd_file, Globals::useRealZoom());
+    mpCourseView->initialize(cd_file, Globals::sUseRealZoom);
 }
 
 void MainWindow::courseNew_()
@@ -654,7 +648,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Globals::preserveUnitSize() && !Globals::useRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Globals::sPreserveUnitSize && !Globals::sUseRealZoom);
         mCourseViewResized = false;
     }
 
@@ -1351,29 +1345,34 @@ void MainWindow::drawMainMenuBarUI_()
     default:
         break;
     case POPUP_TYPE_SETTINGS:
+        static char contentPath[260];
+        static bool forceSharcfb;
+        static float bigItemScale;
+        static bool useRealZoom;
+        static bool preserveUnitSize;
+        static bool applyDistantViewScissor;
+
         if (mPopupOpen)
         {
             ImGui::OpenPopup("Settings");
+            RIO_ASSERT(Globals::sContentPath.length() < 260);
+            rio::MemUtil::copy(contentPath, Globals::sContentPath.c_str(), Globals::sContentPath.length() + 1);
+            forceSharcfb = Globals::sForceSharcfb;
+            bigItemScale = Globals::sBigItemScale;
+            useRealZoom = Globals::sUseRealZoom;
+            preserveUnitSize = Globals::sPreserveUnitSize;
+            applyDistantViewScissor = Globals::sApplyDistantViewScissor;
             mPopupOpen = false;
         }
 
         if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            std::string contentPath = Globals::getContentPath();
-            bool forceSharcfb = Globals::forceSharcfb();
-            float bigItemScale = Globals::getBigItemScale();
-            bool useRealZoom = Globals::useRealZoom();
-            bool preserveUnitSize = Globals::preserveUnitSize();
-            bool applyDistantViewScissor = Globals::applyDistantViewScissor();
-
-            ImGui::BeginDisabled();
-            ImGui::InputText("Content Path", const_cast<char*>(contentPath.c_str()), contentPath.length());
+            ImGui::InputText("Content Path", contentPath, 260);
             ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
             ImGui::InputFloat("Big Item Scale", &bigItemScale);
             ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
             ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
             ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
-            ImGui::EndDisabled();
 
             ImGui::Separator();
 
@@ -1381,6 +1380,15 @@ void MainWindow::drawMainMenuBarUI_()
             {
                 ImGui::CloseCurrentPopup();
                 mPopupType = POPUP_TYPE_NONE;
+
+                Globals::sContentPath = contentPath;
+                Globals::sForceSharcfb = forceSharcfb;
+                Globals::sBigItemScale = bigItemScale;
+                Globals::sUseRealZoom = useRealZoom;
+                Globals::sPreserveUnitSize = preserveUnitSize;
+                Globals::sApplyDistantViewScissor = applyDistantViewScissor;
+
+                mpCourseView->onApplyDistantViewScissorChange();
             }
 
             ImGui::SameLine();
