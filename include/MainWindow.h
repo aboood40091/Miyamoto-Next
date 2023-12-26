@@ -27,6 +27,7 @@ public:
     void courseOpen();
     void courseSave();
     void courseSaveAs();
+    void courseItemSelect();
 
 private:
     void prepare_() override;
@@ -89,7 +90,8 @@ private:
         POPUP_TYPE_NONE = 0,
         POPUP_TYPE_SETTINGS = 0,
         POPUP_TYPE_ACTION_DISCARD,
-        POPUP_TYPE_SAVE
+        POPUP_TYPE_SAVE,
+        POPUP_TYPE_SELECT
     };
 
     enum PopupCallbackType
@@ -97,7 +99,8 @@ private:
         POPUP_CALLBACK_TYPE_NONE = 0,
         POPUP_CALLBACK_TYPE_COURSE_NEW,
         POPUP_CALLBACK_TYPE_COURSE_OPEN,
-        POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH
+        POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH,
+        POPUP_CALLBACK_TYPE_COURSE_ITEM_SELECT
     };
 
     CourseView*             mpCourseView;
@@ -118,6 +121,7 @@ private:
     PopupType               mPopupType;
     PopupCallbackType       mPopupCallbackType;
     u32                     mNextFile;
+    u32                     mItemSelectFlag;
     s32                     mMetricsLocation;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;

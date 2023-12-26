@@ -1724,6 +1724,10 @@ void CourseView::onCursorReleasedCompletely_()
         {
             static_cast<MainWindow*>(rio::sRootTask)->courseSaveAs();
         }
+        else if (ImGui::IsKeyPressed(ImGuiKey_A))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->courseItemSelect();
+        }
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_Delete) ||
              ImGui::IsKeyPressed(ImGuiKey_Backspace))
@@ -2223,6 +2227,64 @@ void CourseView::selectItem(const ItemID& item_id)
     mSelectedItems.push_back(item_id);
     mSelectionChange = true;
     setItemSelection_(item_id, true);
+}
+
+void CourseView::selectItems(u32 flag)
+{
+    clearSelection();
+
+    if (flag & 1 << ITEM_TYPE_BG_UNIT_OBJ)
+    {
+        for (std::vector<BgUnitItem>& vec : mBgUnitItem)
+        {
+            mSelectionChange |= !vec.empty();
+            for (BgUnitItem& item : vec)
+            {
+                mSelectedItems.push_back(item.getItemID());
+                item.setSelection(true);
+            }
+        }
+    }
+
+    if (flag & 1 << ITEM_TYPE_MAP_ACTOR)
+    {
+        mSelectionChange |= !mMapActorItemPtr.empty();
+        for (std::unique_ptr<MapActorItem>& p_item : mMapActorItemPtr)
+        {
+            mSelectedItems.push_back(p_item->getItemID());
+            p_item->setSelection(true);
+        }
+    }
+
+    if (flag & 1 << ITEM_TYPE_NEXT_GOTO)
+    {
+        mSelectionChange |= !mNextGotoItem.empty();
+        for (NextGotoItem& item : mNextGotoItem)
+        {
+            mSelectedItems.push_back(item.getItemID());
+            item.setSelection(true);
+        }
+    }
+
+    if (flag & 1 << ITEM_TYPE_LOCATION)
+    {
+        mSelectionChange |= !mLocationItem.empty();
+        for (LocationItem& item : mLocationItem)
+        {
+            mSelectedItems.push_back(item.getItemID());
+            item.setSelection(true);
+        }
+    }
+
+    if (flag & 1 << ITEM_TYPE_AREA)
+    {
+        mSelectionChange |= !mAreaItemPtr.empty();
+        for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
+        {
+            mSelectedItems.push_back(p_item->getItemID());
+            p_item->setSelection(true);
+        }
+    }
 }
 
 void CourseView::onSelectionChange_()

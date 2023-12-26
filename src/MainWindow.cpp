@@ -77,6 +77,7 @@ MainWindow::MainWindow()
     , mPopupType(POPUP_TYPE_NONE)
     , mPopupCallbackType(POPUP_CALLBACK_TYPE_NONE)
     , mNextFile(0)
+    , mItemSelectFlag(0)
     , mMetricsLocation(0)
 {
 }
@@ -555,6 +556,14 @@ void MainWindow::courseFileSwitch_(u32 file_index)
     setCurrentCourseDataFile_(file_index);
 }
 
+void MainWindow::courseItemSelect()
+{
+    RIO_ASSERT(mPopupType == POPUP_TYPE_NONE);
+    mPopupOpen = true;
+    mPopupType = POPUP_TYPE_SELECT;
+    mPopupCallbackType = POPUP_CALLBACK_TYPE_COURSE_ITEM_SELECT;
+}
+
 void MainWindow::handlePopupCallback_()
 {
     switch (mPopupCallbackType)
@@ -569,6 +578,9 @@ void MainWindow::handlePopupCallback_()
         break;
     case POPUP_CALLBACK_TYPE_COURSE_FILE_SWITCH:
         courseFileSwitch_(mNextFile);
+        break;
+    case POPUP_CALLBACK_TYPE_COURSE_ITEM_SELECT:
+        mpCourseView->selectItems(mItemSelectFlag);
         break;
     }
 }
@@ -1110,7 +1122,7 @@ void MainWindow::drawPaletteUI_()
                 {
                     const BgTexMgr::UnitObjTexArray& obj_tex_array = BgTexMgr::instance()->getUnitObjTexArray();
 
-                    if (ImGui::CollapsingHeader("Slot 0", ImGuiTreeNodeFlags_DefaultOpen))
+                    if (ImGui::CollapsingHeader("Main (Slot 0)", ImGuiTreeNodeFlags_DefaultOpen))
                     {
                         if (ImGui::BeginChild("Env0", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY))
                         {
@@ -1247,6 +1259,9 @@ void MainWindow::drawMainMenuBarUI_()
                 mpCourseView->redo();
 
             ImGui::Separator();
+
+            if (ImGui::MenuItem("Select All...", "Ctrl+A"))
+                courseItemSelect();
 
             if (ImGui::MenuItem("Delete", "Delete / Backspace", false, mpCourseView->hasSelection()))
                 mpCourseView->deleteSelection();
@@ -1442,6 +1457,49 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::SameLine();
 
             if (ImGui::Button("No"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SetItemDefaultFocus();
+
+            ImGui::EndPopup();
+        }
+        break;
+    case POPUP_TYPE_SELECT:
+        if (mPopupOpen)
+        {
+            ImGui::OpenPopup("Select All");
+            mPopupOpen = false;
+        }
+
+        if (ImGui::BeginPopupModal("Select All", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Choose object types you would like to select:");
+
+            ImGui::Separator();
+
+            ImGui::CheckboxFlags("Bg Unit Object",  &mItemSelectFlag, 1 << ITEM_TYPE_BG_UNIT_OBJ);
+            ImGui::CheckboxFlags("Actor",           &mItemSelectFlag, 1 << ITEM_TYPE_MAP_ACTOR);
+            ImGui::CheckboxFlags("NextGoto",        &mItemSelectFlag, 1 << ITEM_TYPE_NEXT_GOTO);
+            ImGui::CheckboxFlags("Location",        &mItemSelectFlag, 1 << ITEM_TYPE_LOCATION);
+            ImGui::CheckboxFlags("Area",            &mItemSelectFlag, 1 << ITEM_TYPE_AREA);
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Select"))
+            {
+                ImGui::CloseCurrentPopup();
+                mPopupType = POPUP_TYPE_NONE;
+                handlePopupCallback_();
+                mPopupCallbackType = POPUP_CALLBACK_TYPE_NONE;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel"))
             {
                 ImGui::CloseCurrentPopup();
                 mPopupType = POPUP_TYPE_NONE;
