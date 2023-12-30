@@ -57,7 +57,6 @@ private:
     void drawMainMenuBarUI_();
     void drawFileOptionsUI_();
     void drawFileOptionsMenuItemUI_();
-    void setupUiStyle_();
 
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
