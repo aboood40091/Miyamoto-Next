@@ -499,12 +499,12 @@ void MainWindow::courseSaveAs()
         { "Uncompressed course pack (*.sarc)", "sarc" }
     };
     
-    nfdopendialogu8args_t args = {0};
+    nfdsavedialogu8args_t args = {0};
     args.filterList = filters;
     args.filterCount = 3;
     
     nfdu8char_t* chosen_file;
-    nfdresult_t result = NFD_OpenDialogU8_With(&chosen_file, &args);
+    nfdresult_t result = NFD_SaveDialogU8_With(&chosen_file, &args);
     if (result == NFD_CANCEL)
         return;
     
