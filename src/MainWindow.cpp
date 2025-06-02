@@ -37,23 +37,17 @@
 #include <detail/aglGX2.h>
 #endif // RIO_IS_CAFE
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
 #include <graphics/win/ShaderUtil.h>
-
-#include <misc/win/rio_Windows.h>
-#include <commdlg.h>
-
 #include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-#endif // RIO_IS_WIN
+#include <nfd.h>
+#endif // RIO_IS_DESKTOP
 
 #include <rio.h>
 
 #include <imgui_internal.h>
 
 #include <format>
-#include <functional>
 
 static const char* level_fname = "1-1.szs";
 
@@ -77,7 +71,7 @@ MainWindow::MainWindow()
 {
 }
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
 
 void MainWindow::resize_(s32 width, s32 height)
 {
@@ -89,15 +83,16 @@ void MainWindow::onResizeCallback_(s32 width, s32 height)
     static_cast<MainWindow*>(rio::sRootTask)->resize_(width, height);
 }
 
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
 void MainWindow::prepare_()
 {
   //RIO_LOG("MainWindow::prepare_(): start\n");
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     rio::Window::instance()->setOnResizeCallback(&MainWindow::onResizeCallback_);
-#endif // RIO_IS_WIN
+    NFD_Init();
+#endif // RIO_IS_DESKTOP
 
     s32 width = rio::Window::instance()->getWidth();
     s32 height = rio::Window::instance()->getHeight();
@@ -144,13 +139,13 @@ void MainWindow::prepare_()
 
   //RIO_LOG("MainWindow::prepare_(): layer initialized\n");
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     ShaderUtil::sTempPath                   = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/shaders/cache";
     ShaderUtil::sGx2ShaderDecompilerPath    = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/gx2shader-decompiler.exe";
     ShaderUtil::sSpirvCrossPath             = rio::FileDeviceMgr::instance()->getNativeFileDevice()->getCWD() + "/fs/content/spirv-cross.exe";
 
   //RIO_LOG("MainWindow::prepare_(): ShaderUtil parameters set\n");
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
 #if RIO_IS_CAFE
     agl::driver::GX2Resource::createSingleton();
@@ -365,9 +360,10 @@ void MainWindow::exit_()
 
     ImGuiUtil::shutdown();
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     rio::Window::instance()->setOnResizeCallback(nullptr);
-#endif // RIO_IS_WIN
+    NFD_Quit();
+#endif // RIO_IS_DESKTOP
 }
 
 void MainWindow::setCurrentCourseDataFile_(u32 id)
@@ -413,31 +409,30 @@ void MainWindow::courseNew()
 
 void MainWindow::courseOpen_()
 {
-#if RIO_IS_WIN
-    const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
-                         "Compressed course pack (*.szs)\0*.szs\0"
-                         "Uncompressed course pack (*.sarc)\0*.sarc\0";
-
-    OPENFILENAMEA ofn;
-    CHAR szFile[260] = { 0 };
-    CHAR currentDir[256] = { 0 };
-    ZeroMemory(&ofn, sizeof(OPENFILENAME));
-    ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = glfwGetWin32Window(rio::Window::instance()->getNativeWindow().getGLFWwindow());
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    if (GetCurrentDirectoryA(256, currentDir))
-        ofn.lpstrInitialDir = currentDir;
-    ofn.lpstrFilter = filter;
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-    if (!GetOpenFileNameA(&ofn))
+#if RIO_IS_DESKTOP
+    nfdu8filteritem_t filters[3] = {
+        { "Course pack (*.sarc *.szs)", "sarc,szs" },
+        { "Compressed course pack (*.szs)", "szs" },
+        { "Uncompressed course pack (*.sarc)", "sarc" }
+    };
+    
+    nfdopendialogu8args_t args = {0};
+    args.filterList = filters;
+    args.filterCount = 3;
+    
+    nfdu8char_t* chosen_file;
+    nfdresult_t result = NFD_OpenDialogU8_With(&chosen_file, &args);
+    if (result == NFD_CANCEL)
         return;
-
-    RIO_LOG("Chose file: %s\n", ofn.lpstrFile);
+    
+    if (result != NFD_OKAY)
+    {
+        RIO_LOG("File selection error: %s", NFD_GetError());
+    }
+    
+    RIO_LOG("Chose file: %s\n", chosen_file);
     std::string level_path = "native://";
-    level_path += ofn.lpstrFile;
+    level_path += chosen_file;
 
     if (!CourseData::instance()->loadFromPack(level_path))
         return;
@@ -446,7 +441,7 @@ void MainWindow::courseOpen_()
     RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
     ActionMgr::instance()->discard(false);
     setCurrentCourseDataFile_(0);
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 }
 
 void MainWindow::courseOpen()
@@ -497,34 +492,30 @@ void MainWindow::courseSave()
 
 void MainWindow::courseSaveAs()
 {
-#if RIO_IS_WIN
-    const char* filter = "Course pack (*.sarc *.szs)\0*.sarc;*.szs\0"
-                         "Compressed course pack (*.szs)\0*.szs\0"
-                         "Uncompressed course pack (*.sarc)\0*.sarc\0";
-
-    OPENFILENAMEA ofn;
-    CHAR szFile[260] = { 0 };
-    CHAR currentDir[256] = { 0 };
-    ZeroMemory(&ofn, sizeof(OPENFILENAME));
-    ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = glfwGetWin32Window(rio::Window::instance()->getNativeWindow().getGLFWwindow());
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    if (GetCurrentDirectoryA(256, currentDir))
-        ofn.lpstrInitialDir = currentDir;
-    ofn.lpstrFilter = filter;
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-
-    // Sets the default extension by extracting it from the filter
-    ofn.lpstrDefExt = strchr(filter, '\0') + 1;
-
-    if (!GetSaveFileNameA(&ofn))
+#if RIO_IS_DESKTOP
+    nfdu8filteritem_t filters[3] = {
+        { "Course pack (*.sarc *.szs)", "sarc,szs" },
+        { "Compressed course pack (*.szs)", "szs" },
+        { "Uncompressed course pack (*.sarc)", "sarc" }
+    };
+    
+    nfdopendialogu8args_t args = {0};
+    args.filterList = filters;
+    args.filterCount = 3;
+    
+    nfdu8char_t* chosen_file;
+    nfdresult_t result = NFD_OpenDialogU8_With(&chosen_file, &args);
+    if (result == NFD_CANCEL)
         return;
+    
+    if (result != NFD_OKAY)
+    {
+        RIO_LOG("File selection error: %s", NFD_GetError());
+    }
 
-    RIO_LOG("Save as file: %s\n", ofn.lpstrFile);
+    RIO_LOG("Save as file: %s\n", chosen_file);
     std::string level_path = "native://";
-    level_path += ofn.lpstrFile;
+    level_path += chosen_file;
 
     bool to_compress = level_path.ends_with(".szs");
 
@@ -550,7 +541,7 @@ void MainWindow::courseSaveAs()
     }
 
     rio::MemUtil::free(out.data());
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 }
 
 void MainWindow::courseFileSwitch_(u32 file_index)
@@ -590,10 +581,10 @@ void MainWindow::handlePopupCallback_()
 
 void MainWindow::processMouseInput_()
 {
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     if (glfwGetWindowAttrib(rio::Window::instance()->getNativeWindow().getGLFWwindow(), GLFW_ICONIFIED))
         return;
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
     // Checking this is kinda useless
     /*
@@ -624,10 +615,10 @@ void MainWindow::processMouseInput_()
 
 void MainWindow::processKeyboardInput_()
 {
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     if (glfwGetWindowAttrib(rio::Window::instance()->getNativeWindow().getGLFWwindow(), GLFW_ICONIFIED))
         return;
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
     // Checking this is kinda useless
     /*
@@ -784,7 +775,7 @@ void MainWindow::drawCourseViewUI_()
 #if RIO_IS_CAFE
         mImGuiGX2Texture.Texture = const_cast<GX2Texture*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
         texture_id = &mImGuiGX2Texture;
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
         texture_id = (void*)(mpCourseView->getColorTexture()->getNativeTextureHandle());
 #endif
 
@@ -871,9 +862,9 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
         if (obj_tex)
         {
             ImGui::SetCursorPos({ cursor_pos.x + std::max<f32>(0.0f, (self_box_size.x - icon_size.x) * 0.5f), cursor_pos.y + std::max<f32>(0.0f, (self_box_size.y - icon_size.y) * 0.5f) });
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
             ImGui::Image((void*)obj_tex->getNativeTextureHandle(), icon_size);
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
         }
 
         cursor_pos.x += self_box_size.x + spacing.x;

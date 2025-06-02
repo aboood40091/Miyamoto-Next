@@ -2,3 +2,16 @@
 	path = lib/ninTexUtils
 	url = https://github.com/aboood40091/ninTexUtils
 	branch = cpp
+[submodule "lib/nfd"]
+	path = lib/nfd
+	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "lib/imgui"]
+	path = lib/imgui
+	url = https://github.com/aboood40091/imgui.git
+	branch = rio_docking
+[submodule "lib/glew"]
+	path = lib/glew
+	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "lib/glfw"]
+	path = lib/glfw
+	url = https://github.com/glfw/glfw.git

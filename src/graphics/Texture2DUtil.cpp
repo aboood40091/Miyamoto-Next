@@ -7,7 +7,7 @@
 #if RIO_IS_CAFE
 #include <gfd.h>
 #include <gx2/mem.h>
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
 #include <ninTexUtils/gfd/gfdStruct.h>
 #endif
 
@@ -70,7 +70,7 @@ Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, std::u
 
     GX2CalcSurfaceSizeAndAlignment(&native_texture.surface);
     GX2InitTextureRegs(&native_texture);
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
     GFDFile gfd;
     gfd.load(file_data);
 
