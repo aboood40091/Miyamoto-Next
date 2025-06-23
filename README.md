@@ -7,7 +7,7 @@ A complete rewrite of Miyamoto! Level Editor, with all-new features.
 * GNU build tools (GCC, Make)
 * Premake5
 * GLEW
-* [RIO](https://github.com/aboood40091/rio) & its dependencies (g++ | GLEW | GLFW).  
+* [RIO](https://github.com/aboood40091/rio).
 * [ninTexUtils](https://github.com/aboood40091/nintexUtils/tree/cpp).  
 * [NW4F G3d Windows Port](https://github.com/nw4f/G3d/tree/nsmbu-win-port).  
 * [agl-next](https://github.com/aboood40091/agl-next).  
