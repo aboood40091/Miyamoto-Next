@@ -1,7 +1,3 @@
-[submodule "lib/ninTexUtils"]
-	path = lib/ninTexUtils
-	url = https://github.com/aboood40091/ninTexUtils
-	branch = cpp
 [submodule "lib/nfd"]
 	path = lib/nfd
 	url = https://github.com/btzy/nativefiledialog-extended.git
@@ -15,3 +11,7 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "lib/ModelStuff"]
+	path = lib/ModelStuff
+	url = https://github.com/aboood40091/ModelStuff-next.git
+	branch = nsmbu-win-port
