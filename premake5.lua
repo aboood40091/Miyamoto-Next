@@ -21,6 +21,7 @@ workspace "Miyamoto-Next"
     
     filter "configurations:Release"
         optimize "speed"
+        linktimeoptimization "on"
         symbols "off"
         defines {
             "RIO_RELEASE",
