@@ -1,6 +1,7 @@
 -- premake5.lua
 workspace "Miyamoto-Next"
     architecture "x86"
+    vectorextensions "AVX2"
     language "C++"
     cppdialect "C++23"
     toolset "clang"
