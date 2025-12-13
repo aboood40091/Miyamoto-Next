@@ -6,8 +6,8 @@ A complete rewrite of Miyamoto! Level Editor, with all-new features.
 * OpenGL 4.3 or higher.  
 * GNU build tools (GCC, Make)
 * Premake5
-* [GLEW](https://glew.sourceforge.net/)
-* [GLFW](https://www.glfw.org/)
+* [GLEW](https://github.com/Perlmint/glew-cmake)
+* [GLFW](https://github.com/glfw/glfw)
 * [RIO](https://github.com/aboood40091/rio).
 * [ninTexUtils](https://github.com/aboood40091/nintexUtils/tree/cpp).  
 * [NW4F G3d Windows Port](https://github.com/nw4f/G3d/tree/nsmbu-win-port).  
