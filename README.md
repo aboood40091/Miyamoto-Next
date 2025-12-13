@@ -15,6 +15,7 @@ A complete rewrite of Miyamoto! Level Editor, with all-new features.
 * [ModelStuff-next](https://github.com/aboood40091/ModelStuff-next).  
 * [ImGui for RIO](https://github.com/aboood40091/imgui/tree/rio_docking).  
 * [Native File Dialog Extended](https://github.com/btzy/nativefiledialog-extended)
+* [Backward-cpp](https://github.com/bombela/backward-cpp)
 
 # Building
 1. Clone this repository **recursively**.
