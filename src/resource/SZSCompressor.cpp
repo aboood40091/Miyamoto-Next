@@ -3,6 +3,7 @@
 #include <misc/rio_MemUtil.h>
 
 #include <cstring>
+#include <algorithm>
 
 std::span<const u8> SZSCompressor::compressionSearch_(
     const u8* src,

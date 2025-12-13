@@ -2,7 +2,8 @@
 workspace "Miyamoto-Next"
     architecture "x86"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "C++23"
+    toolset "clang"
     staticruntime "on"
     --warnings "Extra"
     configurations { "Debug", "Release" }
@@ -44,7 +45,8 @@ project "Miyamoto-Next"
         "lib/ModelStuff-next/include",
         "lib/imgui",
         "lib/imgui/backends",
-        "lib/nfd/src/include"
+        "lib/nfd/src/include",
+        "lib/backward-cpp"
     }
 
     files {
@@ -79,10 +81,14 @@ project "Miyamoto-Next"
         "lib/glfw/src/platform.c",
         "lib/glfw/src/vulkan.c",
         "lib/glfw/src/window.c",
+        
+        "lib/backward-cpp/backward.cpp",
     }
 
     filter "system:linux"
         pic "On"
+        
+        stl "libc++"
 
         systemversion "latest"
         
@@ -118,6 +124,9 @@ project "Miyamoto-Next"
             "_GLFW_X11",
             "NFD_PLATFORM_LINUX"
         }
+        
+        buildoptions { "-stdlib=libc++" }
+        linkoptions  { "-stdlib=libc++" }
 
     filter "system:macosx"
         pic "On"
