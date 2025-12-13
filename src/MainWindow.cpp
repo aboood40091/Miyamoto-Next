@@ -428,6 +428,7 @@ void MainWindow::courseOpen_()
     if (result != NFD_OKAY)
     {
         RIO_LOG("File selection error: %s", NFD_GetError());
+        return;
     }
     
     RIO_LOG("Chose file: %s\n", chosen_file);
@@ -511,6 +512,7 @@ void MainWindow::courseSaveAs()
     if (result != NFD_OKAY)
     {
         RIO_LOG("File selection error: %s", NFD_GetError());
+        return;
     }
 
     RIO_LOG("Save as file: %s\n", chosen_file);
