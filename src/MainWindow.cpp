@@ -1242,6 +1242,11 @@ void MainWindow::drawMainMenuBarUI_()
                 mPopupOpen = true;
                 mPopupType = POPUP_TYPE_SETTINGS;
             }
+            
+            if (ImGui::MenuItem("Exit"))
+            {
+                std::exit(0);
+            }
 
             ImGui::EndMenu();
         }
