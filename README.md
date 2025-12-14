@@ -19,5 +19,5 @@ A complete rewrite of Miyamoto! Level Editor, with all-new features.
 
 # Building
 1. Clone this repository **recursively**.
-2. Invoke Premake on your system as: `premake5 gmake`.
-3. Compile the resulting Makefile using `make`, the output executable will be in `bin`.
+2. Invoke Premake on your system as: `premake5 gmake2`.
+3. Compile the resulting Makefile using `make` with either `config=debug` or `config=release`, the output executable will be in `bin`.

@@ -41,6 +41,9 @@ compile_commands.json
 .vs
 *.sh
 
+# Generic build files
+Makefile
+
 # Wii U build files
 build/
 bin/fs/code/*.elf
