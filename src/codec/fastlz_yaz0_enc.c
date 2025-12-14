@@ -54,13 +54,13 @@ static uint32_t flz_cmp(const uint8_t *p, const uint8_t *q, const uint8_t *r)
 
 #else
 
-static uint32_t flz_readu32(const void *ptr)
+static inline uint32_t __attribute__((always_inline)) flz_readu32(const void *ptr)
 {
     const uint8_t *p = (const uint8_t *)ptr;
     return (p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0];
 }
 
-static uint32_t flz_cmp(const uint8_t *p, const uint8_t *q, const uint8_t *r)
+static inline uint32_t __attribute__((always_inline)) flz_cmp(const uint8_t *p, const uint8_t *q, const uint8_t *r)
 {
     const uint8_t *start = p;
     while (q < r && *p == *q)
@@ -77,7 +77,7 @@ static uint32_t flz_cmp(const uint8_t *p, const uint8_t *q, const uint8_t *r)
 #define MAX_LEN 273
 #define MAX_MATCH_DISTANCE 4096
 
-#define HASH_LOG 15
+#define HASH_LOG 14
 #define HASH_SIZE (1 << HASH_LOG)
 #define HASH_MASK (HASH_SIZE - 1)
 
@@ -88,7 +88,7 @@ static uint16_t flz_hash(uint32_t v)
 }
 
 /* special case of memcpy: at most MAX_COPY bytes */
-static void flz_smallcopy(uint8_t *dest, const uint8_t *src, uint32_t count)
+static inline void __attribute__((always_inline)) flz_smallcopy(uint8_t *dest, const uint8_t *src, uint32_t count)
 {
 #if defined(FLZ_ARCH64)
     if (count >= 4)
@@ -108,7 +108,7 @@ static void flz_smallcopy(uint8_t *dest, const uint8_t *src, uint32_t count)
 }
 
 /* special case of memcpy: exactly MAX_COPY bytes */
-static void yaz0w_maxcopy(void *dest, const void *src)
+static inline void __attribute__((always_inline)) yaz0w_maxcopy(void *dest, const void *src)
 {
 #if defined(FLZ_ARCH64)
     const uint32_t *p = (const uint32_t *)src;
@@ -128,7 +128,7 @@ typedef struct
 } yaz0w_t;
 
 /* start a new flag byte */
-static inline void yaz0w_newgroup(yaz0w_t *w)
+static inline void __attribute__((always_inline)) yaz0w_newgroup(yaz0w_t *w)
 {
     w->flagp = w->op;
     *w->op++ = 0;
