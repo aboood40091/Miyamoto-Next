@@ -89,6 +89,7 @@ project "Miyamoto-Next"
         pic "On"
         
         toolset "clang"
+        stl "gnu"
 
         systemversion "latest"
         
