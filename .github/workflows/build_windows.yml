@@ -13,9 +13,13 @@ jobs:
               with:
                   submodules: recursive
 
-            - name: Install MinGW and dependencies
-              run: |
-                choco install mingw
+            - name: Setup MSYS2 (MINGW64)
+              uses: msys2/setup-msys2@v2
+              with:
+                msystem: MINGW64
+                update: true
+                install: >
+                  mingw-w64-x86_64-toolchain
 
             - name: Setup premake
               uses: abel0b/setup-premake@v2.4
@@ -25,11 +29,12 @@ jobs:
             - name: Run premake
               run: premake5 gmake2
 
-            - name: Compile
+            - name: Compile (from MSYS2 bash)
+              shell: bash -l {0}
               env:
-                  PKG_CONFIG_LIBDIR: C:\Tools\mingw\lib\pkgconfig
+                PKG_CONFIG_LIBDIR: /mingw64/lib/pkgconfig
               run: |
-                mingw32-make config=release verbose=true
+                make config=release verbose=true
 
             - name: Upload artifacts
               uses: actions/upload-artifact@v4
