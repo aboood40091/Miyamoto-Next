@@ -1,0 +1,38 @@
+name: Build (Windows)
+on:
+    push:
+        branches: ["*"]
+    pull_request:
+        branches: ["*"]
+
+jobs:
+    build:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install MinGW and dependencies
+              run: |
+                choco install mingw
+                choco install pkg-config
+
+            - name: Setup premake
+              uses: abel0b/setup-premake@v2.4
+              with:
+                  version: "5.0.0-beta2"
+
+            - name: Run premake
+              run: premake5 gmake2
+
+            - name: Compile
+              env:
+                  PKG_CONFIG_LIBDIR: C:\Tools\mingw\lib\pkgconfig
+              run: |
+                mingw32-make config=release verbose=true
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  path: ./bin/
