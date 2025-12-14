@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
@@ -29,56 +30,6 @@
 #include <stdint-gcc.h>
 #endif
 
-#if defined(FASTLZ_USE_MEMMOVE) && (FASTLZ_USE_MEMMOVE == 0)
-
-static void fastlz_memmove(uint8_t *dest, const uint8_t *src, uint32_t count)
-{
-    do
-    {
-        *dest++ = *src++;
-    } while (--count);
-}
-
-static void fastlz_memcpy(uint8_t *dest, const uint8_t *src, uint32_t count)
-{
-    return fastlz_memmove(dest, src, count);
-}
-
-#else
-
-#include <string.h>
-
-static void fastlz_memmove(uint8_t *dest, const uint8_t *src, uint32_t count)
-{
-    if ((count > 4) && (dest >= src + count))
-    {
-        memmove(dest, src, count);
-    }
-    else
-    {
-        switch (count)
-        {
-        default:
-            do
-            {
-                *dest++ = *src++;
-            } while (--count);
-            break;
-        case 3:
-            *dest++ = *src++;
-        case 2:
-            *dest++ = *src++;
-        case 1:
-            *dest++ = *src++;
-        case 0:
-            break;
-        }
-    }
-}
-
-static void fastlz_memcpy(uint8_t *dest, const uint8_t *src, uint32_t count) { memcpy(dest, src, count); }
-
-#endif
 
 #if defined(FLZ_ARCH64)
 
@@ -126,7 +77,7 @@ static uint32_t flz_cmp(const uint8_t *p, const uint8_t *q, const uint8_t *r)
 #define MAX_LEN 273
 #define MAX_MATCH_DISTANCE 4096
 
-#define HASH_LOG 13
+#define HASH_LOG 15
 #define HASH_SIZE (1 << HASH_LOG)
 #define HASH_MASK (HASH_SIZE - 1)
 
@@ -153,7 +104,7 @@ static void flz_smallcopy(uint8_t *dest, const uint8_t *src, uint32_t count)
         }
     }
 #endif
-    fastlz_memcpy(dest, src, count);
+    memcpy(dest, src, count);
 }
 
 /* special case of memcpy: exactly MAX_COPY bytes */
@@ -165,7 +116,7 @@ static void yaz0w_maxcopy(void *dest, const void *src)
     *q++ = *p++;
     *q++ = *p++;
 #else
-    fastlz_memcpy((uint8_t *)dest, (const uint8_t *)src, MAX_COPY);
+    memcpy((uint8_t *)dest, (const uint8_t *)src, MAX_COPY);
 #endif
 }
 
