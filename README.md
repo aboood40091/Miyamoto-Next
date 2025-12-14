@@ -4,8 +4,8 @@ A complete rewrite of Miyamoto! Level Editor, with all-new features.
 # Dependencies
 * NSMBU, NSLU or NSMBU+NSLU "content" folder. Set its path in `src/Globals.cpp`. For absolute path, prepend path with `native://`. Relative paths are relative to `fs/content/`.  
 * OpenGL 4.3 or higher.  
-* GNU build tools (GCC, Make)
-* Premake5
+* GCC-compatible compiler
+* Premake5 + GNU Make or MSBuild with Clang-cl
 * [GLEW](https://github.com/Perlmint/glew-cmake)
 * [GLFW](https://github.com/glfw/glfw)
 * [RIO](https://github.com/aboood40091/rio).

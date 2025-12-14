@@ -1,10 +1,8 @@
 -- premake5.lua
 workspace "Miyamoto-Next"
     architecture "x86"
-    vectorextensions "AVX2"
     language "C++"
-    cppdialect "C++23"
-    toolset "clang"
+    cppdialect "C++20"
     staticruntime "on"
     --warnings "Extra"
     configurations { "Debug", "Release" }
@@ -90,6 +88,7 @@ project "Miyamoto-Next"
     filter "system:linux"
         pic "On"
         
+        toolset "clang"
         stl "libc++"
 
         systemversion "latest"
