@@ -55,6 +55,7 @@ bin/*.dll
 bin/Miyamoto-Next
 bin/Miyamoto-Next-Debug
 !Cafe.make
+Makefile
 
 # Test files
 bin/fs/content/game/
