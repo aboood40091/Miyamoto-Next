@@ -115,11 +115,9 @@ project "Miyamoto-Next"
             
             "lib/nfd/src/nfd_portal.cpp"
         }
-        
-        includedirs {
-            "/usr/include/dbus-1.0",
-            "/usr/lib64/dbus-1.0/include"
-        }
+
+        buildoptions { "`pkg-config --cflags dbus-1`" }
+        linkoptions  { "`pkg-config --libs dbus-1`" }
 
         defines {
             "_GLFW_X11",
