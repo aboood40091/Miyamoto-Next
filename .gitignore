@@ -31,10 +31,15 @@
 *.out
 *.app
 
-# CodeBlocks Project files
+# IDE files
 *.depend
 *.layout
 *.cbp
+compile_commands.json
+.cache
+.vscode
+.vs
+*.sh
 
 # Wii U build files
 build/
@@ -44,6 +49,11 @@ bin/fs/code/*.rpx
 # Windows build files
 bin/*.exe
 bin/*.dll
+
+# Linux build files
+*.make
+bin/Miyamoto-Next
+bin/Miyamoto-Next-Debug
 
 # Test files
 bin/fs/content/game/

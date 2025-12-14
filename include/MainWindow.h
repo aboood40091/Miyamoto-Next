@@ -34,10 +34,10 @@ private:
     void calc_()    override;
     void exit_()    override;
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     void resize_(s32 width, s32 height);
     static void onResizeCallback_(s32 width, s32 height);
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
     void courseNew_();
     void courseOpen_();

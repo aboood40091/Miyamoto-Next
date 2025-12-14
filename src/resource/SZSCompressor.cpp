@@ -3,6 +3,7 @@
 #include <misc/rio_MemUtil.h>
 
 #include <cstring>
+#include <algorithm>
 
 std::span<const u8> SZSCompressor::compressionSearch_(
     const u8* src,
@@ -26,7 +27,7 @@ std::span<const u8> SZSCompressor::compressionSearch_(
     u8 c = *src;
     while (search < src)
     {
-        search = static_cast<u8*>(std::memchr(search, c, uintptr_t(src) - uintptr_t(search)));
+        search = static_cast<const u8*>(std::memchr(search, c, uintptr_t(src) - uintptr_t(search)));
         if (!search)
             break;
 

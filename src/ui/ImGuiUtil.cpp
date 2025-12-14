@@ -26,7 +26,9 @@ void ImGuiUtil::initialize()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 #else
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+#if !RIO_IS_LINUX // Viewports is buggy on X11...
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+#endif // RIO_IS_LINUX
 #endif // RIO_IS_CAFE
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     //io.ConfigViewportsNoAutoMerge = true;

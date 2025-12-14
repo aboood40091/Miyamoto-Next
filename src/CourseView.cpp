@@ -66,9 +66,9 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mCursorForceReleaseFlag(CURSOR_RELEASE_FLAG_NONE)
     , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     , mpItemIDClearBuffer(nullptr)
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
     , mpColorTexture(nullptr)
     , mpItemIDTexture(nullptr)
     , mpDepthTexture(nullptr)
@@ -152,13 +152,13 @@ CourseView::~CourseView()
         mpItemIDReadBuffer = nullptr;
     }
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     if (mpItemIDClearBuffer)
     {
         delete[] mpItemIDClearBuffer;
         mpItemIDClearBuffer = nullptr;
     }
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
     if (mpDepthTexture)
     {
@@ -177,7 +177,7 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
 {
 #if RIO_IS_CAFE
     GX2DrawDone();
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
     RIO_GL_CALL(glFinish());
 #endif
 
@@ -224,13 +224,13 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
         mpItemIDReadBuffer = nullptr;
     }
 
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     if (mpItemIDClearBuffer)
     {
         delete[] mpItemIDClearBuffer;
         mpItemIDClearBuffer = nullptr;
     }
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 
     if (mpDepthTexture)
     {
@@ -246,11 +246,11 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
         u32 size = width * height * sizeof(u32);
         mpItemIDReadBuffer = new u8[size];
         rio::MemUtil::set(mpItemIDReadBuffer, 0xFF, size);
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
         RIO_ASSERT(size == mpItemIDTexture->getNativeTexture().surface.imageSize);
         mpItemIDClearBuffer = new u8[size];
         rio::MemUtil::set(mpItemIDClearBuffer, 0xFF, size);
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
     }
 
     agl::TextureData color_texture_data(*mpColorTexture, true, false);
@@ -303,7 +303,7 @@ void CourseView::clearItemIDTexture_()
     const GX2Surface& surface = mpItemIDTexture->getNativeTexture().surface;
     rio::MemUtil::set(surface.image, 0xFF, surface.imageSize);
     GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, surface.image, surface.imageSize);
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
     rio::Texture2DUtil::uploadTexture(
         mpItemIDTexture->getNativeTextureHandle(),
         mpItemIDTexture->getNativeTexture().surface.format,
@@ -313,7 +313,7 @@ void CourseView::clearItemIDTexture_()
         mpItemIDTexture->getNativeTexture().surface.imageSize,
         mpItemIDClearBuffer
     );
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
 }
 
 void CourseView::setCameraCenterWorldPos(const rio::BaseVec2f& center_pos)
@@ -391,7 +391,7 @@ void CourseView::uninitialize()
 
 #if RIO_IS_CAFE
     GX2DrawDone();
-#elif RIO_IS_WIN
+#elif RIO_IS_DESKTOP
     RIO_GL_CALL(glFinish());
 #endif
 
@@ -1774,11 +1774,11 @@ void CourseView::update()
     {
         mRenderBuffer.read(
             TARGET_TYPE_ITEM_ID, mpItemIDReadBuffer
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
             , mpItemIDTexture->getNativeTexture().surface.width
             , mpItemIDTexture->getNativeTexture().surface.height
             , mpItemIDTexture->getNativeTexture().surface.nativeFormat
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
         );
     }
     mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);

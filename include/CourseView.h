@@ -492,9 +492,9 @@ private:
                                 mAreaItemPtr;
     std::vector<LocationItem>   mLocationItem;
     u8*                         mpItemIDReadBuffer;
-#if RIO_IS_WIN
+#if RIO_IS_DESKTOP
     u8*                         mpItemIDClearBuffer;
-#endif // RIO_IS_WIN
+#endif // RIO_IS_DESKTOP
     rio::Texture2D             *mpColorTexture,
                                *mpItemIDTexture,
                                *mpDepthTexture;
