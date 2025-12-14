@@ -274,7 +274,7 @@ std::span<u8> SZSCompressor::compressFast(std::span<const u8> data)
 
         next_read_end_pos = current_read_end_pos;
 
-        if (data_pos >= cSearchWindowSize + 14 * cMatchLenMax)
+        if (data_pos >= cDataBufferSize - cMatchLenMax - 1)
         {
             std::memmove(sWork.data_buffer, sWork.data_buffer + copy_pos, copy_size);
 
