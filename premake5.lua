@@ -125,9 +125,6 @@ project "Miyamoto-Next"
             "_GLFW_X11",
             "NFD_PLATFORM_LINUX"
         }
-        
-        buildoptions { "-stdlib=libc++" }
-        linkoptions  { "-stdlib=libc++" }
 
     filter "system:macosx"
         pic "On"
