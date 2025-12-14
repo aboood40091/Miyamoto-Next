@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
           sudo apt update
-          sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev
+          sudo apt install clang libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev
     
     - name: Setup premake
       uses: abel0b/setup-premake@v2.4

@@ -89,7 +89,6 @@ project "Miyamoto-Next"
         pic "On"
         
         toolset "clang"
-        stl "libc++"
 
         systemversion "latest"
         
