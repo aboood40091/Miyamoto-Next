@@ -1,5 +1,5 @@
 #include <CourseView.h>
-#include <Globals.h>
+#include <Preferences.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -33,10 +33,10 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     , cIsKaiga(map_actor_data.type == 503 || map_actor_data.type == 631)
     , mFrame(0)
 {
-    static const std::string archive_path_normal        = Globals::sContentPath + "/Common/actor/" + cResNameNormal     + ".szs";
-    static const std::string archive_path_kaiga         = Globals::sContentPath + "/Common/actor/" + cResNameKaiga      + ".szs";
-    static const std::string archive_path_rdash         = Globals::sContentPath + "/Common/actor/" + cResNameRDash      + ".szs";
-    static const std::string archive_path_kaiga_rdash   = Globals::sContentPath + "/Common/actor/" + cResNameKaigaRDash + ".szs";
+    static const std::string archive_path_normal        = Preferences::instance()->getContentPath() + "/Common/actor/" + cResNameNormal     + ".szs";
+    static const std::string archive_path_kaiga         = Preferences::instance()->getContentPath() + "/Common/actor/" + cResNameKaiga      + ".szs";
+    static const std::string archive_path_rdash         = Preferences::instance()->getContentPath() + "/Common/actor/" + cResNameRDash      + ".szs";
+    static const std::string archive_path_kaiga_rdash   = Preferences::instance()->getContentPath() + "/Common/actor/" + cResNameKaigaRDash + ".szs";
 
     bool rdash = map_actor_data.type == 630 || map_actor_data.type == 631;
 
@@ -56,7 +56,7 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::sForceSharcfb);
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(mpModelResource);
 
     mpBaseModel = BasicModel::create(

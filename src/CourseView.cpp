@@ -1,6 +1,6 @@
 #include <CourseView.h>
-#include <Globals.h>
 #include <MainWindow.h>
+#include <Preferences.h>
 #include <action/ActionItemDelete.h>
 #include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
@@ -606,7 +606,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             }
             else
             {
-                const rio::Vector2f& wheel_delta = wheel * Globals::sScrollMovementSpeed;
+                const rio::Vector2f& wheel_delta = wheel * Preferences::instance()->getScrollMovementSpeed();
 
                 const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
                 const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(wheel_delta);
@@ -637,9 +637,9 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             rio::Vector2f movement_delta;
 
             if (ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
-                movement_delta = movement * Globals::sFastArrowMovementSpeed;
+                movement_delta = movement * Preferences::instance()->getFastArrowMovementSpeed();
             else
-                movement_delta = movement * Globals::sArrowMovementSpeed;
+                movement_delta = movement * Preferences::instance()->getArrowMovementSpeed();
 
             const rio::BaseVec2f& last_cursor_pos_world = mCamera.pos();    // viewToWorldPos(zero) == mCamera.pos()
             const rio::BaseVec2f& cursor_pos_world = viewToWorldPos(movement_delta);
@@ -1841,7 +1841,7 @@ void CourseView::update()
 
     if (isInitialized())
     {
-        if (!Globals::sApplyDistantViewScissor)
+        if (!Preferences::instance()->getApplyDistantViewScissor())
         {
             rio::BaseVec2f center_pos = getCenterWorldPos();
             s32 area_index = findNearestArea_(center_pos.x, -center_pos.y);
@@ -1867,7 +1867,7 @@ void CourseView::update()
 
 void CourseView::onApplyDistantViewScissorChange()
 {
-    if (Globals::sApplyDistantViewScissor)
+    if (Preferences::instance()->getApplyDistantViewScissor())
         for (std::unique_ptr<AreaItem>& item : mAreaItemPtr)
             item->SetDrawDV(true);
 }
