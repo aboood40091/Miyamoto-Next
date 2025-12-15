@@ -1,7 +1,5 @@
 #pragma once
 
-#include <misc/rio_Types.h>
-
 #include <util/SimpleIniWrapper.h>
 
 class ConfigMgr
