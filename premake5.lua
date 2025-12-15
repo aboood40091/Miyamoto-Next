@@ -50,6 +50,7 @@ project "Miyamoto-Next"
         "lib/imgui",
         "lib/imgui/backends",
         "lib/nfd/src/include",
+        "lib/simpleini",
     }
 
     files {

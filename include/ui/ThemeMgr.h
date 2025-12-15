@@ -11,10 +11,11 @@ public:
     static bool createSingleton();
     static void destroySingleton();
     static ThemeMgr* instance() { return sInstance; }
-    static const std::string sDefaultTheme;
+
+    static constexpr const char* cDefaultTheme = "Dark Blue";
 
 private:
-    static ThemeMgr* sInstance;
+    static inline ThemeMgr* sInstance = nullptr;
 
     ThemeMgr();
     ~ThemeMgr();

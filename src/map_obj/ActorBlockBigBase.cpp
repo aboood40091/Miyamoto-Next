@@ -1,5 +1,5 @@
 #include <CourseView.h>
-#include <Globals.h>
+#include <Preferences.h>
 #include <course/BgRenderer.h>
 #include <course/BgTexMgr.h>
 #include <graphics/QuadRenderer.h>
@@ -126,7 +126,7 @@ void ActorBlockBigBase::drawXlu(const rio::lyr::DrawInfo& draw_info)
             .setItemID(mItemID)
             .setSelection(mIsSelected)
             .setCenter({ mPosition.x + 16, mPosition.y - 16, mPosition.z })
-            .setSize({ Globals::sBigItemScale, Globals::sBigItemScale }),
+            .setSize({ Preferences::getBigItemScale(), Preferences::getBigItemScale() }),
         { 1.0f / s32(BgTexMgr::ITEM_MAX), 1.0f },
         0.0f,
         { s32(mItemType) - s32(BgTexMgr::ITEM_MAX) * 0.5f + 0.5f, 0.0f }

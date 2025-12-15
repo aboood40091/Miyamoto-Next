@@ -1,9 +1,6 @@
 #include <ui/ThemeMgr.h>
 #include <rio.h>
 
-ThemeMgr* ThemeMgr::sInstance = nullptr;
-const std::string ThemeMgr::sDefaultTheme = "Dark Blue";
-
 bool ThemeMgr::createSingleton()
 {
     if (sInstance)
@@ -124,7 +121,7 @@ void ThemeMgr::loadThemes_()
     default_theme.TabRounding = 4.0f;
     default_theme.WindowRounding = 4.0f;
 
-    mThemes[sDefaultTheme] = default_theme;
+    mThemes[cDefaultTheme] = default_theme;
 
     ImGuiStyle light_theme;
 

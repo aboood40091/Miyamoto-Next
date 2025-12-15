@@ -1,4 +1,4 @@
-#include <Globals.h>
+#include <Preferences.h>
 #include <graphics/BasicModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
@@ -137,11 +137,11 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     mType = type;
 
     static const std::string cArchivePath[TYPE_MAX] = {
-        Globals::sContentPath + "/Common/actor/" + cResName[TYPE_NORMAL] + ".szs",
-        Globals::sContentPath + "/Common/actor/" + cResName[TYPE_KAIGA]  + ".szs",
-        Globals::sContentPath + "/Common/actor/" + cResName[TYPE_MAME]   + ".szs",
-        Globals::sContentPath + "/Common/actor/" + cResName[TYPE_BIG]    + ".szs",
-        Globals::sContentPath + "/Common/actor/" + cResName[TYPE_CB]     + ".szs"
+        Preferences::getContentPath() + "/Common/actor/" + cResName[TYPE_NORMAL] + ".szs",
+        Preferences::getContentPath() + "/Common/actor/" + cResName[TYPE_KAIGA]  + ".szs",
+        Preferences::getContentPath() + "/Common/actor/" + cResName[TYPE_MAME]   + ".szs",
+        Preferences::getContentPath() + "/Common/actor/" + cResName[TYPE_BIG]    + ".szs",
+        Preferences::getContentPath() + "/Common/actor/" + cResName[TYPE_CB]     + ".szs"
     };
 
     const std::string& res_name = cResName[mType];
@@ -151,7 +151,7 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     if (archive_res == nullptr)
         return false;
 
-    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Globals::sForceSharcfb);
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Preferences::getForceSharcfb());
     RIO_ASSERT(mpModelResource);
 
     const char* const model_name_a = cModelNameA[mType];
