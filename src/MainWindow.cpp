@@ -1,7 +1,7 @@
 #include <ConfigMgr.h>
 #include <CourseView.h>
-#include <Preferences.h>
 #include <MainWindow.h>
+#include <Preferences.h>
 #include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
 #include <course/BgTexMgr.h>
