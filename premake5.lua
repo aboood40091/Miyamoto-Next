@@ -8,6 +8,10 @@ workspace "Miyamoto-Next"
     configurations { "Debug", "Release" }
     startproject "Miyamoto-Next"
 
+    defines {
+        "GLEW_STATIC"
+    }
+
     filter "configurations:Debug"
         optimize "debug"
         symbols "on"
@@ -46,7 +50,6 @@ project "Miyamoto-Next"
         "lib/imgui",
         "lib/imgui/backends",
         "lib/nfd/src/include",
-        "lib/backward-cpp"
     }
 
     files {
@@ -81,8 +84,6 @@ project "Miyamoto-Next"
         "lib/glfw/src/platform.c",
         "lib/glfw/src/vulkan.c",
         "lib/glfw/src/window.c",
-        
-        "lib/backward-cpp/backward.cpp",
     }
 
     filter "system:linux"
@@ -98,6 +99,10 @@ project "Miyamoto-Next"
             "dbus-1"
         }
         
+        includedirs {
+            "lib/backward-cpp"
+        }
+
         files {
             "lib/glfw/src/x11_init.c",
             "lib/glfw/src/x11_monitor.c",
@@ -113,16 +118,18 @@ project "Miyamoto-Next"
             "lib/glfw/src/osmesa_context.c",
             "lib/glfw/src/linux_joystick.c",
             
-            "lib/nfd/src/nfd_portal.cpp"
+            "lib/nfd/src/nfd_portal.cpp",
+        
+            "lib/backward-cpp/backward.cpp"
         }
-
-        buildoptions { "`pkg-config --cflags dbus-1`" }
-        linkoptions  { "`pkg-config --libs dbus-1`" }
 
         defines {
             "_GLFW_X11",
             "NFD_PLATFORM_LINUX"
         }
+        
+        buildoptions { "`pkg-config --cflags dbus-1`" }
+        linkoptions  { "`pkg-config --libs dbus-1`" }
 
     filter "system:macosx"
         pic "On"
@@ -148,7 +155,11 @@ project "Miyamoto-Next"
         systemversion "latest"
 
         links {
-            "opengl32"
+            "opengl32",
+            "gdi32",
+            "ole32",
+            "uuid",
+            "shell32"
         }
 
         files {
@@ -168,9 +179,11 @@ project "Miyamoto-Next"
 
         defines {
             "_GLFW_WIN32",
-            "_CRT_SECURE_NO_WARNINGS",
             "NFD_PLATFORM_WINDOWS"
         }
+
+    filter { "system:windows", "toolset:gcc" }
+        linkoptions { "-static-libstdc++", "-static-libgcc", "-static", "-m32" }
 
     filter "configurations:Debug"
         kind "ConsoleApp"
