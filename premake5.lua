@@ -24,6 +24,7 @@ workspace "Miyamoto-Next"
     filter "configurations:Release"
         optimize "speed"
         flags { "LinkTimeOptimization" }
+        omitframepointer "On"
         symbols "off"
         defines {
             "RIO_RELEASE",
@@ -183,10 +184,7 @@ project "Miyamoto-Next"
         }
 
     filter { "system:windows", "toolset:gcc" }
-        linkoptions { "-static-libstdc++", "-static-libgcc", "-static", "-m32" }
-
-    filter { "system:windows", "toolset:gcc", "configurations:Release" }
-        buildoptions { "-fomit-frame-pointer" }
+        linkoptions { "-static-libstdc++", "-static-libgcc", "-static" }
 
     filter "configurations:Debug"
         kind "ConsoleApp"
