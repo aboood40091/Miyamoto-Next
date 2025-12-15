@@ -52,6 +52,13 @@
 
 static const char* level_fname = "1-1.szs";
 
+static constexpr int cDefaultZoomUnitSize = 32;
+
+static constexpr int cUnitSize = 60;
+static constexpr int cMinZoomUnitSize = cUnitSize / 4;
+static constexpr int cMaxZoomUnitSize = cUnitSize * 2;
+static constexpr int cZoomUnitSizeStep = cUnitSize / 4;
+
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
     , mpCourseView(nullptr)
@@ -69,6 +76,7 @@ MainWindow::MainWindow()
     , mNextFile(0)
     , mItemSelectFlag(0)
     , mMetricsLocation(0)
+    , mZoomUnitSize(cDefaultZoomUnitSize)
 {
 }
 
@@ -263,7 +271,7 @@ void MainWindow::prepare_()
     mCourseViewPos.x = 0.0f;
     mCourseViewPos.y = 0.0f;
 
-    CourseView::createSingleton(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos);
+    CourseView::createSingleton(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos, mZoomUnitSize);
     mpCourseView = CourseView::instance();
 
   //RIO_LOG("Created CourseView\n");
@@ -1347,6 +1355,51 @@ void MainWindow::drawMainMenuBarUI_()
         if (ImGui::BeginMenu("Environment", false))
         {
             ImGui::EndMenu();
+        }
+
+        // Zoom controls
+        {
+            auto updateZoom = [&](){
+                if (!mpCourseView)
+                    return;
+                const rio::BaseVec2f center = mpCourseView->getCameraCenterWorldPos();
+                mpCourseView->setZoomUnitSize(mZoomUnitSize);
+                mpCourseView->setCameraCenterWorldPos(center);
+            };
+
+            auto applyZoom = [&](int newSize){
+                newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
+                if (newSize == mZoomUnitSize)
+                    return;
+                mZoomUnitSize = newSize;
+                updateZoom();
+            };
+
+            ImGui::SameLine();
+            {
+                ImGuiIO& io = ImGui::GetIO();
+                const bool useRealZoom = Preferences::instance()->getUseRealZoom();
+
+                ImGui::BeginDisabled(useRealZoom);
+                {
+                    if (ImGui::Button("-") || (!useRealZoom && io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
+                        applyZoom(mZoomUnitSize - cZoomUnitSizeStep);
+
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(120);
+                    if (ImGui::SliderInt("##ZoomSlider", &mZoomUnitSize, cMinZoomUnitSize, cMaxZoomUnitSize))
+                        updateZoom();
+                    ImGui::PopItemWidth();
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("+") || (!useRealZoom && io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
+                        applyZoom(mZoomUnitSize + cZoomUnitSizeStep);
+                }
+                ImGui::EndDisabled();
+            }
+
+            ImGui::SameLine();
+            ImGui::Text("Zoom %d%%", (mZoomUnitSize * 100) / cUnitSize);
         }
 
         ImGui::EndMainMenuBar();

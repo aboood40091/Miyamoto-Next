@@ -118,14 +118,14 @@ private:
     };
 
 public:
-    static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos);
+    static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size = 32);
     static void destroySingleton();
     static CourseView* instance() { return sInstance; }
 
 private:
     static CourseView* sInstance;
 
-    CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos);
+    CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size);
     ~CourseView();
 
     CourseView(const CourseView&);

@@ -36,12 +36,12 @@
 
 CourseView* CourseView::sInstance = nullptr;
 
-bool CourseView::createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos)
+bool CourseView::createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size)
 {
     if (sInstance)
         return false;
 
-    sInstance = new CourseView(width, height, window_pos);
+    sInstance = new CourseView(width, height, window_pos, zoom_unit_size);
     return true;
 }
 
@@ -54,7 +54,7 @@ void CourseView::destroySingleton()
     sInstance = nullptr;
 }
 
-CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
+CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size)
     : mIsFocused(false)
     , mIsHovered(false)
     , mDrawCallback3D(*this)
@@ -94,7 +94,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
          mSize.x    // Right
     );
 
-    setZoomUnitSize(32);
+    setZoomUnitSize(zoom_unit_size);
 
     mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
     mRenderBufferDV.setRenderTargetColor(&mColorTargetDV);
