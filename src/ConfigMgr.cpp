@@ -1,5 +1,3 @@
-#include "SimpleIni.h"
-#include "misc/rio_Types.h"
 #include <ConfigMgr.h>
 
 bool ConfigMgr::createSingleton()
