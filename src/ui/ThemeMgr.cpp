@@ -1,4 +1,5 @@
 #include <ui/ThemeMgr.h>
+#include <Preferences.h>
 #include <rio.h>
 
 bool ThemeMgr::createSingleton()
@@ -28,6 +29,11 @@ ThemeMgr::~ThemeMgr()
 {
 }
 
+void ThemeMgr::initialize()
+{
+    applyTheme(Preferences::instance()->getTheme());
+}
+
 std::vector<std::string> ThemeMgr::getThemes() const
 {
     std::vector<std::string> theme_names;
@@ -48,6 +54,8 @@ void ThemeMgr::applyTheme(const std::string& name)
 
     mCurrentTheme = it->first;
     ImGui::GetStyle() = it->second;
+    
+    Preferences::instance()->setTheme(name);
 }
 
 void ThemeMgr::loadThemes_()

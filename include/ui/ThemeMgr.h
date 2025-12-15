@@ -31,6 +31,8 @@ public:
 
     std::vector<std::string> getThemes() const;
     void applyTheme(const std::string& name);
+    
+    void initialize();
 
 private:
     void loadThemes_();

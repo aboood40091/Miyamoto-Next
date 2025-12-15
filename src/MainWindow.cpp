@@ -112,7 +112,7 @@ void MainWindow::prepare_()
     Preferences::createSingleton();
     
     ThemeMgr::createSingleton();
-    ThemeMgr::instance()->applyTheme(Preferences::instance()->getTheme());
+    ThemeMgr::instance()->initialize();
 
     ActionMgr::createSingleton();
 
@@ -1394,9 +1394,7 @@ void MainWindow::drawMainMenuBarUI_()
 
                     if (ImGui::Selectable(theme_name.c_str(), selected))
                     {
-                        //? Should one of these functions internally call the other?
                         ThemeMgr::instance()->applyTheme(theme_name);
-                        Preferences::instance()->setTheme(theme_name);
                     }
 
                     if (selected)
