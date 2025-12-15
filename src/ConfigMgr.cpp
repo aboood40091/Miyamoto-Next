@@ -13,6 +13,11 @@ ConfigMgr::ConfigMgr(const char* file_name)
     RIO_ASSERT(rc == SI_OK);
 }
 
+ConfigMgr::~ConfigMgr()
+{
+    save();
+}
+
 std::string ConfigMgr::getString(const char* section, const char* key, const char* default_value)
 {
     return mIni.GetValue(section, key, default_value);
@@ -37,31 +42,27 @@ void ConfigMgr::setString(const char* section, const char* key, const char* valu
 {
     SI_Error rc = mIni.SetValue(section, key, value, comment);
     RIO_ASSERT(rc >= SI_OK);
-    save_();
 }
 
 void ConfigMgr::setBool(const char* section, const char* key, bool value, const char* comment)
 {
     SI_Error rc = mIni.SetBoolValue(section, key, value, comment);
     RIO_ASSERT(rc >= SI_OK);
-    save_();
 }
 
 void ConfigMgr::setDouble(const char* section, const char* key, f64 value, const char* comment)
 {
     SI_Error rc = mIni.SetDoubleValue(section, key, value, comment);
     RIO_ASSERT(rc >= SI_OK);
-    save_();
 }
 
 void ConfigMgr::setInt(const char* section, const char* key, s32 value, const char* comment)
 {
     SI_Error rc = mIni.SetLongValue(section, key, value, comment);
     RIO_ASSERT(rc >= SI_OK);
-    save_();
 }
 
-void ConfigMgr::save_()
+void ConfigMgr::save() const
 {
     SI_Error rc = mIni.SaveFile(mFileName);
     RIO_ASSERT(rc == SI_OK);

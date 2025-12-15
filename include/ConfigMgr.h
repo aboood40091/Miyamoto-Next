@@ -6,7 +6,7 @@ class ConfigMgr
 {
 public:
     ConfigMgr(const char* file_name);
-    ~ConfigMgr() = default;
+    ~ConfigMgr();
     
     ConfigMgr(const ConfigMgr&) = delete;
     ConfigMgr& operator=(const ConfigMgr&) = delete;
@@ -38,8 +38,7 @@ public:
     }
     void setInt(const char* section, const char* key, s32 value, const char* comment = nullptr);
 
-private:
-    void save_();
+    void save() const;
     
 private:
     CSimpleIniA mIni;
