@@ -1,0 +1,38 @@
+name: Build (Linux)
+on:
+    push:
+        branches: ["*"]
+    pull_request:
+        branches: ["*"]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install dependencies
+              run: |
+                  sudo dpkg --add-architecture i386
+                  sudo apt update
+                  sudo apt install clang libxrandr-dev:i386 libxinerama-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libxext-dev:i386 libwayland-dev:i386 libxkbcommon-dev:i386 libglu1-mesa-dev:i386 libgl1-mesa-dev:i386 g++-multilib gcc-multilib libdbus-1-dev:i386
+
+            - name: Setup premake
+              uses: abel0b/setup-premake@v2.4
+              with:
+                  version: "5.0.0-beta2"
+
+            - name: Run premake
+              run: premake5 gmake2
+
+            - name: Compile
+              env:
+                  PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
+              run: make -j4 config=release verbose=true
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  path: ./bin/
