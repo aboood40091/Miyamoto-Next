@@ -28,7 +28,7 @@ workspace "Miyamoto-Next"
 
 project "Miyamoto-Next"
     targetdir "./bin"
-    objdir "build/bin/%{prj.name}-%{cfg.buildcfg}/int"
+    objdir "build/%{cfg.buildcfg}"
     debugdir "./bin"
     
     includedirs {
