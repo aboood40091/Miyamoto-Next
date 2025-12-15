@@ -18,6 +18,7 @@ jobs:
               with:
                   msystem: MINGW32
                   update: true
+                  path-type: inherit
                   install: >
                       mingw-w64-i686-toolchain
                       make
