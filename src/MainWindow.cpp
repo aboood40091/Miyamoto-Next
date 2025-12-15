@@ -1248,6 +1248,11 @@ void MainWindow::drawMainMenuBarUI_()
                 mPopupType = POPUP_TYPE_SETTINGS;
             }
 
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Exit"))
+                rio::Window::instance()->requestClose();
+
             ImGui::EndMenu();
         }
 
