@@ -66,7 +66,7 @@ void Preferences::setBigItemScale(f32 value)
 
 bool Preferences::getUseRealZoom()
 {
-    return mConfig.getBool(cSection, "UseRealZoom", true);
+    return mConfig.getBool(cSection, "UseRealZoom", false);
 }
 
 void Preferences::setUseRealZoom(bool value)
