@@ -209,7 +209,7 @@ public:
     void drawFileOptionsUI();
     void drawFileOptionsMenuItemUI();
 
-    void resize(s32 width, s32 height, bool preserve_unit_size = false);
+    void resize(s32 width, s32 height, bool real_zoom = false);
 
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;

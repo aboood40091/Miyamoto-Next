@@ -74,16 +74,6 @@ void Preferences::setUseRealZoom(bool value)
     mConfig.setBool(cSection, "UseRealZoom", value);
 }
 
-bool Preferences::getPreserveUnitSize()
-{
-    return mConfig.getBool(cSection, "PreserveUnitSize", true);
-}
-
-void Preferences::setPreserveUnitSize(bool value)
-{
-    mConfig.setBool(cSection, "PreserveUnitSize", value);
-}
-
 bool Preferences::getApplyDistantViewScissor()
 {
     return mConfig.getBool(cSection, "ApplyDistantViewScissor", true);

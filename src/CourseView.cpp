@@ -173,7 +173,7 @@ CourseView::~CourseView()
     }
 }
 
-void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
+void CourseView::resize(s32 width, s32 height, bool real_zoom)
 {
 #if RIO_IS_CAFE
     GX2DrawDone();
@@ -194,10 +194,10 @@ void CourseView::resize(s32 width, s32 height, bool preserve_unit_size)
          mSize.x    // Right
     );
 
-    if (preserve_unit_size)
-        setZoomUnitSize(getZoomUnitSize());
-    else
+    if (real_zoom)
         setZoom(mBgZoom);
+    else
+        setZoomUnitSize(getZoomUnitSize());
 
     setCameraCenterWorldPos(center_pos);
 

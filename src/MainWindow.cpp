@@ -655,7 +655,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Preferences::instance()->getPreserveUnitSize() && !Preferences::instance()->getUseRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Preferences::instance()->getUseRealZoom());
         mCourseViewResized = false;
     }
 
@@ -1361,7 +1361,6 @@ void MainWindow::drawMainMenuBarUI_()
         static bool forceSharcfb;
         static float bigItemScale;
         static bool useRealZoom;
-        static bool preserveUnitSize;
         static bool applyDistantViewScissor;
         static float scrollMovementSpeed;
         static float arrowMovementSpeed;
@@ -1375,7 +1374,6 @@ void MainWindow::drawMainMenuBarUI_()
             forceSharcfb = Preferences::instance()->getForceSharcfb();
             bigItemScale = Preferences::instance()->getBigItemScale();
             useRealZoom = Preferences::instance()->getUseRealZoom();
-            preserveUnitSize = Preferences::instance()->getPreserveUnitSize();
             applyDistantViewScissor = Preferences::instance()->getApplyDistantViewScissor();
             scrollMovementSpeed = Preferences::instance()->getScrollMovementSpeed();
             arrowMovementSpeed = Preferences::instance()->getArrowMovementSpeed();
@@ -1412,7 +1410,6 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
             ImGui::InputFloat("Big Item Scale", &bigItemScale);
             ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
-            ImGui::Checkbox("Preserve Unit Size", &preserveUnitSize);
             ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
             ImGui::InputFloat("Scroll Movement Speed", &scrollMovementSpeed);
             ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
@@ -1429,7 +1426,6 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setForceSharcfb(forceSharcfb);
                 Preferences::instance()->setBigItemScale(bigItemScale);
                 Preferences::instance()->setUseRealZoom(useRealZoom);
-                Preferences::instance()->setPreserveUnitSize(preserveUnitSize);
                 Preferences::instance()->setApplyDistantViewScissor(applyDistantViewScissor);
                 Preferences::instance()->setScrollMovementSpeed(scrollMovementSpeed);
                 Preferences::instance()->setArrowMovementSpeed(arrowMovementSpeed);

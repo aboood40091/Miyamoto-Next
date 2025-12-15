@@ -43,10 +43,6 @@ public:
     void setUseRealZoom(bool value);
     
     [[nodiscard]]
-    bool getPreserveUnitSize();
-    void setPreserveUnitSize(bool value);
-    
-    [[nodiscard]]
     bool getApplyDistantViewScissor();
     void setApplyDistantViewScissor(bool value);
     
