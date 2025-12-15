@@ -1,6 +1,6 @@
 #include <CourseView.h>
-#include <Preferences.h>
 #include <MainWindow.h>
+#include <Preferences.h>
 #include <action/ActionItemDelete.h>
 #include <action/ActionItemPushBack.h>
 #include <action/ActionItemSelectionMove.h>
