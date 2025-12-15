@@ -185,6 +185,9 @@ project "Miyamoto-Next"
     filter { "system:windows", "toolset:gcc" }
         linkoptions { "-static-libstdc++", "-static-libgcc", "-static", "-m32" }
 
+    filter { "system:windows", "toolset:gcc", "configurations:Release" }
+        buildoptions { "-fomit-frame-pointer" }
+
     filter "configurations:Debug"
         kind "ConsoleApp"
         targetname "Miyamoto-Next-Debug"
