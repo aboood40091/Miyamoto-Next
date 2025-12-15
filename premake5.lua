@@ -180,7 +180,9 @@ project "Miyamoto-Next"
 
         defines {
             "_GLFW_WIN32",
-            "NFD_PLATFORM_WINDOWS"
+            "NFD_PLATFORM_WINDOWS",
+            "NOMINMAX",
+            "WIN32_LEAN_AND_MEAN"
         }
 
     filter { "system:windows", "toolset:gcc" }
