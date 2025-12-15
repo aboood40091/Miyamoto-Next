@@ -13,10 +13,6 @@ ConfigMgr::ConfigMgr(const char* file_name)
     RIO_ASSERT(rc == SI_OK);
 }
 
-ConfigMgr::~ConfigMgr()
-{
-}
-
 std::string ConfigMgr::getString(const char* section, const char* key, const char* default_value)
 {
     return mIni.GetValue(section, key, default_value);

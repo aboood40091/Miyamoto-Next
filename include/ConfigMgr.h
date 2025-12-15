@@ -6,7 +6,7 @@ class ConfigMgr
 {
 public:
     ConfigMgr(const char* file_name);
-    ~ConfigMgr();
+    ~ConfigMgr() = default;
     
     ConfigMgr(const ConfigMgr&) = delete;
     ConfigMgr& operator=(const ConfigMgr&) = delete;
