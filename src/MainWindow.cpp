@@ -109,10 +109,10 @@ void MainWindow::prepare_()
     mImGuiGX2Texture.Sampler = &mGX2Sampler;
 #endif // RIO_IS_CAFE
 
-    ConfigMgr::createSingleton();
+    Preferences::createSingleton();
     
     ThemeMgr::createSingleton();
-    ThemeMgr::instance()->applyTheme(Preferences::getTheme());
+    ThemeMgr::instance()->applyTheme(Preferences::instance()->getTheme());
 
     ActionMgr::createSingleton();
 
@@ -177,7 +177,7 @@ void MainWindow::prepare_()
         rio::FileDevice::LoadArg arg;
         arg.path =
 #if RIO_IS_CAFE
-            Preferences::getContentPath() + "/CAFE/agl_resource_cafe.sarc";
+            Preferences::instance()->getContentPath() + "/CAFE/agl_resource_cafe.sarc";
 #else
             "agl_resource_cafe_dev.sarc";
 #endif
@@ -200,7 +200,7 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized agl!\n");
 
     ShaderHolder::createSingleton();
-    ShaderHolder::instance()->initialize(Preferences::getContentPath() + "/Common/shader/shaderfb");
+    ShaderHolder::instance()->initialize(Preferences::instance()->getContentPath() + "/Common/shader/shaderfb");
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
@@ -210,7 +210,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = Preferences::getContentPath() + "/Common/actor/jyotyuActorPack.szs";
+        arg.path = Preferences::instance()->getContentPath() + "/Common/actor/jyotyuActorPack.szs";
         arg.alignment = 0x2000;
 
         mJyotyuActorPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -227,7 +227,7 @@ void MainWindow::prepare_()
 
     {
         rio::FileDevice::LoadArg arg;
-        arg.path = Preferences::getContentPath() + "/Common/actor/cobPack.szs";
+        arg.path = Preferences::instance()->getContentPath() + "/Common/actor/cobPack.szs";
         arg.alignment = 0x2000;
 
         mCobPack.p_archive = SZSDecompressor::tryDecomp(arg);
@@ -268,7 +268,7 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created CourseView\n");
 
-    const std::string& level_path = Preferences::getContentPath() + "/Common/course_res_pack/" + level_fname;
+    const std::string& level_path = Preferences::instance()->getContentPath() + "/Common/course_res_pack/" + level_fname;
     if (CourseData::instance()->loadFromPack(level_path))
     {
         mCoursePath = level_path;
@@ -361,7 +361,7 @@ void MainWindow::exit_()
 
     ThemeMgr::destroySingleton();
     
-    ConfigMgr::destroySingleton();
+    Preferences::destroySingleton();
 
     ImGuiUtil::shutdown();
 
@@ -385,7 +385,7 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
     BgTexMgr::instance()->initialize(cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(cd_file, Preferences::getUseRealZoom());
+    mpCourseView->initialize(cd_file, Preferences::instance()->getUseRealZoom());
 }
 
 void MainWindow::courseNew_()
@@ -655,7 +655,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Preferences::getPreserveUnitSize() && !Preferences::getUseRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Preferences::instance()->getPreserveUnitSize() && !Preferences::instance()->getUseRealZoom());
         mCourseViewResized = false;
     }
 
@@ -1365,16 +1365,16 @@ void MainWindow::drawMainMenuBarUI_()
         if (mPopupOpen)
         {
             ImGui::OpenPopup("Settings");
-            RIO_ASSERT(Preferences::getContentPath().length() < 260);
-            rio::MemUtil::copy(contentPath, Preferences::getContentPath().c_str(), Preferences::getContentPath().length() + 1);
-            forceSharcfb = Preferences::getForceSharcfb();
-            bigItemScale = Preferences::getBigItemScale();
-            useRealZoom = Preferences::getUseRealZoom();
-            preserveUnitSize = Preferences::getPreserveUnitSize();
-            applyDistantViewScissor = Preferences::getApplyDistantViewScissor();
-            scrollMovementSpeed = Preferences::getScrollMovementSpeed();
-            arrowMovementSpeed = Preferences::getArrowMovementSpeed();
-            fastArrowMovementSpeed = Preferences::getFastArrowMovementSpeed();
+            RIO_ASSERT(Preferences::instance()->getContentPath().length() < 260);
+            rio::MemUtil::copy(contentPath, Preferences::instance()->getContentPath().c_str(), Preferences::instance()->getContentPath().length() + 1);
+            forceSharcfb = Preferences::instance()->getForceSharcfb();
+            bigItemScale = Preferences::instance()->getBigItemScale();
+            useRealZoom = Preferences::instance()->getUseRealZoom();
+            preserveUnitSize = Preferences::instance()->getPreserveUnitSize();
+            applyDistantViewScissor = Preferences::instance()->getApplyDistantViewScissor();
+            scrollMovementSpeed = Preferences::instance()->getScrollMovementSpeed();
+            arrowMovementSpeed = Preferences::instance()->getArrowMovementSpeed();
+            fastArrowMovementSpeed = Preferences::instance()->getFastArrowMovementSpeed();
             mPopupOpen = false;
         }
 
@@ -1396,7 +1396,7 @@ void MainWindow::drawMainMenuBarUI_()
                     {
                         //? Should one of these functions internally call the other?
                         ThemeMgr::instance()->applyTheme(theme_name);
-                        Preferences::setTheme(theme_name);
+                        Preferences::instance()->setTheme(theme_name);
                     }
 
                     if (selected)
@@ -1422,15 +1422,15 @@ void MainWindow::drawMainMenuBarUI_()
                 ImGui::CloseCurrentPopup();
                 mPopupType = POPUP_TYPE_NONE;
 
-                Preferences::setContentPath(contentPath);
-                Preferences::setForceSharcfb(forceSharcfb);
-                Preferences::setBigItemScale(bigItemScale);
-                Preferences::setUseRealZoom(useRealZoom);
-                Preferences::setPreserveUnitSize(preserveUnitSize);
-                Preferences::setApplyDistantViewScissor(applyDistantViewScissor);
-                Preferences::setScrollMovementSpeed(scrollMovementSpeed);
-                Preferences::setArrowMovementSpeed(arrowMovementSpeed);
-                Preferences::setFastArrowMovementSpeed(fastArrowMovementSpeed);
+                Preferences::instance()->setContentPath(contentPath);
+                Preferences::instance()->setForceSharcfb(forceSharcfb);
+                Preferences::instance()->setBigItemScale(bigItemScale);
+                Preferences::instance()->setUseRealZoom(useRealZoom);
+                Preferences::instance()->setPreserveUnitSize(preserveUnitSize);
+                Preferences::instance()->setApplyDistantViewScissor(applyDistantViewScissor);
+                Preferences::instance()->setScrollMovementSpeed(scrollMovementSpeed);
+                Preferences::instance()->setArrowMovementSpeed(arrowMovementSpeed);
+                Preferences::instance()->setFastArrowMovementSpeed(fastArrowMovementSpeed);
 
                 mpCourseView->onApplyDistantViewScissorChange();
             }

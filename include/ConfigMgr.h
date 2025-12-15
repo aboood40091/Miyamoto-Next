@@ -5,21 +5,12 @@
 class ConfigMgr
 {
 public:
-    static bool createSingleton();
-    static void destroySingleton();
-    static ConfigMgr* instance() { return sInstance; }
-
-private:
-    static inline ConfigMgr* sInstance = nullptr;
-    static constexpr const char* cFileName = "config.ini";
-    
-    ConfigMgr();
+    ConfigMgr(const char* file_name);
     ~ConfigMgr();
     
     ConfigMgr(const ConfigMgr&) = delete;
     ConfigMgr& operator=(const ConfigMgr&) = delete;
 
-public:
     [[nodiscard]]
     std::string getString(const char* section, const char* key, const char* default_value = nullptr);
     
@@ -52,4 +43,5 @@ private:
     
 private:
     CSimpleIniA mIni;
+    const char* mFileName;
 };

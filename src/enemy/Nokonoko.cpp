@@ -38,8 +38,8 @@ Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
     , mIsAltColor(false)
 {
     static const std::string cArchivePath[2] = {
-        Preferences::getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
-        Preferences::getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
+        Preferences::instance()->getContentPath() + "/Common/actor/" + cResName[0] + ".szs",
+        Preferences::instance()->getContentPath() + "/Common/actor/" + cResName[1] + ".szs"
     };
 
     const std::string& res_name = cResName[cIsBig];
@@ -49,7 +49,7 @@ Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
     if (archive_res == nullptr)
         return;
 
-    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Preferences::getForceSharcfb());
+    mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(mpModelResource);
 
     const char* model_name = res_name.c_str();

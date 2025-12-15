@@ -1,105 +1,125 @@
-#include "ui/ThemeMgr.h"
 #include <Preferences.h>
+#include <ui/ThemeMgr.h>
 
-#include <ConfigMgr.h>
+bool Preferences::createSingleton()
+{
+    if (sInstance)
+        return false;
+    
+    sInstance = new Preferences();
+    return true;
+}
+
+void Preferences::destroySingleton()
+{
+    if (!sInstance)
+        return;
+    
+    delete sInstance;
+    sInstance = nullptr;
+}
+
+Preferences::Preferences()
+    : mConfig("preferences.ini")
+{
+}
 
 std::string Preferences::getTheme()
 {
-    return ConfigMgr::instance()->getString(cSection, "Theme", ThemeMgr::cDefaultTheme);
-}
-
-std::string Preferences::getContentPath()
-{
-    return ConfigMgr::instance()->getString(cSection, "ContentPath", "game/nsmbu");
-}
-
-bool Preferences::getForceSharcfb()
-{
-    return ConfigMgr::instance()->getBool(cSection, "ForceSharcfb", true);
-}
-
-f32 Preferences::getBigItemScale()
-{
-    return ConfigMgr::instance()->getFloat(cSection, "BigItemScale", 16.0f);
-}
-
-bool Preferences::getUseRealZoom()
-{
-    return ConfigMgr::instance()->getBool(cSection, "UseRealZoom", true);
-}
-
-bool Preferences::getPreserveUnitSize()
-{
-    return ConfigMgr::instance()->getBool(cSection, "PreserveUnitSize", true);
-}
-
-bool Preferences::getApplyDistantViewScissor()
-{
-    return ConfigMgr::instance()->getBool(cSection, "ApplyDistantViewScissor", true);
-}
-
-f32 Preferences::getScrollMovementSpeed()
-{
-    return ConfigMgr::instance()->getFloat(cSection, "ScrollMovementSpeed", 200.0f);
-}
-
-f32 Preferences::getArrowMovementSpeed()
-{
-    return ConfigMgr::instance()->getFloat(cSection, "ArrowMovementSpeed", 25.0f);
-}
-
-f32 Preferences::getFastArrowMovementSpeed()
-{
-    return ConfigMgr::instance()->getFloat(cSection, "FastArrowMovementSpeed", 100.0f);
+    return mConfig.getString(cSection, "Theme", ThemeMgr::cDefaultTheme);
 }
 
 void Preferences::setTheme(const std::string& value)
 {
-    ConfigMgr::instance()->setString(cSection, "Theme", value.c_str());
+    mConfig.setString(cSection, "Theme", value.c_str());
+}
+
+std::string Preferences::getContentPath()
+{
+    return mConfig.getString(cSection, "ContentPath", "game/nsmbu");
 }
 
 void Preferences::setContentPath(const std::string& value)
 {
-    ConfigMgr::instance()->setString(cSection, "ContentPath", value.c_str());
+    mConfig.setString(cSection, "ContentPath", value.c_str());
+}
+
+bool Preferences::getForceSharcfb()
+{
+    return mConfig.getBool(cSection, "ForceSharcfb", true);
 }
 
 void Preferences::setForceSharcfb(bool value)
 {
-    ConfigMgr::instance()->setBool(cSection, "ForceSharcfb", value);
+    mConfig.setBool(cSection, "ForceSharcfb", value);
+}
+
+f32 Preferences::getBigItemScale()
+{
+    return mConfig.getFloat(cSection, "BigItemScale", 16.0f);
 }
 
 void Preferences::setBigItemScale(f32 value)
 {
-    ConfigMgr::instance()->setFloat(cSection, "BigItemScale", value);
+    mConfig.setFloat(cSection, "BigItemScale", value);
+}
+
+bool Preferences::getUseRealZoom()
+{
+    return mConfig.getBool(cSection, "UseRealZoom", true);
 }
 
 void Preferences::setUseRealZoom(bool value)
 {
-    ConfigMgr::instance()->setBool(cSection, "UseRealZoom", value);
+    mConfig.setBool(cSection, "UseRealZoom", value);
+}
+
+bool Preferences::getPreserveUnitSize()
+{
+    return mConfig.getBool(cSection, "PreserveUnitSize", true);
 }
 
 void Preferences::setPreserveUnitSize(bool value)
 {
-    ConfigMgr::instance()->setBool(cSection, "PreserveUnitSize", value);
+    mConfig.setBool(cSection, "PreserveUnitSize", value);
+}
+
+bool Preferences::getApplyDistantViewScissor()
+{
+    return mConfig.getBool(cSection, "ApplyDistantViewScissor", true);
 }
 
 void Preferences::setApplyDistantViewScissor(bool value)
 {
-    ConfigMgr::instance()->setBool(cSection, "ApplyDistantViewScissor", value);
+    mConfig.setBool(cSection, "ApplyDistantViewScissor", value);
+}
+
+f32 Preferences::getScrollMovementSpeed()
+{
+    return mConfig.getFloat(cSection, "ScrollMovementSpeed", 200.0f);
 }
 
 void Preferences::setScrollMovementSpeed(f32 value)
 {
-    ConfigMgr::instance()->setFloat(cSection, "ScrollMovementSpeed", value);
+    mConfig.setFloat(cSection, "ScrollMovementSpeed", value);
+}
+
+f32 Preferences::getArrowMovementSpeed()
+{
+    return mConfig.getFloat(cSection, "ArrowMovementSpeed", 25.0f);
 }
 
 void Preferences::setArrowMovementSpeed(f32 value)
 {
-    ConfigMgr::instance()->setFloat(cSection, "ArrowMovementSpeed", value);
+    mConfig.setFloat(cSection, "ArrowMovementSpeed", value);
+}
+
+f32 Preferences::getFastArrowMovementSpeed()
+{
+    return mConfig.getFloat(cSection, "FastArrowMovementSpeed", 100.0f);
 }
 
 void Preferences::setFastArrowMovementSpeed(f32 value)
 {
-    ConfigMgr::instance()->setFloat(cSection, "FastArrowMovementSpeed", value);
+    mConfig.setFloat(cSection, "FastArrowMovementSpeed", value);
 }
-

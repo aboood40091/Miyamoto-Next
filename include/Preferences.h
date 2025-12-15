@@ -1,33 +1,67 @@
 #pragma once
 
-#include <misc/rio_Types.h>
+#include <ConfigMgr.h>
+
 #include <string>
 
 class Preferences
 {
+public:
+    static bool createSingleton();
+    static void destroySingleton();
+    static Preferences* instance() { return sInstance; }
+
 private:
     static constexpr const char* cSection = "Preferences";
+    static inline Preferences* sInstance = nullptr;
+
+    Preferences();
+    ~Preferences() = default;
+
+    Preferences(const Preferences&) = delete;
+    Preferences& operator=(const Preferences&) = delete;
 
 public:
-    static std::string  getTheme();
-    static std::string  getContentPath();
-    static bool         getForceSharcfb();
-    static f32          getBigItemScale();
-    static bool         getUseRealZoom();
-    static bool         getPreserveUnitSize();
-    static bool         getApplyDistantViewScissor();
-    static f32          getScrollMovementSpeed();
-    static f32          getArrowMovementSpeed();
-    static f32          getFastArrowMovementSpeed();
+    [[nodiscard]]
+    std::string getTheme();
+    void setTheme(const std::string& value);
     
-    static void setTheme(const std::string& value);
-    static void setContentPath(const std::string& value);
-    static void setForceSharcfb(bool value);
-    static void setBigItemScale(f32 value);
-    static void setUseRealZoom(bool value);
-    static void setPreserveUnitSize(bool value);
-    static void setApplyDistantViewScissor(bool value);
-    static void setScrollMovementSpeed(f32 value);
-    static void setArrowMovementSpeed(f32 value);
-    static void setFastArrowMovementSpeed(f32 value);
+    [[nodiscard]]
+    std::string getContentPath();
+    void setContentPath(const std::string& value);
+    
+    [[nodiscard]]
+    bool getForceSharcfb();
+    void setForceSharcfb(bool value);
+    
+    [[nodiscard]]
+    f32 getBigItemScale();
+    void setBigItemScale(f32 value);
+    
+    [[nodiscard]]
+    bool getUseRealZoom();
+    void setUseRealZoom(bool value);
+    
+    [[nodiscard]]
+    bool getPreserveUnitSize();
+    void setPreserveUnitSize(bool value);
+    
+    [[nodiscard]]
+    bool getApplyDistantViewScissor();
+    void setApplyDistantViewScissor(bool value);
+    
+    [[nodiscard]]
+    f32 getScrollMovementSpeed();
+    void setScrollMovementSpeed(f32 value);
+    
+    [[nodiscard]]
+    f32 getArrowMovementSpeed();
+    void setArrowMovementSpeed(f32 value);
+    
+    [[nodiscard]]
+    f32 getFastArrowMovementSpeed();
+    void setFastArrowMovementSpeed(f32 value);
+    
+private:
+    ConfigMgr mConfig;
 };

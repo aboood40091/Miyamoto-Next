@@ -1,28 +1,11 @@
 #include <ConfigMgr.h>
 
-bool ConfigMgr::createSingleton()
-{
-    if (sInstance)
-        return false;
-    
-    sInstance = new ConfigMgr();
-    return true;
-}
-
-void ConfigMgr::destroySingleton()
-{
-    if (!sInstance)
-        return;
-    
-    delete sInstance;
-    sInstance = nullptr;
-}
-
-ConfigMgr::ConfigMgr()
+ConfigMgr::ConfigMgr(const char* file_name)
+    : mFileName(file_name)
 {
     mIni.SetUnicode();
     
-    SI_Error rc = mIni.LoadFile(cFileName);
+    SI_Error rc = mIni.LoadFile(mFileName);
     
     if (rc == SI_FILE) // file doesn't exist but that's ok we will make one
         return;
@@ -84,6 +67,6 @@ void ConfigMgr::setInt(const char* section, const char* key, s32 value, const ch
 
 void ConfigMgr::save_()
 {
-    SI_Error rc = mIni.SaveFile(cFileName);
+    SI_Error rc = mIni.SaveFile(mFileName);
     RIO_ASSERT(rc == SI_OK);
 }

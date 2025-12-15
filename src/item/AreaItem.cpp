@@ -132,7 +132,7 @@ void AreaItem::loadDistantView_(f32 x, f32 y, f32 w, f32 h, const DistantViewDat
     mRenderMgrDV.setDrawCallback(&mDrawCallbackDV);
 
     mDVName = dv_data.name;
-    const std::string& dv_path = Preferences::getContentPath() + "/Common/distant_view";
+    const std::string& dv_path = Preferences::instance()->getContentPath() + "/Common/distant_view";
     RIO_LOG("DV Path: \"%s\", DV Name: \"%s\"\n", dv_path.c_str(), mDVName.c_str());
 
     const rio::BaseVec2f bg_pos {
@@ -157,7 +157,7 @@ void AreaItem::loadDistantView_(f32 x, f32 y, f32 w, f32 h, const DistantViewDat
     mpDistantViewMgr->setFlickerEnable(false);
     mpDistantViewMgr->initialize(
         mDVName, dv_path,
-        Preferences::getForceSharcfb(),
+        Preferences::instance()->getForceSharcfb(),
         bg_pos,
         bg_screen_center,
         bg_offset_area_bottom_to_screen_bottom,
@@ -273,7 +273,7 @@ void AreaItem::gather()
 {
     if (mpDistantViewMgr)
     {
-        if (Preferences::getApplyDistantViewScissor())
+        if (Preferences::instance()->getApplyDistantViewScissor())
             calcDistantViewScissor_();
 
         if (mDrawDV)
@@ -605,7 +605,7 @@ void AreaItem::dv_PostFx_(const rio::lyr::DrawInfo& draw_info)
     if (!mDrawDV || !mpDistantViewMgr)
         return;
 
-    if (Preferences::getApplyDistantViewScissor())
+    if (Preferences::instance()->getApplyDistantViewScissor())
     {
         const rio::BaseVec2f scissor_pos = mpRenderBufferDV->getScissorPos();
         const rio::BaseVec2f scissor_size = mpRenderBufferDV->getScissorSize();
@@ -635,7 +635,7 @@ void AreaItem::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawIn
 {
     CourseView::instance()->bindRenderBuffer(false);
 
-    if (Preferences::getApplyDistantViewScissor())
+    if (Preferences::instance()->getApplyDistantViewScissor())
     {
         const AreaItem& item = *(CourseView::instance()->getAreaItem()[mIndex]);
         rio::Graphics::setScissor(item.mScissorMin.x, item.mScissorMin.y, item.mScissorSize.x, item.mScissorSize.y, item.mpRenderBufferDV->getSize().y);

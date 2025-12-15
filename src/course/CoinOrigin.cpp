@@ -66,12 +66,12 @@ bool CoinOrigin::initialize()
 {
     RIO_ASSERT(mIsInitialized == false);
 
-    static const std::string archive_path = Preferences::getContentPath() + "/Common/actor/" + cResName + ".sarc";
+    static const std::string archive_path = Preferences::instance()->getContentPath() + "/Common/actor/" + cResName + ".sarc";
     const SharcArchiveRes* archive_res = ResMgr::instance()->loadArchiveRes(cResName, archive_path, false);
     if (archive_res == nullptr)
         return false;
 
-    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Preferences::getForceSharcfb());
+    const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(model_res);
 
     mpModelCoin = Model::createG3d(
