@@ -1627,8 +1627,9 @@ void MainWindow::drawStatusBarControls_()
     
     // Zoom controls
     {
-        auto applyZoom = [&](f32 newSize){
-            newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
+        auto applyZoom = [&](f32 newSize, bool bypassLimits = false){
+            if (!bypassLimits)
+                newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
             if (newSize == mTargetZoomUnitSize)
                 return;
             mTargetZoomUnitSize = newSize;
@@ -1648,7 +1649,7 @@ void MainWindow::drawStatusBarControls_()
         {
             f32 real_zoom_unit_size;
             if (mpCourseView && mpCourseView->getRealZoomUnitSize(real_zoom_unit_size))
-                applyZoom(real_zoom_unit_size);
+                applyZoom(real_zoom_unit_size, true);
         }
         
         {
