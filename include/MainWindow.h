@@ -58,6 +58,8 @@ private:
     void drawFileOptionsUI_();
     void drawFileOptionsMenuItemUI_();
 
+    void updateZoom_();
+
     void gather_ (const rio::lyr::DrawInfo&);
     void dispose_(const rio::lyr::DrawInfo&);
 
@@ -122,6 +124,8 @@ private:
     u32                     mNextFile;
     u32                     mItemSelectFlag;
     s32                     mMetricsLocation;
+    f32                     mZoomUnitSize;
+    f32                     mTargetZoomUnitSize;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;

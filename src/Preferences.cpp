@@ -113,3 +113,13 @@ void Preferences::setFastArrowMovementSpeed(f32 value)
 {
     mConfig.setFloat(cSection, "FastArrowMovementSpeed", value);
 }
+
+bool Preferences::getSmoothZoom()
+{
+    return mConfig.getBool(cSection, "SmoothZoom", true);
+}
+
+void Preferences::setSmoothZoom(bool value)
+{
+    mConfig.setBool(cSection, "SmoothZoom", value);
+}

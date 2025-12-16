@@ -52,12 +52,12 @@
 
 static const char* level_fname = "1-1.szs";
 
-static constexpr int cDefaultZoomUnitSize = 32;
+static constexpr f32 cDefaultZoomUnitSize = 32;
 
-static constexpr int cUnitSize = 60;
-static constexpr int cMinZoomUnitSize = cUnitSize / 4;
-static constexpr int cMaxZoomUnitSize = cUnitSize * 2;
-static constexpr int cZoomUnitSizeStep = cUnitSize / 4;
+static constexpr f32 cUnitSize = 60;
+static constexpr f32 cMinZoomUnitSize = cUnitSize / 4;
+static constexpr f32 cMaxZoomUnitSize = cUnitSize * 2;
+static constexpr f32 cZoomUnitSizeStep = cUnitSize / 4;
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
@@ -76,6 +76,8 @@ MainWindow::MainWindow()
     , mNextFile(0)
     , mItemSelectFlag(0)
     , mMetricsLocation(0)
+    , mZoomUnitSize(cDefaultZoomUnitSize)
+    , mTargetZoomUnitSize(cDefaultZoomUnitSize)
 {
 }
 
@@ -263,6 +265,9 @@ void MainWindow::prepare_()
 
     CoinOrigin::createSingleton();
     CoinOrigin::instance()->initialize();
+
+    mZoomUnitSize = Preferences::instance()->getZoomUnitSize();
+    mTargetZoomUnitSize = mZoomUnitSize;
 
     mCourseViewSize.x = width;
     mCourseViewSize.y = height;
@@ -659,6 +664,8 @@ void MainWindow::calc_()
     drawSelectionUI_();
     drawFileOptionsUI_();
     drawMainMenuBarUI_();
+
+    updateZoom_();
 
     if (mCourseViewResized)
     {
@@ -1358,17 +1365,18 @@ void MainWindow::drawMainMenuBarUI_()
 
         // Zoom controls
         {
-            auto updateZoom = [&](){
-                if (mpCourseView)
-                    mpCourseView->setZoomUnitSizeCentered(Preferences::instance()->getZoomUnitSize());
-            };
-
-            auto applyZoom = [&](int newSize){
+            auto applyZoom = [&](f32 newSize){
                 newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
-                if (newSize == Preferences::instance()->getZoomUnitSize())
+                if (newSize == mTargetZoomUnitSize)
                     return;
-                Preferences::instance()->setZoomUnitSize(newSize);
-                updateZoom();
+                mTargetZoomUnitSize = newSize;
+                Preferences::instance()->setZoomUnitSize(mTargetZoomUnitSize);
+                if (!Preferences::instance()->getSmoothZoom())
+                {
+                    mZoomUnitSize = mTargetZoomUnitSize;
+                    if (mpCourseView)
+                        mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
+                }
             };
 
             ImGui::SameLine();
@@ -1376,26 +1384,23 @@ void MainWindow::drawMainMenuBarUI_()
                 ImGuiIO& io = ImGui::GetIO();
                 {
                     if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
-                        applyZoom(Preferences::instance()->getZoomUnitSize() - cZoomUnitSizeStep);
+                        applyZoom(mTargetZoomUnitSize - cZoomUnitSizeStep);
 
                     ImGui::SameLine();
                     ImGui::PushItemWidth(120);
-                    f32 zoom_unit_size = Preferences::instance()->getZoomUnitSize();
+                    f32 zoom_unit_size = mTargetZoomUnitSize;
                     if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize))
-                    {
-                        Preferences::instance()->setZoomUnitSize(zoom_unit_size);
-                        updateZoom();
-                    }
+                        applyZoom(zoom_unit_size);
                     ImGui::PopItemWidth();
 
                     ImGui::SameLine();
                     if (ImGui::Button("+") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
-                        applyZoom(Preferences::instance()->getZoomUnitSize() + cZoomUnitSizeStep);
+                        applyZoom(mTargetZoomUnitSize + cZoomUnitSizeStep);
                 }
             }
 
             ImGui::SameLine();
-            ImGui::Text("Zoom %.3f%%", (Preferences::instance()->getZoomUnitSize() * 100) / cUnitSize);
+            ImGui::Text("Zoom %.3f%%", (mTargetZoomUnitSize * 100) / cUnitSize);
 
             ImGui::SameLine();
             if (ImGui::Button("Default Zoom"))
@@ -1404,11 +1409,9 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::SameLine();
             if (ImGui::Button("Real Zoom"))
             {
-                if (mpCourseView)
-                {
-                    mpCourseView->setRealZoomCentered();
-                    Preferences::instance()->setZoomUnitSize(mpCourseView->getZoomUnitSize());
-                }
+                f32 real_zoom_unit_size;
+                if (mpCourseView && mpCourseView->getRealZoomUnitSize(real_zoom_unit_size))
+                    applyZoom(real_zoom_unit_size);
             }
         }
 
@@ -1427,6 +1430,7 @@ void MainWindow::drawMainMenuBarUI_()
         static float scrollMovementSpeed;
         static float arrowMovementSpeed;
         static float fastArrowMovementSpeed;
+        static bool smoothZoom;
 
         if (mPopupOpen)
         {
@@ -1439,6 +1443,7 @@ void MainWindow::drawMainMenuBarUI_()
             scrollMovementSpeed = Preferences::instance()->getScrollMovementSpeed();
             arrowMovementSpeed = Preferences::instance()->getArrowMovementSpeed();
             fastArrowMovementSpeed = Preferences::instance()->getFastArrowMovementSpeed();
+            smoothZoom = Preferences::instance()->getSmoothZoom();
             mPopupOpen = false;
         }
 
@@ -1474,6 +1479,7 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::InputFloat("Scroll Movement Speed", &scrollMovementSpeed);
             ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
             ImGui::InputFloat("Fast Arrow Movement Speed", &fastArrowMovementSpeed);
+            ImGui::Checkbox("Smooth Zoom", &smoothZoom);
 
             ImGui::Separator();
 
@@ -1489,6 +1495,7 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setScrollMovementSpeed(scrollMovementSpeed);
                 Preferences::instance()->setArrowMovementSpeed(arrowMovementSpeed);
                 Preferences::instance()->setFastArrowMovementSpeed(fastArrowMovementSpeed);
+                Preferences::instance()->setSmoothZoom(smoothZoom);
 
                 mpCourseView->onApplyDistantViewScissorChange();
             }
@@ -1622,4 +1629,14 @@ void MainWindow::drawMainMenuBarUI_()
         }
         break;
     }
+}
+
+void MainWindow::updateZoom_()
+{
+    if (mZoomUnitSize == mTargetZoomUnitSize)
+        return;
+
+    mZoomUnitSize = std::lerp(mZoomUnitSize, mTargetZoomUnitSize, 0.2f);
+    if (mpCourseView)
+        mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
 }

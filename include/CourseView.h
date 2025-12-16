@@ -132,21 +132,39 @@ private:
     CourseView& operator=(const CourseView&);
 
 public:
+    template <typename T>
+    f32 convertZoomUnitAsScale(T value) const
+    {
+        return mSize.y / (value * 224.0f);
+    }
+
+    static f32 scaleToValue(f32 scale)
+    {
+        return scale * 16.f;
+    }
+
+    template <typename T>
+    f32 convertZoomUnit(T value) const
+    {
+        return scaleToValue(convertZoomUnitAsScale(value));
+    }
+
     void setZoom(f32 zoom)
     {
         mBgZoom = zoom;
-        mCamera.setZoomScale(mSize.y / (zoom * 224.0f));
+        mCamera.setZoomScale(convertZoomUnitAsScale(zoom));
     }
 
     template <typename T>
     inline void setZoomUnitSize(T unit_size)
     {
-        setZoom(16.f / unit_size * (mSize.y / 224.0f));
+        setZoom(convertZoomUnit(unit_size));
     }
 
     f32 getZoomUnitSize() const
     {
-        return mCamera.getZoomScale() * 16.f;
+        // return convertZoomUnit(mBgZoom);
+        return scaleToValue(mCamera.getZoomScale());
     }
 
     RenderObjLayer* get3DLayer()
@@ -215,7 +233,19 @@ public:
         setCameraCenterWorldPos(center);
     }
 
-    void setRealZoomCentered(const NextGoto* start_next_goto = nullptr);
+    bool getRealZoom(f32& real_zoom, const NextGoto* start_next_goto = nullptr) const;
+    bool getRealZoomUnitSize(f32& real_zoom_unit_size, const NextGoto* start_next_goto = nullptr) const
+    {
+        if (getRealZoom(real_zoom_unit_size, start_next_goto))
+        {
+            real_zoom_unit_size = convertZoomUnit(real_zoom_unit_size);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
     const rio::Texture2D* getColorTexture() const
     {

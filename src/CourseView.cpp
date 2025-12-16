@@ -499,7 +499,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
     setCameraCenterWorldPos(center_pos);
 }
 
-void CourseView::setRealZoomCentered(const NextGoto* start_next_goto)
+bool CourseView::getRealZoom(f32& real_zoom, const NextGoto* start_next_goto) const
 {
     if (!start_next_goto)
     {
@@ -518,8 +518,13 @@ void CourseView::setRealZoomCentered(const NextGoto* start_next_goto)
         s32 area_index = getCourseDataFile().getAreaDataIndexByID(start_next_goto->area);
       //RIO_ASSERT(area_index >= 0);
         if (area_index >= 0)
-            setZoomCentered(mAreaItemPtr[area_index]->getRealBgZoom());
+        {
+            real_zoom = mAreaItemPtr[area_index]->getRealBgZoom();
+            return true;
+        }
     }
+
+    return false;
 }
 
 bool CourseView::processMouseInput(bool focused, bool hovered)

@@ -58,6 +58,10 @@ public:
     f32 getFastArrowMovementSpeed();
     void setFastArrowMovementSpeed(f32 value);
     
+    [[nodiscard]]
+    bool getSmoothZoom();
+    void setSmoothZoom(bool value);
+
 private:
     ConfigMgr mConfig;
 };
