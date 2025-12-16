@@ -664,6 +664,7 @@ void MainWindow::calc_()
     drawSelectionUI_();
     drawFileOptionsUI_();
     drawMainMenuBarUI_();
+    drawStatusBar_();
 
     updateZoom_();
 
@@ -1363,58 +1364,6 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::EndMenu();
         }
 
-        // Zoom controls
-        {
-            auto applyZoom = [&](f32 newSize){
-                newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
-                if (newSize == mTargetZoomUnitSize)
-                    return;
-                mTargetZoomUnitSize = newSize;
-                Preferences::instance()->setZoomUnitSize(mTargetZoomUnitSize);
-                if (!Preferences::instance()->getSmoothZoom())
-                {
-                    mZoomUnitSize = mTargetZoomUnitSize;
-                    if (mpCourseView)
-                        mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
-                }
-            };
-
-            ImGui::SameLine();
-            {
-                ImGuiIO& io = ImGui::GetIO();
-                {
-                    if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
-                        applyZoom(mTargetZoomUnitSize - cZoomUnitSizeStep);
-
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(120);
-                    f32 zoom_unit_size = mTargetZoomUnitSize;
-                    if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize))
-                        applyZoom(zoom_unit_size);
-                    ImGui::PopItemWidth();
-
-                    ImGui::SameLine();
-                    if (ImGui::Button("+") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
-                        applyZoom(mTargetZoomUnitSize + cZoomUnitSizeStep);
-                }
-            }
-
-            ImGui::SameLine();
-            ImGui::Text("Zoom %.3f%%", (mTargetZoomUnitSize * 100) / cUnitSize);
-
-            ImGui::SameLine();
-            if (ImGui::Button("Default Zoom"))
-                applyZoom(cDefaultZoomUnitSize);
-
-            ImGui::SameLine();
-            if (ImGui::Button("Real Zoom"))
-            {
-                f32 real_zoom_unit_size;
-                if (mpCourseView && mpCourseView->getRealZoomUnitSize(real_zoom_unit_size))
-                    applyZoom(real_zoom_unit_size);
-            }
-        }
-
         ImGui::EndMainMenuBar();
     }
 
@@ -1631,12 +1580,111 @@ void MainWindow::drawMainMenuBarUI_()
     }
 }
 
+void MainWindow::drawStatusBar_()
+{
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    if (ImGui::BeginViewportSideBar("##MainStatusBar", viewport, ImGuiDir_Down, ImGui::GetFrameHeight(), 
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar)
+    )
+    {
+        if (ImGui::BeginMenuBar())
+        {
+            drawStatusBarFileInfo_();
+            drawStatusBarControls_();
+
+            ImGui::EndMenuBar();
+        }
+        ImGui::End();
+    }
+}
+
+void MainWindow::drawStatusBarFileInfo_()
+{
+    if (mCoursePath.empty())
+    {
+        ImGui::TextDisabled("New Course");
+    }
+    else
+    {
+        ImGui::Text("%s", mCoursePath.c_str());
+    }
+    
+    ImGui::Separator();
+    
+    ImGui::Text("%d actors", mpCourseView->getMapActorItem().size());
+}
+
+void MainWindow::drawStatusBarControls_()
+{
+    const f32 width = 475.0f; 
+    f32 cursorX = ImGui::GetWindowWidth() - width;
+    
+    if (cursorX > ImGui::GetCursorPos().x)
+    {
+        ImGui::SetCursorPosX(cursorX);
+    }
+    
+    // Zoom controls
+    {
+        auto applyZoom = [&](f32 newSize){
+            newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
+            if (newSize == mTargetZoomUnitSize)
+                return;
+            mTargetZoomUnitSize = newSize;
+            Preferences::instance()->setZoomUnitSize(mTargetZoomUnitSize);
+            if (!Preferences::instance()->getSmoothZoom())
+            {
+                mZoomUnitSize = mTargetZoomUnitSize;
+                if (mpCourseView)
+                    mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
+            }
+        };
+        
+        if (ImGui::Button("Default Zoom"))
+            applyZoom(cDefaultZoomUnitSize);
+
+        if (ImGui::Button("Real Zoom"))
+        {
+            f32 real_zoom_unit_size;
+            if (mpCourseView && mpCourseView->getRealZoomUnitSize(real_zoom_unit_size))
+                applyZoom(real_zoom_unit_size);
+        }
+        
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            {
+                if (io.KeyCtrl && io.MouseWheel != 0.0f)
+                {
+                    const s32 direction = (io.MouseWheel > 0.0f) ? 1 : -1;
+                    applyZoom(mTargetZoomUnitSize + direction * cZoomUnitSizeStep);
+                }
+                
+                
+                if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
+                    applyZoom(mTargetZoomUnitSize - cZoomUnitSizeStep);
+
+                ImGui::PushItemWidth(120);
+                f32 zoom_unit_size = mTargetZoomUnitSize;
+                if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize))
+                    applyZoom(zoom_unit_size);
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("+") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
+                    applyZoom(mTargetZoomUnitSize + cZoomUnitSizeStep);
+            }
+        }
+
+        ImGui::Text("Zoom %.2f%%", (mTargetZoomUnitSize * 100) / cUnitSize);
+    }
+}
+
 void MainWindow::updateZoom_()
 {
     if (mZoomUnitSize == mTargetZoomUnitSize)
         return;
 
-    mZoomUnitSize = std::lerp(mZoomUnitSize, mTargetZoomUnitSize, 0.2f);
+    mZoomUnitSize = std::lerp(mZoomUnitSize, mTargetZoomUnitSize, 15.0f * ImGui::GetIO().DeltaTime);
     if (mpCourseView)
         mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
 }
