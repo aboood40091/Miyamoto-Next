@@ -118,14 +118,14 @@ private:
     };
 
 public:
-    static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size = 32);
+    static bool createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos);
     static void destroySingleton();
     static CourseView* instance() { return sInstance; }
 
 private:
     static CourseView* sInstance;
 
-    CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size);
+    CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos);
     ~CourseView();
 
     CourseView(const CourseView&);
@@ -200,6 +200,23 @@ public:
         return /* mSize.y / (2 * mCamera.getZoomScale()) */ (224 / 2) * mBgZoom;
     }
 
+    void setZoomCentered(f32 zoom)
+    {
+        const rio::BaseVec2f center = getCameraCenterWorldPos();
+        setZoom(zoom);
+        setCameraCenterWorldPos(center);
+    }
+
+    template <typename T>
+    inline void setZoomUnitSizeCentered(T unit_size)
+    {
+        const rio::BaseVec2f center = getCameraCenterWorldPos();
+        setZoomUnitSize(unit_size);
+        setCameraCenterWorldPos(center);
+    }
+
+    void setRealZoomCentered(const NextGoto* start_next_goto = nullptr);
+
     const rio::Texture2D* getColorTexture() const
     {
         return mpColorTexture;
@@ -209,7 +226,7 @@ public:
     void drawFileOptionsUI();
     void drawFileOptionsMenuItemUI();
 
-    void resize(s32 width, s32 height, bool real_zoom = false);
+    void resize(s32 width, s32 height, bool update_zoom_with_size = false);
 
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;

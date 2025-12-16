@@ -36,12 +36,12 @@
 
 CourseView* CourseView::sInstance = nullptr;
 
-bool CourseView::createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size)
+bool CourseView::createSingleton(s32 width, s32 height, const rio::BaseVec2f& window_pos)
 {
     if (sInstance)
         return false;
 
-    sInstance = new CourseView(width, height, window_pos, zoom_unit_size);
+    sInstance = new CourseView(width, height, window_pos);
     return true;
 }
 
@@ -54,7 +54,7 @@ void CourseView::destroySingleton()
     sInstance = nullptr;
 }
 
-CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos, s32 zoom_unit_size)
+CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     : mIsFocused(false)
     , mIsHovered(false)
     , mDrawCallback3D(*this)
@@ -94,7 +94,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos, 
          mSize.x    // Right
     );
 
-    setZoomUnitSize(zoom_unit_size);
+    setZoomUnitSize(Preferences::instance()->getZoomUnitSize());
 
     mRenderBuffer.setRenderTargetColor(&mColorTarget, TARGET_TYPE_COLOR);
     mRenderBufferDV.setRenderTargetColor(&mColorTargetDV);
@@ -173,7 +173,7 @@ CourseView::~CourseView()
     }
 }
 
-void CourseView::resize(s32 width, s32 height, bool real_zoom)
+void CourseView::resize(s32 width, s32 height, bool update_zoom_with_size)
 {
 #if RIO_IS_CAFE
     GX2DrawDone();
@@ -194,7 +194,7 @@ void CourseView::resize(s32 width, s32 height, bool real_zoom)
          mSize.x    // Right
     );
 
-    if (real_zoom)
+    if (update_zoom_with_size)
         setZoom(mBgZoom);
     else
         setZoomUnitSize(getZoomUnitSize());
@@ -421,7 +421,7 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
     RIO_ASSERT(cd_file.isValid());
     mpCourseDataFile = &cd_file;
 
-    setZoomUnitSize(32);
+    setZoomUnitSize(Preferences::instance()->getZoomUnitSize());
 
     Bg::instance()->processBgCourseData(getCourseDataFile());
     BgRenderer::instance()->createVertexBuffer();
@@ -475,11 +475,11 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
         start_next_goto = getCourseDataFile().getNextGotoByID(start);
     }
 
-    if (start_next_goto)
+    if (start_next_goto && real_zoom)
     {
         s32 area_index = getCourseDataFile().getAreaDataIndexByID(start_next_goto->area);
       //RIO_ASSERT(area_index >= 0);
-        if (area_index >= 0 && real_zoom)
+        if (area_index >= 0)
             setZoom(mAreaItemPtr[area_index]->getRealBgZoom());
     }
 
@@ -497,6 +497,29 @@ void CourseView::initialize(CourseDataFile& cd_file, bool real_zoom)
     }
 
     setCameraCenterWorldPos(center_pos);
+}
+
+void CourseView::setRealZoomCentered(const NextGoto* start_next_goto)
+{
+    if (!start_next_goto)
+    {
+        u8 start = getCourseDataFile().getOptions().start_next_goto;
+        start_next_goto = getCourseDataFile().getNextGotoByID(start);
+    }
+
+    if (!start_next_goto)
+    {
+        u8 start = getCourseDataFile().getOptions().start_next_goto_coin_boost;
+        start_next_goto = getCourseDataFile().getNextGotoByID(start);
+    }
+
+    if (start_next_goto)
+    {
+        s32 area_index = getCourseDataFile().getAreaDataIndexByID(start_next_goto->area);
+      //RIO_ASSERT(area_index >= 0);
+        if (area_index >= 0)
+            setZoomCentered(mAreaItemPtr[area_index]->getRealBgZoom());
+    }
 }
 
 bool CourseView::processMouseInput(bool focused, bool hovered)

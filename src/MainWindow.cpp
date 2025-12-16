@@ -76,7 +76,6 @@ MainWindow::MainWindow()
     , mNextFile(0)
     , mItemSelectFlag(0)
     , mMetricsLocation(0)
-    , mZoomUnitSize(cDefaultZoomUnitSize)
 {
 }
 
@@ -271,7 +270,7 @@ void MainWindow::prepare_()
     mCourseViewPos.x = 0.0f;
     mCourseViewPos.y = 0.0f;
 
-    CourseView::createSingleton(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos, mZoomUnitSize);
+    CourseView::createSingleton(mCourseViewSize.x, mCourseViewSize.y, mCourseViewPos);
     mpCourseView = CourseView::instance();
 
   //RIO_LOG("Created CourseView\n");
@@ -393,7 +392,7 @@ void MainWindow::setCurrentCourseDataFile_(u32 id)
     BgTexMgr::instance()->initialize(cd_file, getBgPrepareLayer());
     CoinOrigin::instance()->pushBackDrawMethod(getBgPrepareLayer());
 
-    mpCourseView->initialize(cd_file, Preferences::instance()->getUseRealZoom());
+    mpCourseView->initialize(cd_file, false);
 }
 
 void MainWindow::courseNew_()
@@ -663,7 +662,7 @@ void MainWindow::calc_()
 
     if (mCourseViewResized)
     {
-        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, Preferences::instance()->getUseRealZoom());
+        mpCourseView->resize(mCourseViewSize.x, mCourseViewSize.y, false);
         mCourseViewResized = false;
     }
 
@@ -1360,46 +1359,57 @@ void MainWindow::drawMainMenuBarUI_()
         // Zoom controls
         {
             auto updateZoom = [&](){
-                if (!mpCourseView)
-                    return;
-                const rio::BaseVec2f center = mpCourseView->getCameraCenterWorldPos();
-                mpCourseView->setZoomUnitSize(mZoomUnitSize);
-                mpCourseView->setCameraCenterWorldPos(center);
+                if (mpCourseView)
+                    mpCourseView->setZoomUnitSizeCentered(Preferences::instance()->getZoomUnitSize());
             };
 
             auto applyZoom = [&](int newSize){
                 newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
-                if (newSize == mZoomUnitSize)
+                if (newSize == Preferences::instance()->getZoomUnitSize())
                     return;
-                mZoomUnitSize = newSize;
+                Preferences::instance()->setZoomUnitSize(newSize);
                 updateZoom();
             };
 
             ImGui::SameLine();
             {
                 ImGuiIO& io = ImGui::GetIO();
-                const bool useRealZoom = Preferences::instance()->getUseRealZoom();
-
-                ImGui::BeginDisabled(useRealZoom);
                 {
-                    if (ImGui::Button("-") || (!useRealZoom && io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
-                        applyZoom(mZoomUnitSize - cZoomUnitSizeStep);
+                    if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
+                        applyZoom(Preferences::instance()->getZoomUnitSize() - cZoomUnitSizeStep);
 
                     ImGui::SameLine();
                     ImGui::PushItemWidth(120);
-                    if (ImGui::SliderInt("##ZoomSlider", &mZoomUnitSize, cMinZoomUnitSize, cMaxZoomUnitSize))
+                    f32 zoom_unit_size = Preferences::instance()->getZoomUnitSize();
+                    if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize))
+                    {
+                        Preferences::instance()->setZoomUnitSize(zoom_unit_size);
                         updateZoom();
+                    }
                     ImGui::PopItemWidth();
 
                     ImGui::SameLine();
-                    if (ImGui::Button("+") || (!useRealZoom && io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
-                        applyZoom(mZoomUnitSize + cZoomUnitSizeStep);
+                    if (ImGui::Button("+") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
+                        applyZoom(Preferences::instance()->getZoomUnitSize() + cZoomUnitSizeStep);
                 }
-                ImGui::EndDisabled();
             }
 
             ImGui::SameLine();
-            ImGui::Text("Zoom %d%%", (mZoomUnitSize * 100) / cUnitSize);
+            ImGui::Text("Zoom %.3f%%", (Preferences::instance()->getZoomUnitSize() * 100) / cUnitSize);
+
+            ImGui::SameLine();
+            if (ImGui::Button("Default Zoom"))
+                applyZoom(cDefaultZoomUnitSize);
+
+            ImGui::SameLine();
+            if (ImGui::Button("Real Zoom"))
+            {
+                if (mpCourseView)
+                {
+                    mpCourseView->setRealZoomCentered();
+                    Preferences::instance()->setZoomUnitSize(mpCourseView->getZoomUnitSize());
+                }
+            }
         }
 
         ImGui::EndMainMenuBar();
@@ -1413,7 +1423,6 @@ void MainWindow::drawMainMenuBarUI_()
         static char contentPath[260];
         static bool forceSharcfb;
         static float bigItemScale;
-        static bool useRealZoom;
         static bool applyDistantViewScissor;
         static float scrollMovementSpeed;
         static float arrowMovementSpeed;
@@ -1426,7 +1435,6 @@ void MainWindow::drawMainMenuBarUI_()
             rio::MemUtil::copy(contentPath, Preferences::instance()->getContentPath().c_str(), Preferences::instance()->getContentPath().length() + 1);
             forceSharcfb = Preferences::instance()->getForceSharcfb();
             bigItemScale = Preferences::instance()->getBigItemScale();
-            useRealZoom = Preferences::instance()->getUseRealZoom();
             applyDistantViewScissor = Preferences::instance()->getApplyDistantViewScissor();
             scrollMovementSpeed = Preferences::instance()->getScrollMovementSpeed();
             arrowMovementSpeed = Preferences::instance()->getArrowMovementSpeed();
@@ -1462,7 +1470,6 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::InputText("Content Path", contentPath, 260);
             ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
             ImGui::InputFloat("Big Item Scale", &bigItemScale);
-            ImGui::Checkbox("Use Area Zoom On Load", &useRealZoom);
             ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);
             ImGui::InputFloat("Scroll Movement Speed", &scrollMovementSpeed);
             ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
@@ -1478,7 +1485,6 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setContentPath(contentPath);
                 Preferences::instance()->setForceSharcfb(forceSharcfb);
                 Preferences::instance()->setBigItemScale(bigItemScale);
-                Preferences::instance()->setUseRealZoom(useRealZoom);
                 Preferences::instance()->setApplyDistantViewScissor(applyDistantViewScissor);
                 Preferences::instance()->setScrollMovementSpeed(scrollMovementSpeed);
                 Preferences::instance()->setArrowMovementSpeed(arrowMovementSpeed);

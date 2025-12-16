@@ -39,8 +39,8 @@ public:
     void setBigItemScale(f32 value);
     
     [[nodiscard]]
-    bool getUseRealZoom();
-    void setUseRealZoom(bool value);
+    f32 getZoomUnitSize();
+    void setZoomUnitSize(f32 value);
     
     [[nodiscard]]
     bool getApplyDistantViewScissor();

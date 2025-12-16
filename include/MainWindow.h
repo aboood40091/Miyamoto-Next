@@ -122,7 +122,6 @@ private:
     u32                     mNextFile;
     u32                     mItemSelectFlag;
     s32                     mMetricsLocation;
-    s32                     mZoomUnitSize;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;

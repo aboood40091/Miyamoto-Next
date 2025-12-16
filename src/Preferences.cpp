@@ -64,14 +64,14 @@ void Preferences::setBigItemScale(f32 value)
     mConfig.setFloat(cSection, "BigItemScale", value);
 }
 
-bool Preferences::getUseRealZoom()
+f32 Preferences::getZoomUnitSize()
 {
-    return mConfig.getBool(cSection, "UseRealZoom", false);
+    return mConfig.getFloat(cSection, "ZoomUnitSize", 32.0f);
 }
 
-void Preferences::setUseRealZoom(bool value)
+void Preferences::setZoomUnitSize(f32 value)
 {
-    mConfig.setBool(cSection, "UseRealZoom", value);
+    mConfig.setFloat(cSection, "ZoomUnitSize", value);
 }
 
 bool Preferences::getApplyDistantViewScissor()
