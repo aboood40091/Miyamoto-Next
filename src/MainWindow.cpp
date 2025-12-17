@@ -1667,7 +1667,7 @@ void MainWindow::drawStatusBarControls_()
 
                 ImGui::PushItemWidth(120);
                 f32 zoom_unit_size = mTargetZoomUnitSize;
-                if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize))
+                if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize, "%.2f%%"))
                     applyZoom(zoom_unit_size);
                 ImGui::PopItemWidth();
 
