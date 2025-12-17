@@ -57,6 +57,9 @@ private:
     void drawMainMenuBarUI_();
     void drawFileOptionsUI_();
     void drawFileOptionsMenuItemUI_();
+    void drawStatusBar_();
+    void drawStatusBarFileInfo_();
+    void drawStatusBarControls_();
 
     void updateZoom_();
 

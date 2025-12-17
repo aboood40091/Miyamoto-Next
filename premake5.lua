@@ -89,8 +89,6 @@ project "Miyamoto-Next"
     }
 
     filter "system:linux"
-        pic "On"
-        
         toolset "clang"
         stl "gnu"
 
@@ -134,8 +132,6 @@ project "Miyamoto-Next"
         linkoptions  { "`pkg-config --libs dbus-1`" }
 
     filter "system:macosx"
-        pic "On"
-
         files {
             "lib/glfw/src/cocoa_init.m",
             "lib/glfw/src/cocoa_monitor.m",
