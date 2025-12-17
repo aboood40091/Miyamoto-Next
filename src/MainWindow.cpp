@@ -1617,7 +1617,7 @@ void MainWindow::drawStatusBarFileInfo_()
 
 void MainWindow::drawStatusBarControls_()
 {
-    const f32 width = 475.0f; 
+    const f32 width = 480.0f; 
     f32 cursorX = ImGui::GetWindowWidth() - width;
     
     if (cursorX > ImGui::GetCursorPos().x)
