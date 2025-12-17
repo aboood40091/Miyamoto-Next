@@ -31,7 +31,7 @@ class AreaItem : public ItemBase, public rio::lyr::IDrawable
     };
 
 public:
-    enum DataChangeFlag
+    enum DataChangeFlag : u32
     {
         DATA_CHANGE_FLAG_NONE           = 0,
 

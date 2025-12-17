@@ -1,5 +1,9 @@
 #include <course/BgUnitObj.h>
 
+#include <type_traits>
+
+using signed_size_t = std::make_signed_t<std::size_t>;
+
 BgUnitObj::BgUnitObj()
     : mWidth(0)
     , mHeight(0)
@@ -203,13 +207,13 @@ void BgUnitObj::renderDiagonal_(const Unit** out_mtx, u32 width, u32 height) con
     s32 main_block_height = main_block.size();
     s32 main_block_width = 0;
     for (const RefRow& row : main_block)
-        if (ssize_t(row.size()) > main_block_width)
+        if (signed_size_t(row.size()) > main_block_width)
             main_block_width = row.size();
 
     s32 sub_block_height = sub_block.size();
     s32 sub_block_width = 0;
     for (const RefRow& row : sub_block)
-        if (ssize_t(row.size()) > sub_block_width)
+        if (signed_size_t(row.size()) > sub_block_width)
             sub_block_width = row.size();
 
     s32 draw_num = std::min(height / main_block_height, width / main_block_width);

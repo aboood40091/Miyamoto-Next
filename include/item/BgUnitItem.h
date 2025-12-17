@@ -12,7 +12,7 @@ public:
     void drawSelectionUI() override;
 
 private:
-    void onSelectionChange_();
+    void onSelectionChange_() override;
 
 private:
     BgCourseData mSelectionData;

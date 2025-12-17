@@ -11,6 +11,10 @@ public:
     {
     }
 
+    virtual ~IAction()
+    {
+    }
+
     virtual bool apply() const = 0;
     virtual void unapply() const = 0;
 };

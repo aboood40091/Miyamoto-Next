@@ -7,6 +7,10 @@
 #include <gpu/rio_RenderBuffer.h>
 #include <gpu/rio_RenderTarget.h>
 
+#include <array>
+#include <memory>
+#include <vector>
+
 class Bg;
 class CourseDataFile;
 class RenderObjLayer;

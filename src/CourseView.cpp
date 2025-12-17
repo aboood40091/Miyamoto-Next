@@ -2512,7 +2512,7 @@ void CourseView::drawSelectionUI()
 
         if (mSelectedItems.size() > 1)
         {
-            ImGui::Text("%d item(s) selected.\nUnable to edit the selected items.", mSelectedItems.size());
+            ImGui::Text("%zu item(s) selected.\nUnable to edit the selected items.", mSelectedItems.size());
         }
         else
         {

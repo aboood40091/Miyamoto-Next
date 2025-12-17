@@ -516,7 +516,7 @@ void AreaItem::drawSelectionUI()
                 std::static_pointer_cast<const void>(
                     std::make_shared<const AreaData>(mSelectionData)
                 ),
-                data_change_flag
+                u32(data_change_flag)
             };
             ActionMgr::instance()->pushAction<ActionItemDataChange>(&context);
         }

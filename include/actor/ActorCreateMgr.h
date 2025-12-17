@@ -3,6 +3,7 @@
 #include <item/MapActorItem.h>
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 using ActorFactory = std::unique_ptr<MapActorItem> (*)(const MapActorData&, u32);

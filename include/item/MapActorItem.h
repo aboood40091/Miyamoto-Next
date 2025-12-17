@@ -10,7 +10,7 @@
 class MapActorItem : public ItemBase
 {
 public:
-    enum DataChangeFlag
+    enum DataChangeFlag : u32
     {
         DATA_CHANGE_FLAG_NONE           = 0,
 

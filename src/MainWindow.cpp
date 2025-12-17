@@ -1612,7 +1612,7 @@ void MainWindow::drawStatusBarFileInfo_()
     
     ImGui::Separator();
     
-    ImGui::Text("%d actors", mpCourseView->getMapActorItem().size());
+    ImGui::Text("%zu actors", mpCourseView->getMapActorItem().size());
 }
 
 void MainWindow::drawStatusBarControls_()

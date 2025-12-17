@@ -7,6 +7,8 @@
 
 #include <task/rio_Task.h>
 
+#include <string>
+
 #if RIO_IS_CAFE
 #include <imgui_impl_gx2.h>
 #endif // RIO_IS_CAFE
