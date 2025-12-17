@@ -61,6 +61,3 @@ bin/Miyamoto-Next-Debug
 # Test files
 bin/fs/content/game/
 bin/fs/content/shaders/agl_shader_temp_out.*
-
-# Cache
-bin/fs/content/shaders/cache
