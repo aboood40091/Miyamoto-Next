@@ -1665,9 +1665,11 @@ void MainWindow::drawStatusBarControls_()
                 if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
                     applyZoom(mTargetZoomUnitSize - cZoomUnitSizeStep);
 
+        #define ZOOM_FORMAT "%.2f%%"
+                    
                 ImGui::PushItemWidth(120);
                 f32 zoom_unit_size = mTargetZoomUnitSize;
-                if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize, "%.2f%%"))
+                if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize, ZOOM_FORMAT))
                     applyZoom(zoom_unit_size);
                 ImGui::PopItemWidth();
 
@@ -1676,7 +1678,7 @@ void MainWindow::drawStatusBarControls_()
             }
         }
 
-        ImGui::Text("Zoom %.2f%%", (mTargetZoomUnitSize * 100) / cUnitSize);
+        ImGui::Text("Zoom " ZOOM_FORMAT, (mTargetZoomUnitSize * 100) / cUnitSize);
     }
 }
 
