@@ -100,9 +100,9 @@ Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, std::u
     linear_surface.swizzle = 0;
     GX2CalcSurfaceSizeAndAlignment(&linear_surface);
 
-    linear_surface.imagePtr = rio::MemUtil::alloc(linear_surface.imageSize, linear_surface.alignment);
+    linear_surface.imagePtr.set(rio::MemUtil::alloc(linear_surface.imageSize, linear_surface.alignment));
     if (linear_surface.mipSize)
-        linear_surface.mipPtr = rio::MemUtil::alloc(linear_surface.mipSize, linear_surface.alignment);
+        linear_surface.mipPtr.set(rio::MemUtil::alloc(linear_surface.mipSize, linear_surface.alignment));
 
     for (u32 i = 0; i < linear_surface.numMips; i++)
         GX2CopySurface(&gx2Texture.surface, i, 0, &linear_surface, i, 0);
@@ -111,9 +111,9 @@ Texture2DUtil::GTXError Texture2DUtil::createFromGTX(const u8* file_data, std::u
     native_texture.surface.height = linear_surface.height;
     native_texture.surface.mipLevels = linear_surface.numMips;
     native_texture.surface.imageSize = linear_surface.imageSize;
-    native_texture.surface.image = linear_surface.imagePtr;
+    native_texture.surface.image = linear_surface.imagePtr.get();
     native_texture.surface.mipmapSize = linear_surface.mipSize;
-    native_texture.surface.mipmaps = linear_surface.mipPtr;
+    native_texture.surface.mipmaps = linear_surface.mipPtr.get();
 
     rio::MemUtil::copy(native_texture.surface.mipLevelOffset, linear_surface.mipOffset, 13 * sizeof(u32));
     native_texture.surface.mipLevelOffset[0] = 0;

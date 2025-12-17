@@ -797,7 +797,7 @@ void MainWindow::drawCourseViewUI_()
         mImGuiGX2Texture.Texture = const_cast<GX2Texture*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
         texture_id = &mImGuiGX2Texture;
 #elif RIO_IS_DESKTOP
-        texture_id = (void*)(mpCourseView->getColorTexture()->getNativeTextureHandle());
+        texture_id = reinterpret_cast<void*>(mpCourseView->getColorTexture()->getNativeTextureHandle());
 #endif
 
         ImGui::Image(texture_id, size);
@@ -884,7 +884,7 @@ static void DrawBgUnitObj(u8 env, const BgTexMgr::UnitObjTexVector& obj_textures
         {
             ImGui::SetCursorPos({ cursor_pos.x + std::max<f32>(0.0f, (self_box_size.x - icon_size.x) * 0.5f), cursor_pos.y + std::max<f32>(0.0f, (self_box_size.y - icon_size.y) * 0.5f) });
 #if RIO_IS_DESKTOP
-            ImGui::Image((void*)obj_tex->getNativeTextureHandle(), icon_size);
+            ImGui::Image(reinterpret_cast<void*>(obj_tex->getNativeTextureHandle()), icon_size);
 #endif // RIO_IS_DESKTOP
         }
 
