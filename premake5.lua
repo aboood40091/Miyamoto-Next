@@ -4,7 +4,7 @@ workspace "Miyamoto-Next"
     cppdialect "C++20"
     staticruntime "on"
     warnings "Extra"
-    platforms { "x86", "x64" }
+    platforms { "x86", "x64", "ARM64" }
     configurations { "Debug", "Release" }
     startproject "Miyamoto-Next"
     
@@ -18,6 +18,9 @@ workspace "Miyamoto-Next"
     filter "platforms:x64"
         architecture "x64"
         vectorextensions "AVX2"
+        
+    filter "platforms:ARM64"
+        architecture "ARM64"
 
     defines {
         "GLEW_STATIC"
@@ -146,6 +149,13 @@ project "Miyamoto-Next"
         stl "gnu"
 
     filter "system:macosx"
+        links {
+            "Cocoa.framework",
+            "IOKit.framework",
+            "CoreVideo.framework",
+            "OpenGL.framework" 
+        }
+
         files {
             "lib/glfw/src/cocoa_init.m",
             "lib/glfw/src/cocoa_monitor.m",
