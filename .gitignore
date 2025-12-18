@@ -40,6 +40,8 @@ compile_commands.json
 .vscode
 .vs
 *.sh
+*.sln
+*.vcxproj*
 
 # Generic build files
 Makefile

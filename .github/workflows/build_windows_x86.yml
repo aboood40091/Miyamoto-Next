@@ -23,7 +23,7 @@ jobs:
         run: premake5 vs2022
 
       - name: Compile
-        run: msbuild Miyamoto-Next.sln /p:Configuration=Release /p:Platform=x86 /p:PlatformToolset=ClangCl
+        run: msbuild Miyamoto-Next.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=ClangCl
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
