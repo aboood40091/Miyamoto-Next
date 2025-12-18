@@ -141,6 +141,9 @@ project "Miyamoto-Next"
         
         buildoptions { "`pkg-config --cflags dbus-1`" }
         linkoptions  { "`pkg-config --libs dbus-1`" }
+        
+    filter { "system:linux", "platforms:x64" }
+        stl "gnu"
 
     filter "system:macosx"
         files {
