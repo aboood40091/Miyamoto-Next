@@ -55,8 +55,10 @@ bin/*.dll
 
 # Linux build files
 *.make
-bin/Miyamoto-Next
-bin/Miyamoto-Next-Debug
+bin/Miyamoto-Next-Debug-x86
+bin/Miyamoto-Next-Release-x86
+bin/Miyamoto-Next-Debug-x86_64
+bin/Miyamoto-Next-Release-x86_64
 
 # Test files
 bin/fs/content/game/

@@ -1,0 +1,37 @@
+name: Build (Linux x64)
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install clang libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev libglu1-mesa-dev libgl1-mesa-dev libdbus-1-dev
+
+      - name: Setup premake
+        uses: abel0b/setup-premake@v2.4
+        with:
+          version: "5.0.0-beta2"
+
+      - name: Run premake
+        run: premake5 gmake2
+
+      - name: Compile
+        env:
+          PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
+        run: make -j4 config=release_x64 verbose=true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./bin/

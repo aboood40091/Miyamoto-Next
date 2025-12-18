@@ -1,12 +1,23 @@
 -- premake5.lua
 workspace "Miyamoto-Next"
-    architecture "x86"
     language "C++"
     cppdialect "C++20"
     staticruntime "on"
-    --warnings "Extra"
+    warnings "Extra"
+    platforms { "x86", "x64" }
     configurations { "Debug", "Release" }
     startproject "Miyamoto-Next"
+    
+    toolset "clang"
+    systemversion "latest"
+    stl "libc++"
+    
+    filter "platforms:x86"
+        architecture "x86"
+
+    filter "platforms:x64"
+        architecture "x64"
+        vectorextensions "AVX2"
 
     defines {
         "GLEW_STATIC"
@@ -15,6 +26,7 @@ workspace "Miyamoto-Next"
     filter "configurations:Debug"
         optimize "debug"
         symbols "on"
+        omitframepointer "off"
         defines {
             "RIO_DEBUG",
             "NW_DEBUG",
@@ -24,17 +36,21 @@ workspace "Miyamoto-Next"
     filter "configurations:Release"
         optimize "speed"
         flags { "LinkTimeOptimization" }
-        omitframepointer "On"
+        omitframepointer "on"
         symbols "off"
         defines {
             "RIO_RELEASE",
             "NW_RELEASE"
         }
+        
+    filter { "configurations:Debug", "platforms:x64" }
+        sanitize { "Address", "UndefinedBehavior" }
 
 project "Miyamoto-Next"
     targetdir "./bin"
-    objdir "build/%{cfg.buildcfg}"
+    objdir "build/%{cfg.buildcfg}-%{cfg.architecture}"
     debugdir "./bin"
+    targetname "Miyamoto-Next-%{cfg.buildcfg}-%{cfg.architecture}"
     
     includedirs {
         "include",
@@ -89,11 +105,6 @@ project "Miyamoto-Next"
     }
 
     filter "system:linux"
-        toolset "clang"
-        stl "gnu"
-
-        systemversion "latest"
-        
         links {
             "GL",
             "dbus-1"
@@ -150,8 +161,6 @@ project "Miyamoto-Next"
         }
 
     filter "system:windows"
-        systemversion "latest"
-
         links {
             "opengl32",
             "gdi32",
@@ -182,13 +191,8 @@ project "Miyamoto-Next"
             "WIN32_LEAN_AND_MEAN"
         }
 
-    filter { "system:windows", "toolset:gcc" }
-        linkoptions { "-static-libstdc++", "-static-libgcc", "-static" }
-
     filter "configurations:Debug"
         kind "ConsoleApp"
-        targetname "Miyamoto-Next-Debug"
 
     filter "configurations:Release"
         kind "WindowedApp"
-        targetname "Miyamoto-Next"
