@@ -191,7 +191,8 @@ project "Miyamoto-Next"
             "_GLFW_WIN32",
             "NFD_PLATFORM_WINDOWS",
             "NOMINMAX",
-            "WIN32_LEAN_AND_MEAN"
+            "WIN32_LEAN_AND_MEAN",
+            "_CRT_SECURE_NO_WARNINGS"
         }
 
     filter "configurations:Debug"
