@@ -28,7 +28,7 @@ jobs:
       - name: Compile
         env:
           PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
-        run: make -j4 config=release_x86 verbose=true
+        run: make -j config=release_x86 verbose=true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
