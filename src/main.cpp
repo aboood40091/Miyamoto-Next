@@ -16,11 +16,7 @@ static const rio::InitializeArg cInitializeArg = {
     }
 };
 
-#if RIO_IS_WIN && RIO_RELEASE
-int WINAPI WinMain(HINSTANCE, HINSTANCE, PSTR, int)
-#else
 int main()
-#endif
 {
     // Initialize RIO with root task
     if (!rio::Initialize<MainWindow>(cInitializeArg))

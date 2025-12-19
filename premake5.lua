@@ -299,3 +299,6 @@ project "Miyamoto-Next"
 
     filter "configurations:Release"
         kind "WindowedApp"
+        
+    filter { "system:windows", "configurations:Release" }
+        entrypoint "mainCRTStartup"
