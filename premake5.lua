@@ -8,6 +8,7 @@ workspace "Miyamoto-Next"
     configurations { "Debug", "Release" }
 
     toolset "clang"
+    stl "libc++"
 
     targetdir "./bin"
     objdir "build/%{cfg.buildcfg}-%{cfg.architecture}"
@@ -39,29 +40,24 @@ workspace "Miyamoto-Next"
         "lib/backward-cpp"
     }
     
-    buildoptions {
-        "-Wno-invalid-source-encoding",
-        "-Wno-unused-private-field",
-        "-Wno-missing-braces",
-        "-Wno-invalid-offsetof",
-        "-Wno-unused-parameter",
-        "-Wno-missing-field-initializers",
-        "-Wno-format"
+    disablewarnings {
+        "invalid-source-encoding",
+        "unused-private-field",
+        "missing-braces",
+        "invalid-offsetof",
+        "unused-parameter",
+        "missing-field-initializers",
+        "missing-designated-field-initializers",
+        "nontrivial-memcall"
     }
-    
-    filter "toolset:gnu"
-        buildoptions {
-            "-Wno-nontrivial-memcall",
-            "-Wno-missing-designated-field-initializers"
-        }
         
     filter "toolset:clang"
         buildoptions {
             "-Wno-nontrivial-memaccess"
         }
     
-    filter { "toolset:clang", "platforms:x64" }
-        stl "libc++"
+    filter { "platforms:x86" }
+        stl "gnu"
 
     filter "platforms:x86"
         architecture "x86"
