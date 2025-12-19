@@ -294,6 +294,16 @@ project "Miyamoto-Next"
             "shell32"
         }
 
+    filter "system:macosx"
+        links {
+            "Cocoa.framework",
+            "IOKit.framework",
+            "CoreVideo.framework",
+            "OpenGL.framework",
+            "QuartzCore.framework",
+            "UniformTypeIdentifiers.framework"
+        }
+
     filter "configurations:Debug"
         kind "ConsoleApp"
 
