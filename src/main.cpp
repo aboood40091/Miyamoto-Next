@@ -2,10 +2,6 @@
 
 #include <rio.h>
 
-#if RIO_IS_WIN
-    #include <Windows.h>
-#endif
-
 static const rio::InitializeArg cInitializeArg = {
     .window = {
 #if RIO_IS_DESKTOP
