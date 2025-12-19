@@ -1,0 +1,33 @@
+name: Build (Linux x64)
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install clang llvm libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev libglu1-mesa-dev libgl1-mesa-dev libdbus-1-dev
+
+      - name: Setup premake
+        uses: Jarod42/install-premake5@v6
+
+      - name: Run premake
+        run: premake5 --cc=clang gmake2
+
+      - name: Compile
+        run: make -j config=release_x64 verbose=true AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./bin/

@@ -1,0 +1,31 @@
+name: Build (Windows x64)
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup premake
+        uses: Jarod42/install-premake5@v6
+
+      - name: Run premake
+        run: premake5 vs2022
+
+      - name: Compile
+        run: msbuild Miyamoto-Next.sln /m /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=ClangCl
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./bin/

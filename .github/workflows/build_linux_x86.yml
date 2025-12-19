@@ -1,0 +1,36 @@
+name: Build (Linux x86)
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install clang llvm libxrandr-dev:i386 libxinerama-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libxext-dev:i386 libwayland-dev:i386 libxkbcommon-dev:i386 libglu1-mesa-dev:i386 libgl1-mesa-dev:i386 libdbus-1-dev:i386 g++-multilib
+
+      - name: Setup premake
+        uses: Jarod42/install-premake5@v6
+
+      - name: Run premake
+        run: premake5 --cc=clang gmake2
+
+      - name: Compile
+        env:
+          PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
+        run: make -j config=release_x86 verbose=true AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./bin/
