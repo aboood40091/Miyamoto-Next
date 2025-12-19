@@ -61,6 +61,10 @@ public:
     [[nodiscard]]
     bool getSmoothZoom();
     void setSmoothZoom(bool value);
+    
+    [[nodiscard]]
+    bool getUnlockedFPS();
+    void setUnlockedFPS(bool value);
 
 private:
     ConfigMgr mConfig;

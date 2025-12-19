@@ -1380,6 +1380,7 @@ void MainWindow::drawMainMenuBarUI_()
         static float arrowMovementSpeed;
         static float fastArrowMovementSpeed;
         static bool smoothZoom;
+        static bool unlockedFPS;
 
         if (mPopupOpen)
         {
@@ -1393,6 +1394,7 @@ void MainWindow::drawMainMenuBarUI_()
             arrowMovementSpeed = Preferences::instance()->getArrowMovementSpeed();
             fastArrowMovementSpeed = Preferences::instance()->getFastArrowMovementSpeed();
             smoothZoom = Preferences::instance()->getSmoothZoom();
+            unlockedFPS = Preferences::instance()->getUnlockedFPS();
             mPopupOpen = false;
         }
 
@@ -1429,6 +1431,7 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
             ImGui::InputFloat("Fast Arrow Movement Speed", &fastArrowMovementSpeed);
             ImGui::Checkbox("Smooth Zoom", &smoothZoom);
+            ImGui::Checkbox("Unlocked FPS", &unlockedFPS);
 
             ImGui::Separator();
 
@@ -1445,8 +1448,11 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setArrowMovementSpeed(arrowMovementSpeed);
                 Preferences::instance()->setFastArrowMovementSpeed(fastArrowMovementSpeed);
                 Preferences::instance()->setSmoothZoom(smoothZoom);
+                Preferences::instance()->setUnlockedFPS(unlockedFPS);
 
+                
                 mpCourseView->onApplyDistantViewScissorChange();
+                rio::Window::instance()->setSwapInterval(!unlockedFPS);
             }
 
             ImGui::SameLine();
