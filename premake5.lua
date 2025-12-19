@@ -62,7 +62,6 @@ workspace "Miyamoto-Next"
 
     filter { "system:linux", "toolset:clang" }
         disablewarnings {
-            "missing-designated-field-initializers",
             "nontrivial-memaccess"
         }
 
