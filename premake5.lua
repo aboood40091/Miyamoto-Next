@@ -7,23 +7,22 @@ workspace "Miyamoto-Next"
     platforms { "x86", "x64", "ARM64" }
     configurations { "Debug", "Release" }
 
-    toolset "clang"
     stl "libc++"
 
     targetdir "./bin"
-    objdir "build/%{cfg.buildcfg}-%{cfg.architecture}"
+    objdir "build"
     targetname "%{prj.name}-%{cfg.buildcfg}-%{cfg.architecture}"
     debugdir "./bin"
-    
+
     startproject "Miyamoto-Next"
-    
+
     defines {
         "GLEW_STATIC"
     }
-    
+
     includedirs {
         "include",
-        
+
         "lib/glew/include",
         "lib/glfw/include",
         "lib/ModelStuff-next/lib/agl/lib/rio/include",
@@ -36,28 +35,34 @@ workspace "Miyamoto-Next"
         "lib/imgui",
         "lib/imgui/backends",
         "lib/nfd/src/include",
-        "lib/simpleini",
-        "lib/backward-cpp"
+        "lib/simpleini"
     }
-    
+
     disablewarnings {
-        "invalid-source-encoding",
-        "unused-private-field",
-        "missing-braces",
-        "invalid-offsetof",
         "unused-parameter",
-        "missing-field-initializers",
-        "missing-designated-field-initializers",
-        "nontrivial-memcall"
+        "missing-field-initializers"
     }
-        
-    filter "toolset:clang"
-        buildoptions {
-            "-Wno-nontrivial-memaccess"
-        }
-    
-    filter { "platforms:x86" }
+
+    filter { "toolset:clang", "platforms:x86" }
         stl "gnu"
+
+    filter { "toolset:gcc", "files:**.cpp" }
+        disablewarnings {
+            "invalid-offsetof",
+            "class-memaccess"
+        }
+
+    filter "toolset:clang"
+        disablewarnings {
+            "unused-private-field",
+            "missing-braces",
+            "invalid-offsetof",
+            "missing-designated-field-initializers",
+            "nontrivial-memcall"
+        }
+
+    filter "toolset:gcc"
+        linkgroups "On"
 
     filter "platforms:x86"
         architecture "x86"
@@ -65,21 +70,21 @@ workspace "Miyamoto-Next"
     filter "platforms:x64"
         architecture "x64"
         vectorextensions "AVX2"
-        
+
     filter "platforms:ARM64"
         architecture "ARM64"
 
     filter "configurations:Debug"
         optimize "debug"
-        symbols "on"
         omitframepointer "off"
+        symbols "on"
         defines {
             "RIO_DEBUG",
             "NW_DEBUG",
             "_DEBUG"
         }
-    
-    filter { "configurations:Release" }
+
+    filter "configurations:Release"
         optimize "speed"
         omitframepointer "on"
         symbols "off"
@@ -87,29 +92,24 @@ workspace "Miyamoto-Next"
             "RIO_RELEASE",
             "NW_RELEASE"
         }
-
-    filter { "configurations:Release", "action:not vs*" }
-        buildoptions { "-flto=auto" }
-        linkoptions { "-flto=auto" }
-
-    filter { "configurations:Release", "action:vs*" }
-        flags { "LinkTimeOptimization" }
+        linktimeoptimization "On"
 
     filter { "configurations:Debug", "platforms:x64", "toolset:clang" }
         sanitize { "Address", "UndefinedBehavior" }
-        
+
     filter "system:linux"
         systemversion "latest"
 
     filter "system:windows"
         systemversion "latest"
+
         defines {
             "NOMINMAX",
             "WIN32_LEAN_AND_MEAN",
             "_CRT_SECURE_NO_WARNINGS"
         }
 
-project "glew"
+project "Lib_GLEW"
     kind "StaticLib"
     language "C"
     warnings "off"
@@ -117,8 +117,8 @@ project "glew"
     files {
         "lib/glew/src/glew.c"
     }
-        
-project "glfw"
+
+project "Lib_GLFW"
     kind "StaticLib"
     language "C"
     warnings "off"
@@ -131,17 +131,15 @@ project "glfw"
         "lib/glfw/src/init.c",
         "lib/glfw/src/input.c",
         "lib/glfw/src/monitor.c",
-
         "lib/glfw/src/null_init.c",
         "lib/glfw/src/null_joystick.c",
         "lib/glfw/src/null_monitor.c",
         "lib/glfw/src/null_window.c",
-
         "lib/glfw/src/platform.c",
         "lib/glfw/src/vulkan.c",
         "lib/glfw/src/window.c"
     }
-    
+
     filter "system:linux"
         files {
             "lib/glfw/src/x11_init.c",
@@ -158,11 +156,11 @@ project "glfw"
             "lib/glfw/src/osmesa_context.c",
             "lib/glfw/src/linux_joystick.c"
         }
-        
+
         defines {
             "_GLFW_X11"
         }
-    
+
     filter "system:windows"
         files {
             "lib/glfw/src/win32_init.c",
@@ -176,7 +174,7 @@ project "glfw"
             "lib/glfw/src/egl_context.c",
             "lib/glfw/src/osmesa_context.c"
         }
-        
+
         defines {
             "_GLFW_WIN32"
         }
@@ -194,42 +192,35 @@ project "glfw"
             "lib/glfw/src/osmesa_context.c",
             "lib/glfw/src/egl_context.c"
         }
-        
+
         defines {
             "_GLFW_COCOA"
         }
-        
-project "ModelStuff-next"
-    kind "StaticLib"
 
-    files {
-        "lib/ModelStuff-next/lib/agl/lib/rio/src/**",
-        "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/**",
-        "lib/ModelStuff-next/lib/agl/lib/g3d/src/**",
-        "lib/ModelStuff-next/lib/agl/lib/rio_utils/src/**",
-        "lib/ModelStuff-next/lib/agl/src/**",
-        "lib/ModelStuff-next/src/**",
-    }
-    
-project "imgui"
+project "Lib_ImGui"
     kind "StaticLib"
     warnings "off"
 
     files {
         "lib/imgui/*",
         "lib/imgui/backends/imgui_impl_glfw.cpp",
-        "lib/imgui/backends/imgui_impl_opengl3.cpp",
+        "lib/imgui/backends/imgui_impl_opengl3.cpp"
     }
 
-project "backward-cpp"
+project "Lib_BackwardCpp"
     kind "StaticLib"
     warnings "off"
 
-    files {
-        "lib/backward-cpp/backward.cpp"
-    }
+    filter "system:linux"
+        includedirs {
+            "lib/backward-cpp"
+        }
 
-project "nfd"
+        files {
+            "lib/backward-cpp/backward.cpp"
+        }
+
+project "Lib_NFD"
     kind "StaticLib"
     warnings "off"
 
@@ -237,47 +228,103 @@ project "nfd"
         files {
             "lib/nfd/src/nfd_portal.cpp"
         }
-        
+
         defines {
             "NFD_PLATFORM_LINUX"
         }
-        
+
         buildoptions { "`pkg-config --cflags dbus-1`" }
         linkoptions  { "`pkg-config --libs dbus-1`" }
-        
+
     filter "system:windows"
         files {
             "lib/nfd/src/nfd_win.cpp"
         }
-        
+
         defines {
             "NFD_PLATFORM_WINDOWS"
         }
-    
+
     filter "system:macosx"
         files {
             "lib/nfd/src/nfd_cocoa.m"
         }
 
+project "Lib_RIO"
+    kind "StaticLib"
+
+    files {
+        "lib/ModelStuff-next/lib/agl/lib/rio/src/**",
+        "lib/ModelStuff-next/lib/agl/lib/rio_utils/src/**"
+    }
+
+project "Lib_ninTexUtils"
+    kind "StaticLib"
+
+    files {
+        "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/**"
+    }
+
+project "Lib_G3d"
+    kind "StaticLib"
+
+    files {
+        "lib/ModelStuff-next/lib/agl/lib/g3d/src/**"
+    }
+
+project "Lib_AGL"
+    kind "StaticLib"
+
+    files {
+        "lib/ModelStuff-next/lib/agl/src/**"
+    }
+
+    filter "toolset:gcc"
+        disablewarnings {
+            "maybe-uninitialized"
+        }
+
+    filter "toolset:clang"
+        disablewarnings {
+            "invalid-source-encoding"
+        }
+
+project "Lib_ModelStuff"
+    kind "StaticLib"
+
+    files {
+        "lib/ModelStuff-next/src/**"
+    }
+
 project "Miyamoto-Next"
     files {
         "src/**"
     }
-    
+
     links {
-        "ModelStuff-next",
-        "imgui",
-        "nfd",
-        "glew",
-        "glfw"
+        "Lib_RIO",
+        "Lib_ninTexUtils",
+        "Lib_G3d",
+        "Lib_AGL",
+        "Lib_ModelStuff",
+
+        "Lib_ImGui",
+        "Lib_NFD",
+        "Lib_GLEW",
+        "Lib_GLFW"
     }
+
+    filter "toolset:clang"
+        disablewarnings {
+            "invalid-source-encoding"
+        }
 
     filter "system:linux"
         links {
-            "backward-cpp",
+            "Lib_BackwardCpp",
             "GL"
         }
-        
+
         buildoptions { "`pkg-config --cflags dbus-1`" }
         linkoptions  { "`pkg-config --libs dbus-1`" }
 
@@ -289,6 +336,8 @@ project "Miyamoto-Next"
             "uuid",
             "shell32"
         }
+
+        linkoptions { "-static" }
 
     filter "system:macosx"
         links {
@@ -305,6 +354,18 @@ project "Miyamoto-Next"
 
     filter "configurations:Release"
         kind "WindowedApp"
-        
+
     filter { "system:windows", "configurations:Release" }
         entrypoint "mainCRTStartup"
+
+    filter "action:gmake*"
+        postbuildcommands {
+            'cd "%{cfg.targetdir}" && rm -f *.a *.lib'
+        }
+
+    filter "action:vs*"
+        postbuildcommands {
+            'cd /d "%{cfg.targetdir}"',
+            'del /q *.lib 2>nul',
+            'del /q *.a 2>nul'
+        }
