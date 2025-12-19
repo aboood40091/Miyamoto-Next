@@ -123,3 +123,13 @@ void Preferences::setSmoothZoom(bool value)
 {
     mConfig.setBool(cSection, "SmoothZoom", value);
 }
+
+bool Preferences::getUnlockedFPS()
+{
+    return mConfig.getBool(cSection, "UnlockedFPS", false);
+}
+
+void Preferences::setUnlockedFPS(bool value)
+{
+    mConfig.setBool(cSection, "UnlockedFPS", value);
+}
