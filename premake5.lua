@@ -8,6 +8,7 @@ workspace "Miyamoto-Next"
     configurations { "Debug", "Release" }
 
     stl "libc++"
+    linkgroups "On"
 
     targetdir "./bin"
     objdir "build"
@@ -56,13 +57,20 @@ workspace "Miyamoto-Next"
         disablewarnings {
             "unused-private-field",
             "missing-braces",
-            "invalid-offsetof",
+            "invalid-offsetof"
+        }
+
+    filter { "system:linux", "toolset:clang" }
+        disablewarnings {
+            "missing-designated-field-initializers",
+            "nontrivial-memaccess"
+        }
+
+    filter { "system:windows", "toolset:clang" }
+        disablewarnings {
             "missing-designated-field-initializers",
             "nontrivial-memcall"
         }
-
-    filter "toolset:gcc"
-        linkgroups "On"
 
     filter "platforms:x86"
         architecture "x86"
