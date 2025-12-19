@@ -49,7 +49,7 @@ workspace "Miyamoto-Next"
         "-Wno-format"
     }
     
-    filter "toolset:clang"
+    filter { "toolset:clang", "platforms:x64" }
         stl "libc++"
 
     filter "platforms:x86"
