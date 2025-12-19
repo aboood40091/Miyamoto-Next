@@ -46,10 +46,19 @@ workspace "Miyamoto-Next"
         "-Wno-invalid-offsetof",
         "-Wno-unused-parameter",
         "-Wno-missing-field-initializers",
-        "-Wno-missing-designated-field-initializers",
-        "-Wno-nontrivial-memcall",
         "-Wno-format"
     }
+    
+    filter "toolset:gnu"
+        buildoptions {
+            "-Wno-nontrivial-memcall",
+            "-Wno-missing-designated-field-initializers"
+        }
+        
+    filter "toolset:clang"
+        buildoptions {
+            "-Wno-nontrivial-memaccess"
+        }
     
     filter { "toolset:clang", "platforms:x64" }
         stl "libc++"
@@ -276,7 +285,7 @@ project "Miyamoto-Next"
         buildoptions { "`pkg-config --cflags dbus-1`" }
         linkoptions  { "`pkg-config --libs dbus-1`" }
 
-    filter "system:windows"    
+    filter "system:windows"
         links {
             "opengl32",
             "gdi32",
