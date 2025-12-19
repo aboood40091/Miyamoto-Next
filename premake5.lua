@@ -44,7 +44,7 @@ workspace "Miyamoto-Next"
         "missing-field-initializers"
     }
 
-    filter { "toolset:clang", "platforms:x86" }
+    filter { "not toolset:gcc", "platforms:x86" }
         stl "gnu"
 
     filter { "toolset:gcc", "files:**.cpp" }
@@ -53,19 +53,19 @@ workspace "Miyamoto-Next"
             "class-memaccess"
         }
 
-    filter "toolset:clang"
+    filter "not toolset:gcc"
         disablewarnings {
             "unused-private-field",
             "missing-braces",
             "invalid-offsetof"
         }
 
-    filter { "system:linux", "toolset:clang" }
+    filter { "system:linux", "not toolset:gcc" }
         disablewarnings {
             "nontrivial-memaccess"
         }
 
-    filter { "system:windows", "toolset:clang" }
+    filter { "system:windows", "not toolset:gcc" }
         disablewarnings {
             "missing-designated-field-initializers",
             "nontrivial-memcall"
@@ -101,7 +101,7 @@ workspace "Miyamoto-Next"
         }
         linktimeoptimization "On"
 
-    filter { "configurations:Debug", "platforms:x64", "toolset:clang" }
+    filter { "configurations:Debug", "platforms:x64", "not toolset:gcc" }
         sanitize { "Address", "UndefinedBehavior" }
 
     filter "system:linux"
@@ -291,7 +291,7 @@ project "Lib_AGL"
             "maybe-uninitialized"
         }
 
-    filter "toolset:clang"
+    filter "not toolset:gcc"
         disablewarnings {
             "invalid-source-encoding"
         }
@@ -321,7 +321,7 @@ project "Miyamoto-Next"
         "Lib_GLFW"
     }
 
-    filter "toolset:clang"
+    filter "not toolset:gcc"
         disablewarnings {
             "invalid-source-encoding"
         }
@@ -344,6 +344,7 @@ project "Miyamoto-Next"
             "shell32"
         }
 
+    filter { "system:windows", "action:gmake*" }
         linkoptions { "-static" }
 
     filter "system:macosx"
