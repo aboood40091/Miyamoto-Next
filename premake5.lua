@@ -344,7 +344,7 @@ project "Miyamoto-Next"
             "shell32"
         }
 
-    filter { "system:windows", "action:gmake*" }
+    filter { "system:windows", "not action:vs*" }
         linkoptions { "-static" }
 
     filter "system:macosx"

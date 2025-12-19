@@ -2,6 +2,19 @@
 
 #include <rio.h>
 
+#if RIO_IS_WIN
+
+#include <misc/win/rio_Windows.h>
+
+extern "C" {
+
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
+}
+
+#endif // RIO_IS_WIN
+
 static const rio::InitializeArg cInitializeArg = {
     .window = {
 #if RIO_IS_DESKTOP
