@@ -7,6 +7,8 @@ workspace "Miyamoto-Next"
     platforms { "x86", "x64", "ARM64" }
     configurations { "Debug", "Release" }
 
+    toolset "clang"
+
     targetdir "./bin"
     objdir "build/%{cfg.buildcfg}-%{cfg.architecture}"
     targetname "%{prj.name}-%{cfg.buildcfg}-%{cfg.architecture}"
@@ -72,16 +74,21 @@ workspace "Miyamoto-Next"
             "_DEBUG"
         }
     
-    filter "configurations:Release"
+    filter { "configurations:Release" }
         optimize "speed"
-        buildoptions { "-flto=auto" }
-        linkoptions { "-flto=auto" }
         omitframepointer "on"
         symbols "off"
         defines {
             "RIO_RELEASE",
             "NW_RELEASE"
         }
+
+    filter { "configurations:Release", "action:not vs*" }
+        buildoptions { "-flto=auto" }
+        linkoptions { "-flto=auto" }
+
+    filter { "configurations:Release", "action:vs*" }
+        flags { "LinkTimeOptimization" }
 
     filter { "configurations:Debug", "platforms:x64", "toolset:clang" }
         sanitize { "Address", "UndefinedBehavior" }
@@ -97,9 +104,6 @@ workspace "Miyamoto-Next"
             "_CRT_SECURE_NO_WARNINGS"
         }
 
-    filter { "system:linux", "platforms:x64" }
-        stl "gnu"
-
 project "glew"
     kind "StaticLib"
     language "C"
@@ -107,10 +111,6 @@ project "glew"
 
     files {
         "lib/glew/src/glew.c"
-    }
-    
-    links {
-        "GL"
     }
         
 project "glfw"
@@ -206,11 +206,6 @@ project "ModelStuff-next"
         "lib/ModelStuff-next/src/**",
     }
     
-    links {
-        "glew",
-        "glfw"
-    }
-    
 project "imgui"
     kind "StaticLib"
     warnings "off"
@@ -219,11 +214,6 @@ project "imgui"
         "lib/imgui/*",
         "lib/imgui/backends/imgui_impl_glfw.cpp",
         "lib/imgui/backends/imgui_impl_opengl3.cpp",
-    }
-    
-    links {
-        "glew",
-        "glfw"
     }
 
 project "backward-cpp"
@@ -245,10 +235,6 @@ project "nfd"
         
         defines {
             "NFD_PLATFORM_LINUX"
-        }
-        
-        links {
-            "dbus-1"
         }
         
         buildoptions { "`pkg-config --cflags dbus-1`" }
