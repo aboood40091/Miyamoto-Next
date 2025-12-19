@@ -23,7 +23,7 @@ jobs:
         uses: Jarod42/install-premake5@v6
 
       - name: Run premake
-        run: premake5 gmake2
+        run: premake5 --cc=clang gmake2
 
       - name: Compile
         env:
