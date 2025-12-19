@@ -122,6 +122,8 @@ void MainWindow::prepare_()
     
     ThemeMgr::createSingleton();
     ThemeMgr::instance()->initialize();
+    
+    rio::Window::instance()->setSwapInterval(!Preferences::instance()->getUnlockedFPS());
 
     ActionMgr::createSingleton();
 
@@ -1449,7 +1451,6 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setFastArrowMovementSpeed(fastArrowMovementSpeed);
                 Preferences::instance()->setSmoothZoom(smoothZoom);
                 Preferences::instance()->setUnlockedFPS(unlockedFPS);
-
                 
                 mpCourseView->onApplyDistantViewScissorChange();
                 rio::Window::instance()->setSwapInterval(!unlockedFPS);

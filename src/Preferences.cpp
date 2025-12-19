@@ -131,5 +131,5 @@ bool Preferences::getUnlockedFPS()
 
 void Preferences::setUnlockedFPS(bool value)
 {
-    mConfig.setBool(cSection, "UnlockedFPS", value, "Experimental setting, may cause broken behaviours");
+    mConfig.setBool(cSection, "UnlockedFPS", value);
 }
