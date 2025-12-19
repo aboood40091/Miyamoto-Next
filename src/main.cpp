@@ -2,6 +2,10 @@
 
 #include <rio.h>
 
+#if RIO_IS_DESKTOP
+#include <tracy/Tracy.hpp>
+#endif // RIO_IS_DESKTOP
+
 #if RIO_IS_WIN
 
 #include <misc/win/rio_Windows.h>
@@ -27,6 +31,10 @@ static const rio::InitializeArg cInitializeArg = {
 
 int main()
 {
+#if RIO_IS_DESKTOP
+    TracyNoop;
+#endif // RIO_IS_DESKTOP
+
     // Initialize RIO with root task
     if (!rio::Initialize<MainWindow>(cInitializeArg))
         return -1;

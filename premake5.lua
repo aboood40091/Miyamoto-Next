@@ -5,7 +5,7 @@ workspace "Miyamoto-Next"
     staticruntime "on"
     warnings "Extra"
     platforms { "x86", "x64", "ARM64" }
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "ReleaseDev" }
 
     stl "libc++"
     linkgroups "On"
@@ -36,7 +36,8 @@ workspace "Miyamoto-Next"
         "lib/imgui",
         "lib/imgui/backends",
         "lib/nfd/src/include",
-        "lib/simpleini"
+        "lib/simpleini",
+        "lib/tracy/public"
     }
 
     disablewarnings {
@@ -88,10 +89,11 @@ workspace "Miyamoto-Next"
         defines {
             "RIO_DEBUG",
             "NW_DEBUG",
-            "_DEBUG"
+            "_DEBUG",
+            "TRACY_ENABLE"
         }
 
-    filter "configurations:Release"
+    filter "configurations:Release*"
         optimize "speed"
         omitframepointer "on"
         symbols "off"
@@ -100,6 +102,13 @@ workspace "Miyamoto-Next"
             "NW_RELEASE"
         }
         linktimeoptimization "On"
+
+    filter "configurations:ReleaseDev"
+        omitframepointer "off"
+        symbols "on"
+        defines {
+            "TRACY_ENABLE"
+        }
 
     filter { "configurations:Debug", "platforms:x64", "not toolset:gcc" }
         sanitize { "Address", "UndefinedBehavior" }
@@ -257,6 +266,14 @@ project "Lib_NFD"
             "lib/nfd/src/nfd_cocoa.m"
         }
 
+project "Lib_Tracy"
+    kind "StaticLib"
+    warnings "off"
+    
+    files {
+        "lib/tracy/public/TracyClient.cpp"
+    }
+
 project "Lib_RIO"
     kind "StaticLib"
 
@@ -318,7 +335,8 @@ project "Miyamoto-Next"
         "Lib_ImGui",
         "Lib_NFD",
         "Lib_GLEW",
-        "Lib_GLFW"
+        "Lib_GLFW",
+        "Lib_Tracy"
     }
 
     filter "not toolset:gcc"
@@ -341,7 +359,9 @@ project "Miyamoto-Next"
             "gdi32",
             "ole32",
             "uuid",
-            "shell32"
+            "shell32",
+            "Ws2_32",
+            "dbghelp"
         }
 
     filter { "system:windows", "not action:vs*" }
@@ -360,10 +380,10 @@ project "Miyamoto-Next"
     filter "configurations:Debug"
         kind "ConsoleApp"
 
-    filter "configurations:Release"
+    filter "configurations:Release*"
         kind "WindowedApp"
 
-    filter { "system:windows", "configurations:Release" }
+    filter { "system:windows", "configurations:Release*" }
         entrypoint "mainCRTStartup"
 
     filter "action:gmake*"

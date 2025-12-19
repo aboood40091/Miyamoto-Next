@@ -42,6 +42,8 @@
 #include <graphics/win/ShaderUtil.h>
 #include <GLFW/glfw3.h>
 #include <nfd.h>
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyOpenGL.hpp>
 #endif // RIO_IS_DESKTOP
 
 #include <rio.h>
@@ -100,6 +102,8 @@ void MainWindow::prepare_()
   //RIO_LOG("MainWindow::prepare_(): start\n");
 
 #if RIO_IS_DESKTOP
+    TracyGpuContext;
+
     rio::Window::instance()->setOnResizeCallback(&MainWindow::onResizeCallback_);
     NFD_Init();
 #endif // RIO_IS_DESKTOP
@@ -654,6 +658,10 @@ void MainWindow::processKeyboardInput_()
 
 void MainWindow::calc_()
 {
+#if RIO_IS_DESKTOP
+    FrameMark;
+#endif // RIO_IS_DESKTOP
+
     ImGuiUtil::newFrame();
 
     BgTexMgr::instance()->update();

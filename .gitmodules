@@ -20,3 +20,6 @@
 [submodule "lib/simpleini"]
 	path = lib/simpleini
 	url = https://github.com/brofield/simpleini.git
+[submodule "lib/tracy"]
+	path = lib/tracy
+	url = https://github.com/wolfpld/tracy.git
