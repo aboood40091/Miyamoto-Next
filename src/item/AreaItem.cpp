@@ -532,6 +532,9 @@ void AreaItem::calcDistantViewScissor_()
 {
     mDrawDV = false;
 
+    if (!mpDistantViewMgr)
+        return;
+
     const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
     const f32 x =  s32(area_data.offset.x);
@@ -638,7 +641,8 @@ void AreaItem::DrawCallbackDV::preDrawOpa(s32 view_index, const rio::lyr::DrawIn
     if (Preferences::instance()->getApplyDistantViewScissor())
     {
         const AreaItem& item = *(CourseView::instance()->getAreaItem()[mIndex]);
-        rio::Graphics::setScissor(item.mScissorMin.x, item.mScissorMin.y, item.mScissorSize.x, item.mScissorSize.y, item.mpRenderBufferDV->getSize().y);
+        if (item.mDrawDV)
+            rio::Graphics::setScissor(item.mScissorMin.x, item.mScissorMin.y, item.mScissorSize.x, item.mScissorSize.y, item.mpRenderBufferDV->getSize().y);
     }
 }
 

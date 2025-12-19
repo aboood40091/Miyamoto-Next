@@ -55,6 +55,7 @@ bin/fs/code/*.rpx
 # Windows build files
 bin/*.exe
 bin/*.dll
+bin/*.pdb
 
 # Linux build files
 *.make
