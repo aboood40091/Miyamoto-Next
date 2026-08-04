@@ -140,7 +140,7 @@ void CourseDataFile::loadFile_(const CourseDataFileHeader* p_header)
             dst.offset.z        = CD_FILE_READ_16_BE(src.offset.z);
 
             rio::MemUtil::copy(dst.name, src.name, CD_FILE_DV_NAME_MAX_LEN);
-            dst.name[CD_FILE_DV_NAME_MAX_LEN] = '\0';
+            dst.name[CD_FILE_DV_NAME_MAX_LEN - 1] = '\0';
 
             dst.parallax_mode   = src.parallax_mode;
         }
@@ -470,7 +470,7 @@ std::span<u8> CourseDataFile::saveFile_() const
             dst.offset.z        = CD_FILE_READ_16_BE(src.offset.z);
 
             rio::MemUtil::copy(dst.name, src.name, CD_FILE_DV_NAME_MAX_LEN);
-            dst.name[CD_FILE_DV_NAME_MAX_LEN] = '\0';
+            dst.name[CD_FILE_DV_NAME_MAX_LEN - 1] = '\0';
 
             dst.parallax_mode   = src.parallax_mode;
         }

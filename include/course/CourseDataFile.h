@@ -121,8 +121,8 @@ struct DistantViewData
         s16 y;
         s16 z;
     }       offset;                             // Unused
-    char    name[CD_FILE_DV_NAME_MAX_LEN + 1];
-    u8      parallax_mode;                      // Unused
+    char    name[CD_FILE_DV_NAME_MAX_LEN];
+    u16     parallax_mode;                      // Unused
     u8      _pad[2];
 };
 static_assert(sizeof(DistantViewData) == 0x1C);

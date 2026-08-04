@@ -415,8 +415,8 @@ void AreaItem::drawSelectionUI()
                 {
                   //ImGui::InputScalar("ID", ImGuiDataType_U16, &dv_data.id);
                     ImGui::DragScalarN("Offset (Unused)", ImGuiDataType_S16, &dv_data.offset, 3);
-                    ImGui::InputText("Name", dv_data.name, CD_FILE_DV_NAME_MAX_LEN + 1);
-                    ImGui::InputScalar("Parallax Mode (Unused)", ImGuiDataType_U8, &dv_data.parallax_mode);
+                    ImGui::InputText("Name", dv_data.name, CD_FILE_DV_NAME_MAX_LEN);
+                    ImGui::InputScalar("Parallax Mode (Unused)", ImGuiDataType_U16, &dv_data.parallax_mode);
                 }
                 ImGui::EndDisabled();
             }
