@@ -37,7 +37,7 @@ Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
         const_cast<ModelResource*>(model_res),
         model_name,
         1, 1, 0, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     mpModel->getSklAnim(0)->play(model_res, "walk");

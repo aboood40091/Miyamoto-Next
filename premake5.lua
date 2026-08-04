@@ -28,7 +28,7 @@ workspace "Miyamoto-Next"
         "lib/glfw/include",
         "lib/ModelStuff-next/lib/agl/lib/rio/include",
         "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/include",
-        "lib/ModelStuff-next/lib/agl/lib/g3d/CafeSDKWrappers/cafe_win",
+        "lib/ModelStuff-next/lib/agl/lib/CafeSDKWrappers/cafe_win",
         "lib/ModelStuff-next/lib/agl/lib/g3d/include",
         "lib/ModelStuff-next/lib/agl/lib/rio_utils/include",
         "lib/ModelStuff-next/lib/agl/include",

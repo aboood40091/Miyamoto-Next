@@ -24,7 +24,7 @@ DokanJoint::DokanJoint(const MapActorData& map_actor_data, u32 index)
         *model_res,
         "obj_dokan_joint",
         0, 0, 0, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     updatePositionXY_(map_actor_data);

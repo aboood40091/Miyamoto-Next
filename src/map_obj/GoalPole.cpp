@@ -63,14 +63,14 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
         const_cast<ModelResource*>(mpModelResource),
         "baseA",
         0, 1, 0, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     mpGoalFlagModel = BasicModel::create(
         const_cast<ModelResource*>(mpModelResource),
         "goal_flag",
         1, 1, 1, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     mpGoalFlagModel->getSklAnim(0)->play(mpModelResource, "wait");
@@ -86,7 +86,7 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
         const_cast<ModelResource*>(mpModelResource),
         "toride_std",
         0, 1, 0, cIsKaiga ? 0 : 1, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     updatePositionXY_(map_actor_data);

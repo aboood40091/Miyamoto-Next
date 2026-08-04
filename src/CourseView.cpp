@@ -79,6 +79,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     get3DLayer()->setCamera(&mCamera);
     get3DLayer()->setProjection(&mProjection);
     get3DLayer()->setRenderMgr(&mRenderMgr3D);
+    get3DLayer()->setCullViewFrustum(&mCullViewFrustum3D);
     mRenderMgr3D.setDrawCallback(&mDrawCallback3D);
 
     mSize.x = width;
@@ -1902,6 +1903,8 @@ void CourseView::onApplyDistantViewScissorChange()
 
 void CourseView::gather()
 {
+    mCullViewFrustum3D.update(mCamera, mProjection);
+
     for (std::unique_ptr<AreaItem>& p_item : mAreaItemPtr)
         p_item->gather();
 

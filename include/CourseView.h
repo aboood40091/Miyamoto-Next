@@ -1,6 +1,7 @@
 #pragma once
 
 #include <course/CourseDataFile.h>
+#include <graphics/CullViewFrustum.h>
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
@@ -510,6 +511,7 @@ private:
     f32                         mAspect;
     OrthoCamera                 mCamera;
     rio::OrthoProjection        mProjection;
+    CullViewFrustum             mCullViewFrustum3D;
     DrawCallback3D              mDrawCallback3D;
     RenderMgr                   mRenderMgr3D;
     rio::lyr::Layer::iterator   mLayerItr3D;

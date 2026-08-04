@@ -161,14 +161,14 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
         const_cast<ModelResource*>(mpModelResource),
         model_name_a,
         0, 1, 2, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     mpModelB = BasicModel::create(
         const_cast<ModelResource*>(mpModelResource),
         model_name_b,
         0, 1, 2, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     if (mType != TYPE_CB)

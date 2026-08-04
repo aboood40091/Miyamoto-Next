@@ -58,14 +58,14 @@ Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
         const_cast<ModelResource*>(mpModelResource),
         model_name,
         1, 1, 0, 0, /* cIsBig ? 1 : */ 0,   // Enabling shape animation crashes on Windows atm
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     mpShellModel = BasicModel::create(
         const_cast<ModelResource*>(mpModelResource),
         cShellModelName[cIsBig],
         0, 1, 0, 0, 0,
-        Model::cBoundingMode_Disable
+        Model::cBoundingMode_Enable
     );
 
     if (cIsBig)
