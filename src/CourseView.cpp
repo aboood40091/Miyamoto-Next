@@ -632,7 +632,7 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
             if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
             {
                 if (wheel.y != 0.0f)
-                    static_cast<MainWindow*>(rio::sRootTask)->applyZoomStep(wheel.y > 0.0f);
+                    static_cast<MainWindow*>(rio::sRootTask)->applyZoomStep(wheel.y < 0.0f);
             }
             else
             {
