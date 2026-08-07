@@ -31,6 +31,9 @@ public:
     void courseSaveAs();
     void courseItemSelect();
 
+    void applyZoomUnitSize(f32 zoom_unit_size, bool bypass_limits = false);
+    void applyZoomStep(bool zoom_in);
+
 private:
     void prepare_() override;
     void calc_()    override;
@@ -94,7 +97,7 @@ private:
     enum PopupType
     {
         POPUP_TYPE_NONE = 0,
-        POPUP_TYPE_SETTINGS = 0,
+        POPUP_TYPE_SETTINGS,
         POPUP_TYPE_ACTION_DISCARD,
         POPUP_TYPE_SAVE,
         POPUP_TYPE_SELECT

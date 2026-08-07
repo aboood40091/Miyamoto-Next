@@ -50,6 +50,8 @@
 
 #include <imgui_internal.h>
 
+#include <algorithm>
+#include <cmath>
 #include <format>
 
 static const char* level_fname = "1-1.szs";
@@ -60,6 +62,9 @@ static constexpr f32 cUnitSize = 60;
 static constexpr f32 cMinZoomUnitSize = cUnitSize / 4;
 static constexpr f32 cMaxZoomUnitSize = cUnitSize * 2;
 static constexpr f32 cZoomUnitSizeStep = cUnitSize / 4;
+
+// Display format shared by the zoom slider and the zoom readout.
+#define ZOOM_FORMAT "%.2f"
 
 MainWindow::MainWindow()
     : rio::ITask("Miyamoto! Next")
@@ -1642,54 +1647,32 @@ void MainWindow::drawStatusBarControls_()
     
     // Zoom controls
     {
-        auto applyZoom = [&](f32 newSize, bool bypassLimits = false){
-            if (!bypassLimits)
-                newSize = std::clamp(newSize, cMinZoomUnitSize, cMaxZoomUnitSize);
-            if (newSize == mTargetZoomUnitSize)
-                return;
-            mTargetZoomUnitSize = newSize;
-            Preferences::instance()->setZoomUnitSize(mTargetZoomUnitSize);
-            if (!Preferences::instance()->getSmoothZoom())
-            {
-                mZoomUnitSize = mTargetZoomUnitSize;
-                if (mpCourseView)
-                    mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
-            }
-        };
-        
         if (ImGui::Button("Default Zoom"))
-            applyZoom(cDefaultZoomUnitSize);
+            applyZoomUnitSize(cDefaultZoomUnitSize);
 
         if (ImGui::Button("Real Zoom"))
         {
             f32 real_zoom_unit_size;
             if (mpCourseView && mpCourseView->getRealZoomUnitSize(real_zoom_unit_size))
-                applyZoom(real_zoom_unit_size, true);
+                applyZoomUnitSize(real_zoom_unit_size, true);
         }
-        
+
         {
             ImGuiIO& io = ImGui::GetIO();
             {
-                if (io.KeyCtrl && io.MouseWheel != 0.0f)
-                {
-                    const s32 direction = (io.MouseWheel > 0.0f) ? 1 : -1;
-                    applyZoom(mTargetZoomUnitSize + direction * cZoomUnitSizeStep);
-                }
-                
-                
-                if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
-                    applyZoom(mTargetZoomUnitSize - cZoomUnitSizeStep);
+                // Ctrl + mouse wheel is handled in CourseView::processCursorInput_()
 
-        #define ZOOM_FORMAT "%.2f"
-                    
+                if (ImGui::Button("-") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))))
+                    applyZoomUnitSize(mTargetZoomUnitSize - cZoomUnitSizeStep);
+
                 ImGui::PushItemWidth(120);
                 f32 zoom_unit_size = mTargetZoomUnitSize;
                 if (ImGui::SliderFloat("##ZoomSlider", &zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize, ZOOM_FORMAT))
-                    applyZoom(zoom_unit_size);
+                    applyZoomUnitSize(zoom_unit_size);
                 ImGui::PopItemWidth();
 
                 if (ImGui::Button("+") || (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))))
-                    applyZoom(mTargetZoomUnitSize + cZoomUnitSizeStep);
+                    applyZoomUnitSize(mTargetZoomUnitSize + cZoomUnitSizeStep);
             }
         }
 
@@ -1697,12 +1680,45 @@ void MainWindow::drawStatusBarControls_()
     }
 }
 
+void MainWindow::applyZoomUnitSize(f32 zoom_unit_size, bool bypass_limits)
+{
+    if (!bypass_limits)
+        zoom_unit_size = std::clamp(zoom_unit_size, cMinZoomUnitSize, cMaxZoomUnitSize);
+
+    if (zoom_unit_size == mTargetZoomUnitSize)
+        return;
+
+    mTargetZoomUnitSize = zoom_unit_size;
+    Preferences::instance()->setZoomUnitSize(mTargetZoomUnitSize);
+
+    if (!Preferences::instance()->getSmoothZoom())
+    {
+        mZoomUnitSize = mTargetZoomUnitSize;
+        if (mpCourseView)
+            mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
+    }
+}
+
+void MainWindow::applyZoomStep(bool zoom_in)
+{
+    const s32 direction = zoom_in ? -1 : 1;
+    applyZoomUnitSize(mTargetZoomUnitSize + direction * cZoomUnitSizeStep);
+}
+
 void MainWindow::updateZoom_()
 {
     if (mZoomUnitSize == mTargetZoomUnitSize)
         return;
 
-    mZoomUnitSize = std::lerp(mZoomUnitSize, mTargetZoomUnitSize, 15.0f * ImGui::GetIO().DeltaTime);
+    const f32 t = std::clamp(15.0f * ImGui::GetIO().DeltaTime, 0.0f, 1.0f);
+
+    mZoomUnitSize = std::lerp(mZoomUnitSize, mTargetZoomUnitSize, t);
+
+    // Snap once the remaining delta is imperceptible, so the lerp terminates
+    // instead of asymptotically approaching the target forever.
+    if (std::abs(mTargetZoomUnitSize - mZoomUnitSize) < cZoomUnitSizeEpsilon)
+        mZoomUnitSize = mTargetZoomUnitSize;
+
     if (mpCourseView)
         mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
 }

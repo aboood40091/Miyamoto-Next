@@ -631,7 +631,8 @@ bool CourseView::processMouseInput(bool focused, bool hovered)
         {
             if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
             {
-                //TODO: Add zoom in/out using mouse wheel
+                if (wheel.y != 0.0f)
+                    static_cast<MainWindow*>(rio::sRootTask)->applyZoomStep(wheel.y > 0.0f);
             }
             else
             {
