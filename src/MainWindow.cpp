@@ -1607,9 +1607,10 @@ void MainWindow::drawStatusBar_()
 {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-    if (ImGui::BeginViewportSideBar("##MainStatusBar", viewport, ImGuiDir_Down, ImGui::GetFrameHeight(), 
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar)
-    )
+    if (ImGui::BeginViewportSideBar(
+        "##MainStatusBar", viewport, ImGuiDir_Down, ImGui::GetFrameHeight(),
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar
+    ))
     {
         if (ImGui::BeginMenuBar())
         {
@@ -1618,8 +1619,8 @@ void MainWindow::drawStatusBar_()
 
             ImGui::EndMenuBar();
         }
-        ImGui::End();
     }
+    ImGui::End();
 }
 
 void MainWindow::drawStatusBarFileInfo_()
