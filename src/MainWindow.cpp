@@ -63,6 +63,9 @@ static constexpr f32 cMinZoomUnitSize = cUnitSize / 4;
 static constexpr f32 cMaxZoomUnitSize = cUnitSize * 2;
 static constexpr f32 cZoomUnitSizeStep = cUnitSize / 4;
 
+// Distance at which the smooth-zoom interpolation snaps to its target.
+static constexpr f32 cZoomUnitSizeEpsilon = 0.01f;
+
 // Display format shared by the zoom slider and the zoom readout.
 #define ZOOM_FORMAT "%.2f"
 
