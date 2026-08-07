@@ -44,6 +44,13 @@ private:
     static void onResizeCallback_(s32 width, s32 height);
 #endif // RIO_IS_DESKTOP
 
+    struct Sharc;
+    bool loadRequiredArchive_(Sharc& out, const std::string& path, bool decompress);
+
+    std::string buildContentPathError_(const std::string& what, const std::string& path) const;
+
+    void failContentLoad_(const std::string& message);
+
     void courseNew_();
     void courseOpen_();
     void courseFileSwitch_(u32 file_index);
@@ -54,6 +61,8 @@ private:
 
     void processMouseInput_();
     void processKeyboardInput_();
+
+    void drawContentLoadErrorUI_();
 
     void drawMetricsUI_();
     void drawCourseViewUI_();
@@ -134,6 +143,8 @@ private:
     s32                     mMetricsLocation;
     f32                     mZoomUnitSize;
     f32                     mTargetZoomUnitSize;
+    bool                    mContentLoadFailed;
+    std::string             mContentLoadError;
 #if RIO_IS_CAFE
     ImGui_ImplGX2_Texture   mImGuiGX2Texture;
     GX2Sampler              mGX2Sampler;

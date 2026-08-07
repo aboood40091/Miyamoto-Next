@@ -1,6 +1,8 @@
 #include <Preferences.h>
 #include <ui/ThemeMgr.h>
 
+#include <filedevice/rio_Path.h>
+
 bool Preferences::createSingleton()
 {
     if (sInstance)
@@ -34,14 +36,59 @@ void Preferences::setTheme(const std::string& value)
     mConfig.setString(cSection, "Theme", value.c_str());
 }
 
-std::string Preferences::getContentPath()
+std::string Preferences::getContentPathRaw()
 {
     return mConfig.getString(cSection, "ContentPath", "game/nsmbu");
+}
+
+namespace {
+
+bool hasDevicePrefix(const std::string& path)
+{
+    // True if the path already carries a RIO device prefix such as "native://".
+    return rio::Path::getDriveNameEx(nullptr, path);
+}
+
+bool isAbsolutePath(const std::string& path)
+{
+    if (path.empty())
+        return false;
+
+    // POSIX or Windows UNC
+    if (path[0] == '/' || path[0] == '\\')
+        return true;
+
+    // Windows drive letter
+    return path.size() >= 2
+        && path[1] == ':'
+        && ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z'));
+}
+
+}
+
+std::string Preferences::getContentPath()
+{
+    const std::string& path = getContentPathRaw();
+
+    if (!path.empty() && !hasDevicePrefix(path) && isAbsolutePath(path))
+        return "native://" + path;
+
+    return path;
 }
 
 void Preferences::setContentPath(const std::string& value)
 {
     mConfig.setString(cSection, "ContentPath", value.c_str());
+}
+
+std::string Preferences::getStartupLevel()
+{
+    return mConfig.getString(cSection, "StartupLevel", "1-1.szs");
+}
+
+void Preferences::setStartupLevel(const std::string& value)
+{
+    mConfig.setString(cSection, "StartupLevel", value.c_str());
 }
 
 bool Preferences::getForceSharcfb()

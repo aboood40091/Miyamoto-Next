@@ -27,8 +27,14 @@ public:
     void setTheme(const std::string& value);
     
     [[nodiscard]]
+    std::string getContentPathRaw();
+    [[nodiscard]]
     std::string getContentPath();
     void setContentPath(const std::string& value);
+
+    [[nodiscard]]
+    std::string getStartupLevel();
+    void setStartupLevel(const std::string& value);
     
     [[nodiscard]]
     bool getForceSharcfb();

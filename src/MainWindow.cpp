@@ -49,12 +49,12 @@
 #include <rio.h>
 
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <format>
-
-static const char* level_fname = "1-1.szs";
 
 static constexpr f32 cDefaultZoomUnitSize = 32;
 
@@ -88,6 +88,7 @@ MainWindow::MainWindow()
     , mMetricsLocation(0)
     , mZoomUnitSize(cDefaultZoomUnitSize)
     , mTargetZoomUnitSize(cDefaultZoomUnitSize)
+    , mContentLoadFailed(false)
 {
 }
 
@@ -104,6 +105,95 @@ void MainWindow::onResizeCallback_(s32 width, s32 height)
 }
 
 #endif // RIO_IS_DESKTOP
+
+void MainWindow::failContentLoad_(const std::string& message)
+{
+    mContentLoadFailed = true;
+    mContentLoadError = message;
+
+    RIO_LOG("%s\n", message.c_str());
+
+    // Clear all RenderObj stuff to avoid crashes caused by callbacks trying to access non-initialized resources.
+    for (rio::lyr::Layer* p_layer_base : *rio::lyr::Renderer::instance())
+    {
+        RenderObjLayer* p_layer = dynamic_cast<RenderObjLayer*>(p_layer_base);
+        if (p_layer == nullptr)
+            continue;
+
+        RenderMgr* p_render_mgr = p_layer->getRenderMgr();
+        if (p_render_mgr != nullptr)
+        {
+            p_render_mgr->clear();
+            p_render_mgr->clearView();
+            p_render_mgr->setDrawCallback(nullptr);
+        }
+        p_layer->clearDrawMethodsAll();
+        p_layer->clearRenderSteps();
+    }
+}
+
+std::string MainWindow::buildContentPathError_(const std::string& what, const std::string& path) const
+{
+    return
+        "Could not load " + what + ":\n\n    " + path + "\n\n"
+        "Either file is corrupted, or the content path is probably wrong. It must point\n"
+        "at a folder that contains a \"Common\" directory, i.e. the game's content root.\n\n"
+        "Current content path:\n    " + Preferences::instance()->getContentPathRaw() + "\n\n"
+        "Set \"ContentPath\" in preferences.ini (next to the executable), and restart.\n"
+        "A relative path is resolved against fs/content; an absolute path\n"
+        "such as C:\\Games\\NSMBU\\content also works as-is.";
+}
+
+bool MainWindow::loadRequiredArchive_(Sharc& out, const std::string& path, bool decompress)
+{
+    {
+        rio::FileDevice::LoadArg arg;
+        arg.path = path;
+        arg.alignment = 0x2000;
+
+        out.p_archive = decompress
+            ? SZSDecompressor::tryDecomp(arg)
+            : rio::FileDeviceMgr::instance()->load(arg);
+    }
+
+    if (out.p_archive == nullptr || !out.archive_res.prepareArchive(out.p_archive))
+    {
+        failContentLoad_(buildContentPathError_("a required game file", path));
+        return false;
+    }
+
+    return true;
+}
+
+void MainWindow::drawContentLoadErrorUI_()
+{
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, { 0.5f, 0.5f });
+
+    ImGui::Begin(
+        "Unable to start",
+        nullptr,
+        ImGuiWindowFlags_NoResize     | ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoCollapse   | ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_AlwaysAutoResize
+    );
+    {
+        ImGui::TextUnformatted(mContentLoadError.c_str());
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Copy details"))
+            ImGui::SetClipboardText(mContentLoadError.c_str());
+
+        ImGui::SameLine();
+
+#if RIO_IS_DESKTOP
+        if (ImGui::Button("Quit"))
+            rio::Window::instance()->requestClose();
+#endif // RIO_IS_DESKTOP
+    }
+    ImGui::End();
+}
 
 void MainWindow::prepare_()
 {
@@ -208,7 +298,17 @@ void MainWindow::prepare_()
 
         mAglRes.p_archive = rio::FileDeviceMgr::instance()->load(arg);
     }
-    RIO_ASSERT(mAglRes.p_archive);
+    if (mAglRes.p_archive == nullptr)
+    {
+        failContentLoad_(
+            "Failed to load the AGL shader archive.\n\n"
+            "Expected it next to the executable at:\n"
+            "    fs/content/agl_resource_cafe_dev.sarc\n\n"
+            "This file ships with the editor. If it is missing, reinstall or\n"
+            "re-download the editor's data files."
+        );
+        return;
+    }
 
     mAglRes.archive_res.prepareArchive(mAglRes.p_archive);
   //RIO_LOG("MainWindow::prepare_(): mAglRes.archive_res.prepareArchive() done\n");
@@ -223,7 +323,18 @@ void MainWindow::prepare_()
   //RIO_LOG("Initialized agl!\n");
 
     ShaderHolder::createSingleton();
-    ShaderHolder::instance()->initialize(Preferences::instance()->getContentPath() + "/Common/shader/shaderfb");
+    {
+        const std::string shaderfb_path =
+            Preferences::instance()->getContentPath() + "/Common/shader/shaderfb";
+
+        if (!ShaderHolder::instance()->initialize(shaderfb_path))
+        {
+            failContentLoad_(
+                buildContentPathError_("the game's shader archive", shaderfb_path + ".szs")
+            );
+            return;
+        }
+    }
 
   //RIO_LOG("Initialized ShaderHolder\n");
 
@@ -231,34 +342,22 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created ResMgr\n");
 
-    {
-        rio::FileDevice::LoadArg arg;
-        arg.path = Preferences::instance()->getContentPath() + "/Common/actor/jyotyuActorPack.szs";
-        arg.alignment = 0x2000;
-
-        mJyotyuActorPack.p_archive = SZSDecompressor::tryDecomp(arg);
-    }
-    RIO_ASSERT(mJyotyuActorPack.p_archive);
-
-    mJyotyuActorPack.archive_res.prepareArchive(mJyotyuActorPack.p_archive);
-  //RIO_LOG("MainWindow::prepare_(): mJyotyuActorPack.archive_res.prepareArchive() done\n");
+    if (!loadRequiredArchive_(
+            mJyotyuActorPack,
+            Preferences::instance()->getContentPath() + "/Common/actor/jyotyuActorPack.szs",
+            true))
+        return;
 
     for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
         ResMgr::instance()->loadArchiveRes(entry.name, mJyotyuActorPack.archive_res.getFileConst(entry.name), true);
 
   //RIO_LOG("Initialized jyotyuActorPack\n");
 
-    {
-        rio::FileDevice::LoadArg arg;
-        arg.path = Preferences::instance()->getContentPath() + "/Common/actor/cobPack.szs";
-        arg.alignment = 0x2000;
-
-        mCobPack.p_archive = SZSDecompressor::tryDecomp(arg);
-    }
-    RIO_ASSERT(mCobPack.p_archive);
-
-    mCobPack.archive_res.prepareArchive(mCobPack.p_archive);
-  //RIO_LOG("MainWindow::prepare_(): mCobPack.archive_res.prepareArchive() done\n");
+    if (!loadRequiredArchive_(
+            mCobPack,
+            Preferences::instance()->getContentPath() + "/Common/actor/cobPack.szs",
+            true))
+        return;
 
     for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
         ResMgr::instance()->loadArchiveRes(entry.name, mCobPack.archive_res.getFileConst(entry.name), true);
@@ -294,13 +393,26 @@ void MainWindow::prepare_()
 
   //RIO_LOG("Created CourseView\n");
 
-    const std::string& level_path = Preferences::instance()->getContentPath() + "/Common/course_res_pack/" + level_fname;
-    if (CourseData::instance()->loadFromPack(level_path))
+    const std::string& startup_level = Preferences::instance()->getStartupLevel();
+
+    bool loaded = false;
+    if (!startup_level.empty())
     {
-        mCoursePath = level_path;
-        RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+        const std::string& level_path = Preferences::instance()->getContentPath() + "/Common/course_res_pack/" + startup_level;
+
+        loaded = CourseData::instance()->loadFromPack(level_path);
+        if (loaded)
+        {
+            mCoursePath = level_path;
+            RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+        }
+        else
+        {
+            RIO_LOG("Startup level could not be loaded: %s\n", level_path.c_str());
+        }
     }
-    else
+
+    if (!loaded)
     {
         CourseData::instance()->createNew();
         mCoursePath.clear();
@@ -323,21 +435,27 @@ void MainWindow::exit_()
 
     ModelResMgr::destroySingleton();
 
-    for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
-        ResMgr::instance()->destroyArchiveRes(entry.name);
+    if (mJyotyuActorPack.p_archive != nullptr)
+    {
+        for (const SharcArchiveRes::Entry& entry : mJyotyuActorPack.archive_res.readEntry())
+            ResMgr::instance()->destroyArchiveRes(entry.name);
 
-    mJyotyuActorPack.archive_res.destroy();
+        mJyotyuActorPack.archive_res.destroy();
 
-    rio::MemUtil::free(mJyotyuActorPack.p_archive);
-    mJyotyuActorPack.p_archive = nullptr;
+        rio::MemUtil::free(mJyotyuActorPack.p_archive);
+        mJyotyuActorPack.p_archive = nullptr;
+    }
 
-    for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
-        ResMgr::instance()->destroyArchiveRes(entry.name);
+    if (mCobPack.p_archive != nullptr)
+    {
+        for (const SharcArchiveRes::Entry& entry : mCobPack.archive_res.readEntry())
+            ResMgr::instance()->destroyArchiveRes(entry.name);
 
-    mCobPack.archive_res.destroy();
+        mCobPack.archive_res.destroy();
 
-    rio::MemUtil::free(mCobPack.p_archive);
-    mCobPack.p_archive = nullptr;
+        rio::MemUtil::free(mCobPack.p_archive);
+        mCobPack.p_archive = nullptr;
+    }
 
     ResMgr::destroySingleton();
 
@@ -352,10 +470,13 @@ void MainWindow::exit_()
 
     agl::detail::ShaderHolder::destroySingleton();
 
-    mAglRes.archive_res.destroy();
+    if (mAglRes.p_archive != nullptr)
+    {
+        mAglRes.archive_res.destroy();
 
-    rio::MemUtil::free(mAglRes.p_archive);
-    mAglRes.p_archive = nullptr;
+        rio::MemUtil::free(mAglRes.p_archive);
+        mAglRes.p_archive = nullptr;
+    }
 
 #if RIO_IS_CAFE
     agl::driver::GX2Resource::destroySingleton();
@@ -674,6 +795,12 @@ void MainWindow::calc_()
 
     ImGuiUtil::newFrame();
 
+    if (mContentLoadFailed)
+    {
+        drawContentLoadErrorUI_();
+        return;
+    }
+
     BgTexMgr::instance()->update();
     CoinOrigin::instance()->update();
 
@@ -725,6 +852,9 @@ void MainWindow::calc_()
 
 void MainWindow::gather_(const rio::lyr::DrawInfo&)
 {
+    if (mContentLoadFailed)
+        return;
+
     mpCourseView->gather();
 
     CoinOrigin::instance()->draw(getBgPrepareLayer());
@@ -733,9 +863,12 @@ void MainWindow::gather_(const rio::lyr::DrawInfo&)
 
 void MainWindow::dispose_(const rio::lyr::DrawInfo&)
 {
-    mRenderMgrBgPrepare.clear();
+    if (!mContentLoadFailed)
+    {
+        mRenderMgrBgPrepare.clear();
 
-    mpCourseView->dispose();
+        mpCourseView->dispose();
+    }
 
     ImGuiUtil::render();
 }
@@ -1390,7 +1523,7 @@ void MainWindow::drawMainMenuBarUI_()
     default:
         break;
     case POPUP_TYPE_SETTINGS:
-        static char contentPath[260];
+        static std::string contentPath;
         static bool forceSharcfb;
         static float bigItemScale;
         static bool applyDistantViewScissor;
@@ -1403,8 +1536,7 @@ void MainWindow::drawMainMenuBarUI_()
         if (mPopupOpen)
         {
             ImGui::OpenPopup("Settings");
-            RIO_ASSERT(Preferences::instance()->getContentPath().length() < 260);
-            rio::MemUtil::copy(contentPath, Preferences::instance()->getContentPath().c_str(), Preferences::instance()->getContentPath().length() + 1);
+            contentPath = Preferences::instance()->getContentPathRaw();
             forceSharcfb = Preferences::instance()->getForceSharcfb();
             bigItemScale = Preferences::instance()->getBigItemScale();
             applyDistantViewScissor = Preferences::instance()->getApplyDistantViewScissor();
@@ -1441,7 +1573,7 @@ void MainWindow::drawMainMenuBarUI_()
                 ImGui::EndCombo();
             }
 
-            ImGui::InputText("Content Path", contentPath, 260);
+            ImGui::InputText("Content Path", &contentPath);
             ImGui::Checkbox("Decompile Shaders", &forceSharcfb);
             ImGui::InputFloat("Big Item Scale", &bigItemScale);
             ImGui::Checkbox("Clip DistantView To Area", &applyDistantViewScissor);

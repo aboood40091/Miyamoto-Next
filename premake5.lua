@@ -218,7 +218,11 @@ project "Lib_ImGui"
     warnings "off"
 
     files {
-        "lib/imgui/*",
+        "lib/imgui/imgui.cpp",
+        "lib/imgui/imgui_draw.cpp",
+        "lib/imgui/imgui_tables.cpp",
+        "lib/imgui/imgui_widgets.cpp",
+        "lib/imgui/misc/cpp/imgui_stdlib.cpp",
         "lib/imgui/backends/imgui_impl_glfw.cpp",
         "lib/imgui/backends/imgui_impl_opengl3.cpp"
     }
@@ -286,7 +290,7 @@ project "Lib_ninTexUtils"
     kind "StaticLib"
 
     files {
-        "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/**"
+        "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/src/**"
     }
 
 project "Lib_G3d"
