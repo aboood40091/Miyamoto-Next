@@ -11,6 +11,10 @@ public:
     ItemID(u32 value)
         : mValue(value)
     {
+        if (isValid())
+        {
+            RIO_ASSERT(getType() < ITEM_TYPE_MAX_NUM);
+        }
     }
 
     ItemID(ItemType type, u32 index)
@@ -48,13 +52,14 @@ public:
     void set(ItemType type, u32 index)
     {
         RIO_ASSERT(type < ITEM_TYPE_MAX_NUM);
-        RIO_ASSERT(index < 0x00FFFFFF);
+        RIO_ASSERT(index <= 0x00FFFFFF);
         mValue = type << 24 | index;
     }
 
     void setIndex(u32 index)
     {
         RIO_ASSERT(isValid());
+        RIO_ASSERT(index <= 0x00FFFFFF);
         mValue &= ~0x00FFFFFF;
         mValue |= index;
     }
