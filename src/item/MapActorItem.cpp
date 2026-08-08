@@ -90,9 +90,9 @@ void MapActorItem::drawSelectionUI()
 
     const std::string& name = actor_create_mgr->getName(map_actor_data.type);
     if (name.empty())
-        ImGui::Text("Map Actor %d", map_actor_data.type);
+        ImGui::Text(ITEM_NAME_MAP_ACTOR " %d", map_actor_data.type);
     else
-        ImGui::Text("Map Actor %d: %s", map_actor_data.type, name.c_str());
+        ImGui::Text(ITEM_NAME_MAP_ACTOR " %d: %s", map_actor_data.type, name.c_str());
 
     // Show both names on hover, so that the user can see the Japanese name even if the editor is set to English.
     if (ImGui::IsItemHovered())

@@ -71,7 +71,7 @@ void LocationItem::drawSelectionUI()
 {
     const Location& location = CourseView::instance()->getCourseDataFile().getLocation()[mItemID.getIndex()];
 
-    ImGui::Text("Location");
+    ImGui::Text(ITEM_NAME_LOCATION);
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.

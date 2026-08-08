@@ -10,6 +10,30 @@ ActionItemPushBack::ActionItemPushBack(const void* context)
     , mCenterUnitX(static_cast<const Context*>(context)->center_unit_x)
     , mCenterUnitY(static_cast<const Context*>(context)->center_unit_y)
 {
+    // mTransform is set only when the items came from the clipboard,
+    // so it's what distinguishes a paste from a freshly painted item
+    const char* const verb = mTransform ? "Paste " : "Add ";
+
+    RIO_ASSERT(!mItems.empty());
+
+    const ItemType first_type = mItems.front().item_type;
+    bool same_type = true;
+    for (const Item& item : mItems)
+    {
+        if (item.item_type != first_type)
+        {
+            same_type = false;
+            break;
+        }
+    }
+
+    mDescription = (
+        std::string(verb) + (
+            same_type
+                ? getItemCountText(u32(mItems.size()), first_type)
+                : getItemCountText(u32(mItems.size()))
+        )
+    );
 }
 
 bool ActionItemPushBack::apply() const

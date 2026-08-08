@@ -1502,11 +1502,28 @@ void MainWindow::drawMainMenuBarUI_()
 
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Undo", "Ctrl+Z", false, ActionMgr::instance()->canUndo()))
-                mpCourseView->undo();
+            {
+                ActionMgr* const action_mgr = ActionMgr::instance();
 
-            if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z / Ctrl+Y", false, ActionMgr::instance()->canRedo()))
-                mpCourseView->redo();
+                const std::string& undo_description = action_mgr->getUndoDescription();
+                const std::string& redo_description = action_mgr->getRedoDescription();
+
+                const std::string& undo_label =
+                    undo_description.empty()
+                        ? std::string("Undo")
+                        : std::format("Undo {0:s}", undo_description);
+
+                const std::string& redo_label =
+                    redo_description.empty()
+                        ? std::string("Redo")
+                        : std::format("Redo {0:s}", redo_description);
+
+                if (ImGui::MenuItem(undo_label.c_str(), "Ctrl+Z", false, action_mgr->canUndo()))
+                    mpCourseView->undo();
+
+                if (ImGui::MenuItem(redo_label.c_str(), "Ctrl+Shift+Z / Ctrl+Y", false, action_mgr->canRedo()))
+                    mpCourseView->redo();
+            }
 
             ImGui::Separator();
 
@@ -1611,6 +1628,7 @@ void MainWindow::drawMainMenuBarUI_()
         static bool smoothZoom;
         static bool unlockedFPS;
         static ActorNameLanguage actorNameLanguage;
+        static s32 maxUndoHistory;
 
         if (mPopupOpen)
         {
@@ -1625,6 +1643,7 @@ void MainWindow::drawMainMenuBarUI_()
             smoothZoom = Preferences::instance()->getSmoothZoom();
             unlockedFPS = Preferences::instance()->getUnlockedFPS();
             actorNameLanguage = Preferences::instance()->getActorNameLanguage();
+            maxUndoHistory = s32(Preferences::instance()->getMaxUndoHistory());
             mPopupOpen = false;
         }
 
@@ -1681,6 +1700,12 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::InputFloat("Scroll Movement Speed", &scrollMovementSpeed);
             ImGui::InputFloat("Arrow Movement Speed", &arrowMovementSpeed);
             ImGui::InputFloat("Fast Arrow Movement Speed", &fastArrowMovementSpeed);
+
+            if (ImGui::InputInt("Undo History", &maxUndoHistory))
+                maxUndoHistory = std::clamp<s32>(maxUndoHistory, 0, ActionMgr::cMaxUserMaxHistory);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Maximum number of undo steps kept.\n0 means unlimited.");
+
             ImGui::Checkbox("Smooth Zoom", &smoothZoom);
             ImGui::Checkbox("Unlocked FPS", &unlockedFPS);
 
@@ -1701,8 +1726,11 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setSmoothZoom(smoothZoom);
                 Preferences::instance()->setUnlockedFPS(unlockedFPS);
                 Preferences::instance()->setActorNameLanguage(actorNameLanguage);
+                Preferences::instance()->setMaxUndoHistory(u32(maxUndoHistory));
 
                 ActorCreateMgr::instance()->setNameLanguage(actorNameLanguage);
+
+                ActionMgr::instance()->setMaxHistory(u32(maxUndoHistory));
 
                 mpCourseView->onApplyDistantViewScissorChange();
                 rio::Window::instance()->setSwapInterval(!unlockedFPS);
@@ -1806,11 +1834,11 @@ void MainWindow::drawMainMenuBarUI_()
 
             ImGui::Separator();
 
-            ImGui::CheckboxFlags("Bg Unit Object",  &mItemSelectFlag, 1 << ITEM_TYPE_BG_UNIT_OBJ);
-            ImGui::CheckboxFlags("Actor",           &mItemSelectFlag, 1 << ITEM_TYPE_MAP_ACTOR);
-            ImGui::CheckboxFlags("NextGoto",        &mItemSelectFlag, 1 << ITEM_TYPE_NEXT_GOTO);
-            ImGui::CheckboxFlags("Location",        &mItemSelectFlag, 1 << ITEM_TYPE_LOCATION);
-            ImGui::CheckboxFlags("Area",            &mItemSelectFlag, 1 << ITEM_TYPE_AREA);
+            ImGui::CheckboxFlags(ITEM_NAME_BG_UNIT_OBJ, &mItemSelectFlag, 1 << ITEM_TYPE_BG_UNIT_OBJ);
+            ImGui::CheckboxFlags(ITEM_NAME_MAP_ACTOR,   &mItemSelectFlag, 1 << ITEM_TYPE_MAP_ACTOR);
+            ImGui::CheckboxFlags(ITEM_NAME_NEXT_GOTO,   &mItemSelectFlag, 1 << ITEM_TYPE_NEXT_GOTO);
+            ImGui::CheckboxFlags(ITEM_NAME_LOCATION,    &mItemSelectFlag, 1 << ITEM_TYPE_LOCATION);
+            ImGui::CheckboxFlags(ITEM_NAME_AREA,        &mItemSelectFlag, 1 << ITEM_TYPE_AREA);
 
             ImGui::Separator();
 

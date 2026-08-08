@@ -6,6 +6,7 @@ ActionOptionsDataChange::ActionOptionsDataChange(const void* context)
     , mBefore(static_cast<const Context*>(context)->before)
     , mAfter(static_cast<const Context*>(context)->after)
 {
+    mDescription = "Change File Options";
 }
 
 bool ActionOptionsDataChange::apply() const

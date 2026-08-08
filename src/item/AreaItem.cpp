@@ -343,7 +343,7 @@ void AreaItem::drawSelectionUI()
 {
     const AreaData& area_data = CourseView::instance()->getCourseDataFile().getAreaData()[mItemID.getIndex()];
 
-    ImGui::Text("Area");
+    ImGui::Text(ITEM_NAME_AREA);
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.

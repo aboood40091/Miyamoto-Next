@@ -53,7 +53,7 @@ void BgUnitItem::drawSelectionUI()
     const BgCourseData& data = cd_file.getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
 
     u8 layer = mItemID.getIndex() >> 22;
-    ImGui::Text("Bg Unit Object (Layer %d)", layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
+    ImGui::Text(ITEM_NAME_BG_UNIT_OBJ " (Layer %d)", layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
     ImGui::Separator();
 
     const u16 single_step = 1; //Needed for +/- buttons to appear.

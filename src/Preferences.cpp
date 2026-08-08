@@ -1,8 +1,11 @@
 #include <Preferences.h>
+#include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
 #include <ui/ThemeMgr.h>
 
 #include <filedevice/rio_Path.h>
+
+#include <algorithm>
 
 bool Preferences::createSingleton()
 {
@@ -215,4 +218,15 @@ bool Preferences::getActorHideNSLU()
 void Preferences::setActorHideNSLU(bool value)
 {
     mConfig.setBool(cSection, "ActorHideNSLU", value);
+}
+
+u32 Preferences::getMaxUndoHistory()
+{
+    const s32 value = mConfig.getInt(cSection, "MaxUndoHistory", ActionMgr::cDefaultMaxHistory);
+    return std::clamp<s32>(value, 0, ActionMgr::cMaxUserMaxHistory);
+}
+
+void Preferences::setMaxUndoHistory(u32 value)
+{
+    mConfig.setInt(cSection, "MaxUndoHistory", s32(std::min<u32>(value, ActionMgr::cMaxUserMaxHistory)));
 }

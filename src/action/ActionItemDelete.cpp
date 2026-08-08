@@ -10,6 +10,28 @@ ActionItemDelete::ActionItemDelete(const void* context)
 {
     for (const Item& item : static_cast<const Context*>(context)->items)
         mItems[item.item_id.getType()].emplace(item);
+
+    u32 total = 0;
+    u32 type_num = 0;
+    ItemType last_type = ITEM_TYPE_MAX_NUM;
+
+    for (u32 i = 0; i < ITEM_TYPE_MAX_NUM; i++)
+    {
+        if (mItems[i].empty())
+            continue;
+
+        total += u32(mItems[i].size());
+        type_num++;
+        last_type = ItemType(i);
+    }
+
+    mDescription = (
+        "Delete " + (
+            type_num == 1
+                ? getItemCountText(total, last_type)
+                : getItemCountText(total)
+        )
+    );
 }
 
 bool ActionItemDelete::apply() const

@@ -86,6 +86,10 @@ public:
     bool getActorHideNSLU();
     void setActorHideNSLU(bool value);
 
+    [[nodiscard]]
+    u32 getMaxUndoHistory();
+    void setMaxUndoHistory(u32 value);
+
 private:
     ConfigMgr mConfig;
 };

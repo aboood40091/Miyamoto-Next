@@ -73,7 +73,7 @@ void NextGotoItem::drawSelectionUI()
 {
     const NextGoto& next_goto = CourseView::instance()->getCourseDataFile().getNextGoto()[mItemID.getIndex()];
 
-    ImGui::Text("NextGoto");
+    ImGui::Text(ITEM_NAME_NEXT_GOTO);
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.

@@ -8,6 +8,7 @@ ActionItemDataChange::ActionItemDataChange(const void* context)
     , mAfter(static_cast<const Context*>(context)->after)
     , mDataChangeFlag(static_cast<const Context*>(context)->data_change_flag)
 {
+    mDescription = std::string("Change ") + getItemTypeName(mItemID.getType());
 }
 
 bool ActionItemDataChange::apply() const

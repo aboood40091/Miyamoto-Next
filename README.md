@@ -42,6 +42,7 @@ Settings live in `preferences.ini`, next to the executable in `bin`. The file is
 | `ActorNameLanguage` | `0` | Actor names shown in the palette and inspector: `0` English, `1` Japanese, `2` both. |
 | `ActorHideUnused` | `false` | Hide actors marked `[UNUSED]` from the actor palette. |
 | `ActorHideNSLU` | `false` | Hide New Super Luigi U actors from the actor palette. |
+| `MaxUndoHistory` | `100` | Maximum number of undo steps kept. `0` means unlimited. Applied when the next edit is made. |
 
 Relative paths are resolved against `fs/content/`. For example, based on the default value of `<ContentPath>`, an example game file path would be `fs/content/game/nsmbu/Common/shader/shaderfb.szs`.
 
