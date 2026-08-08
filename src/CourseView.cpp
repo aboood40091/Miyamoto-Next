@@ -66,9 +66,6 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mCursorForceReleaseFlag(CURSOR_RELEASE_FLAG_NONE)
     , mSelectionChange(false)
     , mpItemIDReadBuffer(nullptr)
-#if RIO_IS_DESKTOP
-    , mpItemIDClearBuffer(nullptr)
-#endif // RIO_IS_DESKTOP
     , mpColorTexture(nullptr)
     , mpItemIDTexture(nullptr)
     , mpDepthTexture(nullptr)
@@ -153,14 +150,6 @@ CourseView::~CourseView()
         mpItemIDReadBuffer = nullptr;
     }
 
-#if RIO_IS_DESKTOP
-    if (mpItemIDClearBuffer)
-    {
-        delete[] mpItemIDClearBuffer;
-        mpItemIDClearBuffer = nullptr;
-    }
-#endif // RIO_IS_DESKTOP
-
     if (mpDepthTexture)
     {
         delete mpDepthTexture;
@@ -225,14 +214,6 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
         mpItemIDReadBuffer = nullptr;
     }
 
-#if RIO_IS_DESKTOP
-    if (mpItemIDClearBuffer)
-    {
-        delete[] mpItemIDClearBuffer;
-        mpItemIDClearBuffer = nullptr;
-    }
-#endif // RIO_IS_DESKTOP
-
     if (mpDepthTexture)
     {
         delete mpDepthTexture;
@@ -249,8 +230,6 @@ void CourseView::createRenderBuffer_(s32 width, s32 height)
         rio::MemUtil::set(mpItemIDReadBuffer, 0xFF, size);
 #if RIO_IS_DESKTOP
         RIO_ASSERT(size == mpItemIDTexture->getNativeTexture().surface.imageSize);
-        mpItemIDClearBuffer = new u8[size];
-        rio::MemUtil::set(mpItemIDClearBuffer, 0xFF, size);
 #endif // RIO_IS_DESKTOP
     }
 
@@ -305,16 +284,22 @@ void CourseView::clearItemIDTexture_()
     rio::MemUtil::set(surface.image, 0xFF, surface.imageSize);
     GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, surface.image, surface.imageSize);
 #elif RIO_IS_DESKTOP
-    rio::Texture2DUtil::uploadTexture(
-        mpItemIDTexture->getNativeTextureHandle(),
-        mpItemIDTexture->getNativeTexture().surface.format,
-        mpItemIDTexture->getNativeTexture().surface.nativeFormat,
-        mpItemIDTexture->getNativeTexture().surface.width,
-        mpItemIDTexture->getNativeTexture().surface.height,
-        mpItemIDTexture->getNativeTexture().surface.imageSize,
-        mpItemIDClearBuffer
-    );
+    mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
+    mRenderBuffer.bind();
+
+    static const u32 cClearValue[4] = { ItemID::cInvalidItemID, 0, 0, 0 };
+    RIO_GL_CALL(glClearBufferuiv(GL_COLOR, TARGET_TYPE_ITEM_ID, cClearValue));
 #endif // RIO_IS_DESKTOP
+
+    mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+
+    rio::Window::instance()->makeContextCurrent();
+
+    u32 width = rio::Window::instance()->getWidth();
+    u32 height = rio::Window::instance()->getHeight();
+
+    rio::Graphics::setViewport(0, 0, width, height);
+    rio::Graphics::setScissor(0, 0, width, height);
 }
 
 void CourseView::setCameraCenterWorldPos(const rio::BaseVec2f& center_pos)
@@ -864,6 +849,82 @@ void CourseView::onCursorRelease_MoveItem_()
     moveItems_(true);
 }
 
+bool CourseView::readItemID_(s32 x, s32 y, s32 width, s32 height)
+{
+    if (mpItemIDTexture == nullptr || mpItemIDReadBuffer == nullptr)
+        return false;
+
+    const s32 texture_width  = mpItemIDTexture->getWidth();
+    const s32 texture_height = mpItemIDTexture->getHeight();
+
+    RIO_ASSERT(width  > 0 && x >= 0 && x + width  <= texture_width );
+    RIO_ASSERT(height > 0 && y >= 0 && y + height <= texture_height);
+
+    // Since width <= texture_width and height <= texture_height are guaranteed, the buffer is always large enough.
+
+    mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
+
+    const bool success = mRenderBuffer.read(
+        TARGET_TYPE_ITEM_ID, mpItemIDReadBuffer
+#if RIO_IS_DESKTOP
+        , width
+        , height
+        , mpItemIDTexture->getNativeTexture().surface.nativeFormat
+        , x
+        , y
+#endif // RIO_IS_DESKTOP
+    );
+
+    mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
+
+    return success;
+}
+
+bool CourseView::isItemIDValueInRange_(u32 value) const
+{
+    if (ItemID::isValid(value))
+    {
+        const u32 index = ItemID::getIndex(value);
+        const u32 type = ItemID::getType(value);
+        switch (type)
+        {
+        default:
+            break;
+        case ITEM_TYPE_BG_UNIT_OBJ:
+            {
+                const u32 layer = index >> 22;
+                const u32 obj_index = index & 0x003FFFFF;
+                return layer < CD_FILE_LAYER_MAX_NUM && obj_index < mBgUnitItem[layer].size();
+            }
+        case ITEM_TYPE_MAP_ACTOR:
+            return index < mMapActorItemPtr.size();
+        case ITEM_TYPE_NEXT_GOTO:
+            return index < mNextGotoItem.size();
+        case ITEM_TYPE_LOCATION:
+            return index < mLocationItem.size();
+        case ITEM_TYPE_AREA:
+            return index < mAreaItemPtr.size();
+        }
+    }
+    return false;
+}
+
+ItemID CourseView::getItemIDAt_(s32 x, s32 y)
+{
+    if (!readItemID_(x, y, 1, 1))
+        return ItemID::cInvalidItemID;
+
+    u32 under_mouse = static_cast<const u32*>(static_cast<const void*>(mpItemIDReadBuffer))[0];
+#if RIO_IS_CAFE
+    under_mouse = __builtin_bswap32(under_mouse);
+#endif // RIO_IS_CAFE
+
+    if (!isItemIDValueInRange_(under_mouse))
+        return ItemID::cInvalidItemID;
+
+    return ItemID(under_mouse);
+}
+
 void CourseView::onCursorRelease_SelectionBox_()
 {
     RIO_ASSERT(mSelectedItems.empty());
@@ -876,19 +937,35 @@ void CourseView::onCursorRelease_SelectionBox_()
     s32 y1 = std::clamp<s32>(std::min(mCursorP1.y, mCursorPos.y), 0, height - 1);
     s32 y2 = std::clamp<s32>(std::max(mCursorP1.y, mCursorPos.y), 0, height - 1);
 
+    const s32 box_width  = x2 - x1 + 1;
+    const s32 box_height = y2 - y1 + 1;
+
+    if (!readItemID_(x1, y1, box_width, box_height))
+        return;
+
+    const u32* const item_id = static_cast<const u32*>(static_cast<const void*>(mpItemIDReadBuffer));
+
+    // Neighbouring pixels almost always belong to the same item, so carrying the previous value collapses each run into a single set operation.
+    // Otherwise, we end up with a bunch of hash lookups.
+    u32 last_under_mouse = ItemID::cInvalidItemID;
+
     std::unordered_set<u32> selected_items;
-    for (s32 y = y1; y <= y2; y++)
+    for (s32 y = 0; y < box_height; y++)
     {
-        for (s32 x = x1; x <= x2; x++)
+        for (s32 x = 0; x < box_width; x++)
         {
-            u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
+            u32 under_mouse = item_id[y * box_width + x];
 #if RIO_IS_CAFE
             under_mouse = __builtin_bswap32(under_mouse);
 #endif // RIO_IS_CAFE
 
-            ItemID id_under_mouse = under_mouse;
-            if (id_under_mouse.isValid())
+            if (isItemIDValueInRange_(under_mouse))
             {
+                if (under_mouse == last_under_mouse)
+                    continue;
+                last_under_mouse = under_mouse;
+
+                ItemID id_under_mouse = under_mouse;
                 const auto& it = selected_items.insert(id_under_mouse);
                 if (it.second)
                     setItemSelection_(id_under_mouse, true);
@@ -908,12 +985,7 @@ void CourseView::onCursorPress_L_()
     s32 x = std::clamp<s32>(mCursorPos.x, 0, width - 1);
     s32 y = std::clamp<s32>(mCursorPos.y, 0, height - 1);
 
-    u32 under_mouse = ((u32*)mpItemIDReadBuffer)[y * width + x];
-#if RIO_IS_CAFE
-    under_mouse = __builtin_bswap32(under_mouse);
-#endif // RIO_IS_CAFE
-
-    ItemID id_under_mouse = under_mouse;
+    ItemID id_under_mouse = getItemIDAt_(x, y);
     if (id_under_mouse.isValid())
     {
         if (std::find(mSelectedItems.begin(), mSelectedItems.end(), id_under_mouse) == mSelectedItems.end())
@@ -1800,19 +1872,6 @@ void CourseView::onCursorReleasedCompletely_()
 
 void CourseView::update()
 {
-    mRenderBuffer.setRenderTargetColor(&mItemIDTarget, TARGET_TYPE_ITEM_ID);
-    {
-        mRenderBuffer.read(
-            TARGET_TYPE_ITEM_ID, mpItemIDReadBuffer
-#if RIO_IS_DESKTOP
-            , mpItemIDTexture->getNativeTexture().surface.width
-            , mpItemIDTexture->getNativeTexture().surface.height
-            , mpItemIDTexture->getNativeTexture().surface.nativeFormat
-#endif // RIO_IS_DESKTOP
-        );
-    }
-    mRenderBuffer.setRenderTargetColorNull(TARGET_TYPE_ITEM_ID);
-
     CursorReleaseFlag cursor_release_flag = mCursorForceReleaseFlag;
     mCursorForceReleaseFlag = CURSOR_RELEASE_FLAG_NONE;
 

@@ -37,16 +37,26 @@ public:
         return lhs.mValue != rhs.mValue;
     }
 
+    static u32 getType(u32 value)
+    {
+        RIO_ASSERT(isValid(value));
+        return value >> 24;
+    }
+
     ItemType getType() const
     {
-        RIO_ASSERT(isValid());
-        return ItemType(mValue >> 24);
+        return ItemType(getType(mValue));
+    }
+
+    static u32 getIndex(u32 value)
+    {
+        RIO_ASSERT(isValid(value));
+        return value & 0x00FFFFFF;
     }
 
     u32 getIndex() const
     {
-        RIO_ASSERT(isValid());
-        return mValue & 0x00FFFFFF;
+        return getIndex(mValue);
     }
 
     void set(ItemType type, u32 index)
@@ -64,9 +74,14 @@ public:
         mValue |= index;
     }
 
+    static bool isValid(u32 value)
+    {
+        return value != cInvalidItemID;
+    }
+
     bool isValid() const
     {
-        return mValue != cInvalidItemID;
+        return isValid(mValue);
     }
 
 private:

@@ -444,7 +444,12 @@ public:
 
 private:
     void createRenderBuffer_(s32 width, s32 height);
+
     void clearItemIDTexture_();
+
+    bool readItemID_(s32 x, s32 y, s32 width, s32 height);
+    ItemID getItemIDAt_(s32 x, s32 y);
+    bool isItemIDValueInRange_(u32 value) const;
 
     void onCursorPress_L_();
     void onCursorHold_L_();
@@ -541,9 +546,6 @@ private:
                                 mAreaItemPtr;
     std::vector<LocationItem>   mLocationItem;
     u8*                         mpItemIDReadBuffer;
-#if RIO_IS_DESKTOP
-    u8*                         mpItemIDClearBuffer;
-#endif // RIO_IS_DESKTOP
     rio::Texture2D             *mpColorTexture,
                                *mpItemIDTexture,
                                *mpDepthTexture;
