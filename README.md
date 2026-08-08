@@ -39,6 +39,9 @@ Settings live in `preferences.ini`, next to the executable in `bin`. The file is
 | --- | --- | --- |
 | `ContentPath` | `game/nsmbu` | Path to the game's content root (the folder containing `Common`). |
 | `StartupLevel` | `1-1.szs` | Level opened at startup, relative to `<ContentPath>/Common/course_res_pack/`. Leave empty to start with a blank course. |
+| `ActorNameLanguage` | `0` | Actor names shown in the palette and inspector: `0` English, `1` Japanese, `2` both. |
+| `ActorHideUnused` | `false` | Hide actors marked `[UNUSED]` from the actor palette. |
+| `ActorHideNSLU` | `false` | Hide New Super Luigi U actors from the actor palette. |
 
 Relative paths are resolved against `fs/content/`. For example, based on the default value of `<ContentPath>`, an example game file path would be `fs/content/game/nsmbu/Common/shader/shaderfb.szs`.
 

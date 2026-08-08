@@ -86,11 +86,27 @@ void MapActorItem::drawSelectionUI()
 {
     const MapActorData& map_actor_data = CourseView::instance()->getCourseDataFile().getMapActorData()[mItemID.getIndex()];
 
-    const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.type);
+    ActorCreateMgr* const actor_create_mgr = ActorCreateMgr::instance();
+
+    const std::string& name = actor_create_mgr->getName(map_actor_data.type);
     if (name.empty())
         ImGui::Text("Map Actor %d", map_actor_data.type);
     else
-        ImGui::Text("Map Actor %d: %s", map_actor_data.type, (char*)(name.c_str()));
+        ImGui::Text("Map Actor %d: %s", map_actor_data.type, name.c_str());
+
+    // Show both names on hover, so that the user can see the Japanese name even if the editor is set to English.
+    if (ImGui::IsItemHovered())
+    {
+        const std::string& japanese = actor_create_mgr->getNameJapanese(map_actor_data.type);
+        const std::string& english = actor_create_mgr->getNameEnglish(map_actor_data.type);
+
+        if (!japanese.empty() && !english.empty())
+            ImGui::SetTooltip("%s\n%s", english.c_str(), japanese.c_str());
+    }
+
+    if (actor_create_mgr->getNameFlags(map_actor_data.type) & ActorCreateMgr::NAME_FLAG_CRASHES)
+        ImGui::TextColored(ImVec4(0.90f, 0.55f, 0.10f, 1.00f), "This actor is known to crash the game.");
+
     ImGui::Separator();
 
     const u8 single_step = 1; //Needed for +/- buttons to appear.

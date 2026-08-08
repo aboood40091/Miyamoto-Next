@@ -1131,11 +1131,19 @@ void MainWindow::drawPaletteUI_()
 
                 const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", area_data.id, area_data.offset.x, area_data.offset.y);
 
-                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (!filter.PassFilter(str.c_str()))
+                    continue;
+
+                // Ids are user-editable and need not be unique, so the label alone is not a safe ImGui ID.
+                ImGui::PushID(i);
+
+                if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     mpCourseView->setCameraCenterWorldPos({ f32(area_data.offset.x + 8), -f32(area_data.offset.y + 8) });
                     mpCourseView->selectItem(area_item.getItemID());
                 }
+
+                ImGui::PopID();
             }
             ImGui::EndListBox();
         }
@@ -1162,11 +1170,19 @@ void MainWindow::drawPaletteUI_()
 
                 const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", location_data.id, location_data.offset.x, location_data.offset.y);
 
-                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (!filter.PassFilter(str.c_str()))
+                    continue;
+
+                // Ids are user-editable and need not be unique, so the label alone is not a safe ImGui ID.
+                ImGui::PushID(i);
+
+                if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     mpCourseView->setCameraCenterWorldPos({ f32(location_data.offset.x + 8), -f32(location_data.offset.y + 8) });
                     mpCourseView->selectItem(location_item.getItemID());
                 }
+
+                ImGui::PopID();
             }
             ImGui::EndListBox();
         }
@@ -1193,11 +1209,19 @@ void MainWindow::drawPaletteUI_()
 
                 const std::string& str = std::format("{0:d}: ({1:d}, {2:d})", next_goto.id, next_goto.offset.x, next_goto.offset.y);
 
-                if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (!filter.PassFilter(str.c_str()))
+                    continue;
+
+                // Ids are user-editable and need not be unique, so the label alone is not a safe ImGui ID.
+                ImGui::PushID(i);
+
+                if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     mpCourseView->setCameraCenterWorldPos({ f32(next_goto.offset.x + 8), -f32(next_goto.offset.y + 8) });
                     mpCourseView->selectItem(next_goto_item.getItemID());
                 }
+
+                ImGui::PopID();
             }
             ImGui::EndListBox();
         }
@@ -1215,24 +1239,67 @@ void MainWindow::drawPaletteUI_()
                 if (focused)
                     mPaintType = ITEM_TYPE_MAP_ACTOR;
 
+                ActorCreateMgr* const actor_create_mgr = ActorCreateMgr::instance();
+
                 static ImGuiTextFilter filter;
                 filter.Draw("##ActorAddSearch", -1);
 
-                if (ImGui::BeginListBox("##ActorAddList", ImVec2(-1, -1)))
-                {
-                    for (int n = 0; n < ActorCreateMgr::instance()->getTypeMaxNum(); n++)
-                    {
-                        const std::u8string& name = ActorCreateMgr::instance()->getName(n);
-                        const std::string& str =
-                            name.empty()
-                                ? std::to_string(n)
-                                : std::format("{0:d}: {1:s}", n, (const char*)name.c_str());
+                bool hide_unused = Preferences::instance()->getActorHideUnused();
+                if (ImGui::Checkbox("Hide unused", &hide_unused))
+                    Preferences::instance()->setActorHideUnused(hide_unused);
 
-                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), mMapActorSelectedType == n))
+                ImGui::SameLine();
+
+                bool hide_nslu = Preferences::instance()->getActorHideNSLU();
+                if (ImGui::Checkbox("Hide NSLU", &hide_nslu))
+                    Preferences::instance()->setActorHideNSLU(hide_nslu);
+
+                u32 hidden_flags = ActorCreateMgr::NAME_FLAG_NONE;
+                if (hide_unused)
+                    hidden_flags |= ActorCreateMgr::NAME_FLAG_UNUSED;
+                if (hide_nslu)
+                    hidden_flags |= ActorCreateMgr::NAME_FLAG_NSLU;
+
+                const u32 type_max_num = actor_create_mgr->getTypeMaxNum();
+                u32 shown_num = 0;
+
+                // Reserve one line under the list for the count.
+                if (ImGui::BeginListBox("##ActorAddList", ImVec2(-1, -ImGui::GetFrameHeightWithSpacing())))
+                {
+                    const ImVec4 dimmed_color = ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled);
+
+                    for (u32 n = 0; n < type_max_num; n++)
+                    {
+                        const u32 flags = actor_create_mgr->getNameFlags(n);
+
+                        // Selected type shall stay listed even when the flag filters would hide it, so the paint tool is never pointing at something the palette gives no sign of.
+                        const bool is_selected = mMapActorSelectedType == n;
+                        if ((flags & hidden_flags) != 0 && !is_selected)
+                            continue;
+
+                        if (!filter.PassFilter(actor_create_mgr->getSearchKey(n).c_str()))
+                            continue;
+
+                        shown_num++;
+
+                        const bool dim = (flags & (ActorCreateMgr::NAME_FLAG_UNUSED | ActorCreateMgr::NAME_FLAG_CRASHES)) != 0;
+                        if (dim)
+                            ImGui::PushStyleColor(ImGuiCol_Text, dimmed_color);
+
+                        if (ImGui::Selectable(actor_create_mgr->getLabel(n).c_str(), is_selected))
                             mMapActorSelectedType = n;
+
+                        if (dim)
+                            ImGui::PopStyleColor();
                     }
                     ImGui::EndListBox();
                 }
+
+                if (shown_num == type_max_num)
+                    ImGui::TextDisabled("%u actors", type_max_num);
+                else
+                    ImGui::TextDisabled("%u of %u actors", shown_num, type_max_num);
+
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Current"))
@@ -1245,23 +1312,34 @@ void MainWindow::drawPaletteUI_()
 
                 if (ImGui::BeginListBox("##ActorCurrentList", ImVec2(-1, -1)))
                 {
+                    ActorCreateMgr* const actor_create_mgr = ActorCreateMgr::instance();
+
                     const std::vector< std::unique_ptr<MapActorItem> >& item_vec = mpCourseView->getMapActorItem();
                     const std::vector<MapActorData>& data_vec = mpCourseView->getCourseDataFile().getMapActorData();
                     for (u32 i = 0; i < item_vec.size(); i++)
                     {
                         const MapActorItem& map_actor_item = *(item_vec[i]);
                         const MapActorData& map_actor_data = data_vec[i];
-                        const std::u8string& name = ActorCreateMgr::instance()->getName(map_actor_data.type);
-                        const std::string& str =
-                            name.empty()
-                                ? std::format("{0:d}: ({1:d}, {2:d})", map_actor_data.type, map_actor_data.offset.x, map_actor_data.offset.y)
-                                : std::format("{0:d}: {1:s} ({2:d}, {3:d})", map_actor_data.type, (const char*)name.c_str(), map_actor_data.offset.x, map_actor_data.offset.y);
 
-                        if (filter.PassFilter(str.c_str()) && ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        const std::string& position = std::format(" ({0:d}, {1:d})", map_actor_data.offset.x, map_actor_data.offset.y);
+
+                        // Filter on both names; show only the selected one.
+                        const std::string& key = actor_create_mgr->getSearchKey(map_actor_data.type) + position;
+                        const std::string& str = actor_create_mgr->getLabel(map_actor_data.type) + position;
+
+                        if (!filter.PassFilter(key.c_str()))
+                            continue;
+
+                        // Two actors of the same type may sit at the same offset, which would otherwise give them the same ImGui ID.
+                        ImGui::PushID(i);
+
+                        if (ImGui::Selectable(str.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         {
                             mpCourseView->setCameraCenterWorldPos({ f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8) });
                             mpCourseView->selectItem(map_actor_item.getItemID());
                         }
+
+                        ImGui::PopID();
                     }
                     ImGui::EndListBox();
                 }
@@ -1532,6 +1610,7 @@ void MainWindow::drawMainMenuBarUI_()
         static float fastArrowMovementSpeed;
         static bool smoothZoom;
         static bool unlockedFPS;
+        static ActorNameLanguage actorNameLanguage;
 
         if (mPopupOpen)
         {
@@ -1545,6 +1624,7 @@ void MainWindow::drawMainMenuBarUI_()
             fastArrowMovementSpeed = Preferences::instance()->getFastArrowMovementSpeed();
             smoothZoom = Preferences::instance()->getSmoothZoom();
             unlockedFPS = Preferences::instance()->getUnlockedFPS();
+            actorNameLanguage = Preferences::instance()->getActorNameLanguage();
             mPopupOpen = false;
         }
 
@@ -1566,6 +1646,27 @@ void MainWindow::drawMainMenuBarUI_()
                     {
                         ThemeMgr::instance()->applyTheme(theme_name);
                     }
+
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            static const char* const cActorNameLanguageNames[ACTOR_NAME_LANGUAGE_MAX_NUM] = {
+                "English",
+                "Japanese",
+                "English (Japanese)"
+            };
+
+            if (ImGui::BeginCombo("Actor Names", cActorNameLanguageNames[actorNameLanguage]))
+            {
+                for (s32 i = 0; i < ACTOR_NAME_LANGUAGE_MAX_NUM; i++)
+                {
+                    const bool selected = i == actorNameLanguage;
+
+                    if (ImGui::Selectable(cActorNameLanguageNames[i], selected))
+                        actorNameLanguage = ActorNameLanguage(i);
 
                     if (selected)
                         ImGui::SetItemDefaultFocus();
@@ -1599,7 +1700,10 @@ void MainWindow::drawMainMenuBarUI_()
                 Preferences::instance()->setFastArrowMovementSpeed(fastArrowMovementSpeed);
                 Preferences::instance()->setSmoothZoom(smoothZoom);
                 Preferences::instance()->setUnlockedFPS(unlockedFPS);
-                
+                Preferences::instance()->setActorNameLanguage(actorNameLanguage);
+
+                ActorCreateMgr::instance()->setNameLanguage(actorNameLanguage);
+
                 mpCourseView->onApplyDistantViewScissorChange();
                 rio::Window::instance()->setSwapInterval(!unlockedFPS);
             }

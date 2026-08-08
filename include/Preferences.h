@@ -4,6 +4,8 @@
 
 #include <string>
 
+enum ActorNameLanguage : s32;
+
 class Preferences
 {
 public:
@@ -71,6 +73,18 @@ public:
     [[nodiscard]]
     bool getUnlockedFPS();
     void setUnlockedFPS(bool value);
+
+    [[nodiscard]]
+    ActorNameLanguage getActorNameLanguage();
+    void setActorNameLanguage(ActorNameLanguage value);
+
+    [[nodiscard]]
+    bool getActorHideUnused();
+    void setActorHideUnused(bool value);
+
+    [[nodiscard]]
+    bool getActorHideNSLU();
+    void setActorHideNSLU(bool value);
 
 private:
     ConfigMgr mConfig;

@@ -1,4 +1,5 @@
 #include <Preferences.h>
+#include <actor/ActorCreateMgr.h>
 #include <ui/ThemeMgr.h>
 
 #include <filedevice/rio_Path.h>
@@ -179,4 +180,39 @@ bool Preferences::getUnlockedFPS()
 void Preferences::setUnlockedFPS(bool value)
 {
     mConfig.setBool(cSection, "UnlockedFPS", value);
+}
+
+ActorNameLanguage Preferences::getActorNameLanguage()
+{
+    const s32 value = mConfig.getInt(cSection, "ActorNameLanguage", ACTOR_NAME_LANGUAGE_BOTH);
+
+    if (value < 0 || value >= ACTOR_NAME_LANGUAGE_MAX_NUM)
+        return ACTOR_NAME_LANGUAGE_ENGLISH;
+
+    return ActorNameLanguage(value);
+}
+
+void Preferences::setActorNameLanguage(ActorNameLanguage value)
+{
+    mConfig.setInt(cSection, "ActorNameLanguage", value);
+}
+
+bool Preferences::getActorHideUnused()
+{
+    return mConfig.getBool(cSection, "ActorHideUnused", false);
+}
+
+void Preferences::setActorHideUnused(bool value)
+{
+    mConfig.setBool(cSection, "ActorHideUnused", value);
+}
+
+bool Preferences::getActorHideNSLU()
+{
+    return mConfig.getBool(cSection, "ActorHideNSLU", false);
+}
+
+void Preferences::setActorHideNSLU(bool value)
+{
+    mConfig.setBool(cSection, "ActorHideNSLU", value);
 }
