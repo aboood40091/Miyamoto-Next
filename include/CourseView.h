@@ -1,5 +1,6 @@
 #pragma once
 
+#include <action/ActionItemPushBack.h>
 #include <course/CourseDataFile.h>
 #include <graphics/CullViewFrustum.h>
 #include <graphics/OrthoCamera.h>
@@ -435,8 +436,12 @@ public:
     void deleteSelection();
     void copySelection();
     void pasteClipboard();
+    void duplicateSelection();
 
-    void selectItem(const ItemID& item_id);
+    bool canSetSelectionToLayer(u8 layer) const;
+    void setSelectionToLayer(u8 layer);
+
+    void selectItem(const ItemID& item_id, bool exclusive = true);
     void selectItems(u32 flag);
 
     void onApplyDistantViewScissorChange();
@@ -508,6 +513,11 @@ private:
     void clearSelection_();
     void onSelectionChange_();
     void drawSelectionBox_();
+
+    rio::BaseVec2f getLastCursorWorldPos_() const
+    {
+        return viewToWorldPos(mCursorP1);
+    }
 
     s32 findNearestArea_(s32 x, s32 y);
 

@@ -18,7 +18,7 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
     dx /= 16;
     dy /= 16;
 
-    BgCourseData& data = CourseView::instance()->getCourseDataFile().getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+    BgCourseData& data = CourseView::instance()->getCourseDataFile().getBgData(BgUnitItem::getLayer(mItemID))[BgUnitItem::getIndex(mItemID)];
 
     if (dx == 0 && dy == 0)
     {
@@ -43,16 +43,16 @@ void BgUnitItem::move(s16 dx, s16 dy, bool commit)
 void BgUnitItem::onSelectionChange_()
 {
     if (mIsSelected)
-        mSelectionData = CourseView::instance()->getCourseDataFile().getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+        mSelectionData = CourseView::instance()->getCourseDataFile().getBgData(BgUnitItem::getLayer(mItemID))[BgUnitItem::getIndex(mItemID)];
 }
 
 void BgUnitItem::drawSelectionUI()
 {
     const CourseDataFile& cd_file = CourseView::instance()->getCourseDataFile();
 
-    const BgCourseData& data = cd_file.getBgData(mItemID.getIndex() >> 22)[mItemID.getIndex() & 0x003FFFFF];
+    const BgCourseData& data = cd_file.getBgData(BgUnitItem::getLayer(mItemID))[BgUnitItem::getIndex(mItemID)];
 
-    u8 layer = mItemID.getIndex() >> 22;
+    u8 layer = BgUnitItem::getLayer(mItemID);
     ImGui::Text(ITEM_NAME_BG_UNIT_OBJ " (Layer %d)", layer == LAYER_0 ? 0 : (layer == LAYER_2 ? 2 : 1));
     ImGui::Separator();
 

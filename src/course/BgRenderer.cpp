@@ -3,6 +3,7 @@
 #include <course/BgUnitFile.h>
 #include <course/BgRenderer.h>
 #include <course/CourseDataFile.h>
+#include <item/BgUnitItem.h>
 
 #include <gpu/rio_Drawer.h>
 #include <math/rio_Matrix.h>
@@ -223,7 +224,7 @@ void BgRenderer::createVertexBuffer(u8 layer)
                     base_vtx_data + cVtxPerBlock * block_count,
                     rio::BaseVec3f { f32(x * 16), f32(-y * 16), z },
                     unit_idx,
-                    ItemID(ITEM_TYPE_BG_UNIT_OBJ, u32(layer) << 22 | unit.obj_index)
+                    BgUnitItem::makeItemID(layer, unit.obj_index)
                 );
 
                 block_count++;

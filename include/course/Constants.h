@@ -53,6 +53,36 @@ enum
 };
 static_assert(s32(LAYER_0_ACTOR) == s32(CD_FILE_LAYER_MAX_NUM));
 
+inline s8 GetLayerIndex(u8 layer)
+{
+    switch (layer)
+    {
+    default:
+        return -1;
+    case LAYER_0:
+        return 0;
+    case LAYER_1:
+        return 1;
+    case LAYER_2:
+        return 2;
+    }
+}
+
+inline u8 GetLayerFromIndex(u8 layer_index)
+{
+    switch (layer_index)
+    {
+    default:
+        return CD_FILE_LAYER_MAX_NUM;
+    case 0:
+        return LAYER_0;
+    case 1:
+        return LAYER_1;
+    case 2:
+        return LAYER_2;
+    }
+}
+
 enum AnimeType
 {
     ANIME_TYPE_HATENA = 0,

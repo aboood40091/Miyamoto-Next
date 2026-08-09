@@ -9,6 +9,8 @@ ActionItemPushBack::ActionItemPushBack(const void* context)
     , mTransform(static_cast<const Context*>(context)->transform)
     , mCenterUnitX(static_cast<const Context*>(context)->center_unit_x)
     , mCenterUnitY(static_cast<const Context*>(context)->center_unit_y)
+    , mDestUnitX(static_cast<const Context*>(context)->dest_unit_x)
+    , mDestUnitY(static_cast<const Context*>(context)->dest_unit_y)
 {
     // mTransform is set only when the items came from the clipboard,
     // so it's what distinguishes a paste from a freshly painted item
@@ -44,12 +46,8 @@ bool ActionItemPushBack::apply() const
 
     if (mTransform)
     {
-        const rio::BaseVec2f& center_pos = CourseView::instance()->getCenterWorldPos();
-        s32 center_unit_x =  center_pos.x / 16;
-        s32 center_unit_y = -center_pos.y / 16;
-
-        s32 dx = center_unit_x - mCenterUnitX;
-        s32 dy = center_unit_y - mCenterUnitY;
+        const s32 dx = mDestUnitX - mCenterUnitX;
+        const s32 dy = mDestUnitY - mCenterUnitY;
 
         for (const Item& item : mItems)
         {

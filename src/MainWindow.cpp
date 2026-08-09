@@ -774,13 +774,6 @@ void MainWindow::processKeyboardInput_()
         return;
 #endif // RIO_IS_DESKTOP
 
-    // Checking this is kinda useless
-    /*
-    ImGuiIO& io = ImGui::GetIO();
-    if (!io.WantCaptureKeyboard)
-        return;
-    */
-
     if (!mCourseViewFocused || mCourseViewCameraMoved)
         return;
 
@@ -1532,6 +1525,9 @@ void MainWindow::drawMainMenuBarUI_()
             if (ImGui::MenuItem("Select All...", "Ctrl+A"))
                 courseItemSelect();
 
+            if (ImGui::MenuItem("Deselect", "Esc", false, mpCourseView->hasSelection()))
+                mpCourseView->clearSelection();
+
             if (ImGui::MenuItem("Delete", "Delete / Backspace", false, mpCourseView->hasSelection()))
                 mpCourseView->deleteSelection();
 
@@ -1543,6 +1539,27 @@ void MainWindow::drawMainMenuBarUI_()
 
             if (ImGui::MenuItem("Paste", "Ctrl+V", false, mpCourseView->hasClipboard()))
                 mpCourseView->pasteClipboard();
+
+            if (ImGui::MenuItem("Duplicate", "Ctrl+D", false, mpCourseView->hasSelection()))
+                mpCourseView->duplicateSelection();
+
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Set to Layer"))
+            {
+                for (u8 layer_index = 0; layer_index < CD_FILE_LAYER_MAX_NUM; layer_index++)
+                {
+                    const std::string& label = std::format("Layer {0:d}", layer_index);
+
+                    u8 layer = GetLayerFromIndex(layer_index);
+                    RIO_ASSERT(layer < CD_FILE_LAYER_MAX_NUM);
+
+                    if (ImGui::MenuItem(label.c_str(), nullptr, false, mpCourseView->canSetSelectionToLayer(layer)))
+                        mpCourseView->setSelectionToLayer(layer);
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }

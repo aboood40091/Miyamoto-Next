@@ -30,6 +30,8 @@ public:
         bool                transform = false;
         u16                 center_unit_x,
                             center_unit_y;
+        s32                 dest_unit_x = 0,
+                            dest_unit_y = 0;
 
         ~Context();
     };
@@ -45,4 +47,6 @@ private:
     bool                mTransform;
     u16                 mCenterUnitX,
                         mCenterUnitY;
+    s32                 mDestUnitX,
+                        mDestUnitY;
 };
