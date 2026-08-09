@@ -32,6 +32,7 @@
 #include <imgui.h>
 #include <rio.h>
 
+#include <format>
 #include <unordered_set>
 
 CourseView* CourseView::sInstance = nullptr;
@@ -2664,4 +2665,159 @@ void CourseView::drawFileOptionsMenuItemUI()
         mOptionsOpen = true;
         mOptions = getCourseDataFile().getOptions();
     }
+}
+
+void CourseView::drawItemLabels(const rio::BaseVec2f& screen_pos) const
+{
+    static const f32 cFontSizePerTile = 24.0f / 60.0f;
+    static const f32 cMinFontSize = 6.0f;
+
+    if (!isInitialized())
+        return;
+
+    const f32 px_per_world = mSize.x / getScreenWorldWidth();
+    const f32 tile_px = 16.0f * px_per_world;
+    const f32 font_size = tile_px * cFontSizePerTile;
+
+    if (font_size < cMinFontSize)
+        return;
+
+    const CourseDataFile& cd_file = *mpCourseDataFile;
+
+    ImDrawList* const draw_list = ImGui::GetWindowDrawList();
+    ImFont* const font = ImGui::GetFont();
+
+    draw_list->PushClipRect(
+        { screen_pos.x, screen_pos.y },
+        { screen_pos.x + mSize.x, screen_pos.y + mSize.y },
+        true
+    );
+
+    const auto drawLabel = [&](
+        const rio::BaseVec2f& world_pos,
+        const ImVec2& anchor,
+        const ImVec2& pixel_offset,
+        std::string_view text_str,
+        ImU32 color
+    )
+    {
+        const char* const text = text_str.data();
+        const size_t length = text_str.size();
+
+        const rio::BaseVec2f& view_pos = worldToViewPos(world_pos);
+        const ImVec2& text_size = font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, text, text + length);
+
+        const ImVec2 pos {
+            screen_pos.x + view_pos.x - text_size.x * anchor.x + pixel_offset.x,
+            screen_pos.y + view_pos.y - text_size.y * anchor.y + pixel_offset.y
+        };
+
+        if (pos.x + text_size.x < screen_pos.x || pos.x > screen_pos.x + mSize.x ||
+            pos.y + text_size.y < screen_pos.y || pos.y > screen_pos.y + mSize.y)
+        {
+            return;
+        }
+
+        draw_list->AddText(font, font_size, pos, color, text, text + length);
+    };
+
+    static const ImVec2 cCentered { 0.5f, 0.5f };
+    static const ImVec2 cTopLeft  { 0.0f, 0.0f };
+    static const ImVec2 cNoOffset { 0.0f, 0.0f };
+
+    // Map actors
+    {
+        const std::vector<MapActorData>& data_vec = cd_file.getMapActorData();
+        if (mMapActorItemPtr.size() == data_vec.size())
+        {
+            for (u32 i = 0; i < mMapActorItemPtr.size(); i++)
+            {
+                const MapActorItem& item = *mMapActorItemPtr[i];
+                if (!item.drawBox())
+                    continue;
+
+                const MapActorData& map_actor_data = data_vec[i];
+
+                const std::string& text_str = std::format("{}", map_actor_data.type);
+
+                drawLabel(
+                    { f32(map_actor_data.offset.x + 8), -f32(map_actor_data.offset.y + 8) },
+                    cCentered, cNoOffset, text_str,
+                    item.isSelected() ? IM_COL32(255, 255, 255, 255)
+                                      : IM_COL32(  0,   0,   0, 255)
+                );
+            }
+        }
+    }
+
+    // Next gotos
+    {
+        static const f32 cNextGotoLabelPos = 16.0f * 18.0f / 60.0f;
+
+        const std::vector<NextGoto>& data_vec = cd_file.getNextGoto();
+        if (mNextGotoItem.size() == data_vec.size())
+        {
+            for (u32 i = 0; i < mNextGotoItem.size(); i++)
+            {
+                const NextGoto& next_goto = data_vec[i];
+
+                const std::string& text_str = std::format("{}", next_goto.id);
+
+                drawLabel(
+                    {  f32(next_goto.offset.x) + cNextGotoLabelPos,
+                      -f32(next_goto.offset.y) - cNextGotoLabelPos },
+                    cCentered, cNoOffset, text_str,
+                    mNextGotoItem[i].isSelected() ? IM_COL32(255, 255, 255, 255)
+                                                   : IM_COL32(  0,   0,   0, 255)
+                );
+            }
+        }
+    }
+
+    // Locations
+    {
+        static const f32 cLocationLabelPos = 16.0f * 15.0f / 60.0f;
+
+        const std::vector<Location>& data_vec = cd_file.getLocation();
+
+        for (u32 i = 0; i < data_vec.size(); i++)
+        {
+            const Location& location = data_vec[i];
+
+            const std::string& text_str = std::format("{}", location.id);
+
+            drawLabel(
+                {  f32(location.offset.x) + cLocationLabelPos,
+                  -f32(location.offset.y) - cLocationLabelPos },
+                cCentered, cNoOffset, text_str,
+                IM_COL32(255, 255, 255, 255)
+            );
+        }
+    }
+
+    // Areas
+    {
+        static const f32 cAreaLabelPos = 16.0f * 10.0f / 60.0f;
+
+        const f32 descent = -font->Descent * (font_size / font->FontSize);
+        const ImVec2 area_offset { 0.0f, descent };
+
+        const std::vector<AreaData>& data_vec = cd_file.getAreaData();
+
+        for (u32 i = 0; i < data_vec.size(); i++)
+        {
+            const AreaData& area_data = data_vec[i];
+
+            const std::string& text_str = std::format(ITEM_NAME_AREA " {}", area_data.id);
+
+            drawLabel(
+                {  f32(area_data.offset.x) + cAreaLabelPos,
+                  -f32(area_data.offset.y) - cAreaLabelPos },
+                cTopLeft, area_offset, text_str,
+                IM_COL32(44, 64, 84, 255)
+            );
+        }
+    }
+
+    draw_list->PopClipRect();
 }

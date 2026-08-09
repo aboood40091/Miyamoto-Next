@@ -262,6 +262,8 @@ public:
     rio::BaseVec2f viewToWorldPos(const rio::BaseVec2f& pos) const;
     rio::BaseVec2f worldToViewPos(const rio::BaseVec2f& pos) const;
 
+    void drawItemLabels(const rio::BaseVec2f& screen_pos) const;
+
     void initialize(CourseDataFile& cd_file, bool real_zoom);
     void uninitialize();
 

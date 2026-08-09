@@ -954,6 +954,8 @@ void MainWindow::drawCourseViewUI_()
 
         ImGui::Image(texture_id, size);
 
+        mpCourseView->drawItemLabels(rio::BaseVec2f{ pos.x, pos.y });
+
         bool moved = false;
         if (mCourseViewPos.x != pos.x || mCourseViewPos.y != pos.y)
         {

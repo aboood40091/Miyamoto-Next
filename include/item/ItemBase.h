@@ -35,6 +35,11 @@ public:
         onSelectionChange_();
     }
 
+    bool isSelected() const
+    {
+        return mIsSelected;
+    }
+
     virtual void move(s16 dx, s16 dy, bool commit) = 0;
     virtual void drawSelectionUI() = 0;
 
