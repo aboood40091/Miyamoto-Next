@@ -12,9 +12,14 @@ ActionItemPushBack::ActionItemPushBack(const void* context)
     , mDestUnitX(static_cast<const Context*>(context)->dest_unit_x)
     , mDestUnitY(static_cast<const Context*>(context)->dest_unit_y)
 {
-    // mTransform is set only when the items came from the clipboard,
-    // so it's what distinguishes a paste from a freshly painted item
-    const char* const verb = mTransform ? "Paste " : "Add ";
+    const char* verb;
+    switch (static_cast<const Context*>(context)->action_name)
+    {
+    default:
+    case cActionName_Add:       verb = "Add ";          break;
+    case cActionName_Paste:     verb = "Paste ";        break;
+    case cActionName_Duplicate: verb = "Duplicate ";    break;
+    };
 
     RIO_ASSERT(!mItems.empty());
 

@@ -2271,22 +2271,8 @@ void CourseView::deleteSelection()
     ActionMgr::instance()->pushAction<ActionItemDelete>(&context);
 }
 
-void CourseView::copySelection()
+void CourseView::buildPushBackContext_(ActionItemPushBack::Context& context) const
 {
-    clearClipboard();
-
-    if (mSelectedItems.empty())
-        return;
-
-    const rio::BaseVec2f& center_pos = getCenterWorldPos();
-    s32 center_unit_x =  center_pos.x / 16;
-    s32 center_unit_y = -center_pos.y / 16;
-
-    std::shared_ptr<ActionItemPushBack::Context> context = std::make_shared<ActionItemPushBack::Context>();
-    context->transform = true;
-    context->center_unit_x = center_unit_x;
-    context->center_unit_y = center_unit_y;
-
     for (const ItemID& item_id : mSelectedItems)
     {
         switch (item_id.getType())
@@ -2294,7 +2280,7 @@ void CourseView::copySelection()
         default:
             break;
         case ITEM_TYPE_BG_UNIT_OBJ:
-            context->items.emplace_back(ITEM_TYPE_BG_UNIT_OBJ, std::static_pointer_cast<const void>(
+            context.items.emplace_back(ITEM_TYPE_BG_UNIT_OBJ, std::static_pointer_cast<const void>(
                 std::make_shared<BgCourseData>(
                     getCourseDataFile().getBgData(BgUnitItem::getLayer(item_id))[BgUnitItem::getIndex(item_id)]
                 )
@@ -2303,28 +2289,28 @@ void CourseView::copySelection()
             ));
             break;
         case ITEM_TYPE_MAP_ACTOR:
-            context->items.emplace_back(ITEM_TYPE_MAP_ACTOR, std::static_pointer_cast<const void>(
+            context.items.emplace_back(ITEM_TYPE_MAP_ACTOR, std::static_pointer_cast<const void>(
                 std::make_shared<MapActorData>(
                     getCourseDataFile().getMapActorData()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_NEXT_GOTO:
-            context->items.emplace_back(ITEM_TYPE_NEXT_GOTO, std::static_pointer_cast<const void>(
+            context.items.emplace_back(ITEM_TYPE_NEXT_GOTO, std::static_pointer_cast<const void>(
                 std::make_shared<NextGoto>(
                     getCourseDataFile().getNextGoto()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_LOCATION:
-            context->items.emplace_back(ITEM_TYPE_LOCATION, std::static_pointer_cast<const void>(
+            context.items.emplace_back(ITEM_TYPE_LOCATION, std::static_pointer_cast<const void>(
                 std::make_shared<Location>(
                     getCourseDataFile().getLocation()[item_id.getIndex()]
                 )
             ));
             break;
         case ITEM_TYPE_AREA:
-            context->items.emplace_back(ITEM_TYPE_AREA, std::static_pointer_cast<const void>(
+            context.items.emplace_back(ITEM_TYPE_AREA, std::static_pointer_cast<const void>(
                 std::make_shared<AreaData>(
                     getCourseDataFile().getAreaData()[item_id.getIndex()]
                 )
@@ -2332,6 +2318,24 @@ void CourseView::copySelection()
             break;
         }
     }
+}
+
+void CourseView::copySelection()
+{
+    if (mSelectedItems.empty())
+        return;
+
+    clearClipboard();
+
+    std::shared_ptr<ActionItemPushBack::Context> context = std::make_shared<ActionItemPushBack::Context>();
+    buildPushBackContext_(*context);
+    if (context->items.empty())
+        return;
+
+    // TODO: Perhaps change this to center of all selected items?
+    const rio::BaseVec2f& center_pos = getCenterWorldPos();
+    context->center_unit_x =  center_pos.x / 16;
+    context->center_unit_y = -center_pos.y / 16;
 
     mClipboard.type = CLIPBOARD_TYPE_ITEMS;
     mClipboard.data = std::static_pointer_cast<const void>(context);
@@ -2347,6 +2351,9 @@ void CourseView::pasteClipboard()
         {
             // Create non-shared copy so that we can mutate it
             ActionItemPushBack::Context context = *static_cast<const ActionItemPushBack::Context*>(mClipboard.data.get());
+
+            context.action_name = ActionItemPushBack::cActionName_Paste;
+            context.transform = true;
 
             const rio::BaseVec2f& world_pos =
                 mIsHovered
@@ -2368,95 +2375,12 @@ void CourseView::duplicateSelection()
     if (mSelectedItems.empty())
         return;
 
-    s32 min_unit_x = rio::Mathi::max(), max_unit_x = rio::Mathi::min();
-    s32 min_unit_y = rio::Mathi::max(), max_unit_y = rio::Mathi::min();
-
     ActionItemPushBack::Context context;
-
-    for (const ItemID& item_id : mSelectedItems)
-    {
-        s32 unit_x, unit_y;
-
-        switch (item_id.getType())
-        {
-        default:
-            continue;
-        case ITEM_TYPE_BG_UNIT_OBJ:
-            {
-                const u8 layer = BgUnitItem::getLayer(item_id);
-                const BgCourseData& data = mpCourseDataFile->getBgData(layer)[BgUnitItem::getIndex(item_id)];
-
-                context.items.emplace_back(
-                    ITEM_TYPE_BG_UNIT_OBJ,
-                    std::static_pointer_cast<const void>(std::make_shared<BgCourseData>(data)),
-                    std::static_pointer_cast<const void>(std::make_shared<u8>(layer))
-                );
-
-                unit_x = data.offset.x;
-                unit_y = data.offset.y;
-            }
-            break;
-        case ITEM_TYPE_MAP_ACTOR:
-            {
-                const MapActorData& data = mpCourseDataFile->getMapActorData()[item_id.getIndex()];
-                context.items.emplace_back(
-                    ITEM_TYPE_MAP_ACTOR,
-                    std::static_pointer_cast<const void>(std::make_shared<MapActorData>(data))
-                );
-                unit_x = data.offset.x / 16;
-                unit_y = data.offset.y / 16;
-            }
-            break;
-        case ITEM_TYPE_NEXT_GOTO:
-            {
-                const NextGoto& data = mpCourseDataFile->getNextGoto()[item_id.getIndex()];
-                context.items.emplace_back(
-                    ITEM_TYPE_NEXT_GOTO,
-                    std::static_pointer_cast<const void>(std::make_shared<NextGoto>(data))
-                );
-                unit_x = data.offset.x / 16;
-                unit_y = data.offset.y / 16;
-            }
-            break;
-        case ITEM_TYPE_LOCATION:
-            {
-                const Location& data = mpCourseDataFile->getLocation()[item_id.getIndex()];
-                context.items.emplace_back(
-                    ITEM_TYPE_LOCATION,
-                    std::static_pointer_cast<const void>(std::make_shared<Location>(data))
-                );
-                unit_x = data.offset.x / 16;
-                unit_y = data.offset.y / 16;
-            }
-            break;
-        case ITEM_TYPE_AREA:
-            {
-                const AreaData& data = mpCourseDataFile->getAreaData()[item_id.getIndex()];
-                context.items.emplace_back(
-                    ITEM_TYPE_AREA,
-                    std::static_pointer_cast<const void>(std::make_shared<AreaData>(data))
-                );
-                unit_x = data.offset.x / 16;
-                unit_y = data.offset.y / 16;
-            }
-            break;
-        }
-
-        if (unit_x < min_unit_x) min_unit_x = unit_x;
-        if (unit_x > max_unit_x) max_unit_x = unit_x;
-        if (unit_y < min_unit_y) min_unit_y = unit_y;
-        if (unit_y > max_unit_y) max_unit_y = unit_y;
-    }
-
+    buildPushBackContext_(context);
     if (context.items.empty())
         return;
 
-    context.transform = true;
-    context.center_unit_x = u16((min_unit_x + max_unit_x) / 2);
-    context.center_unit_y = u16((min_unit_y + max_unit_y) / 2);
-
-    context.dest_unit_x = context.center_unit_x;
-    context.dest_unit_y = context.center_unit_y;
+    context.action_name = ActionItemPushBack::cActionName_Duplicate;
 
     clearSelection();
     ActionMgr::instance()->pushAction<ActionItemPushBack>(&context);

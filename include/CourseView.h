@@ -514,6 +514,8 @@ private:
     void onSelectionChange_();
     void drawSelectionBox_();
 
+    void buildPushBackContext_(ActionItemPushBack::Context& context) const;
+
     rio::BaseVec2f getLastCursorWorldPos_() const
     {
         return viewToWorldPos(mCursorP1);

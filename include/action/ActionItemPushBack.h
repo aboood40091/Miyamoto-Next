@@ -24,10 +24,18 @@ public:
         }
     };
 
+    enum ActionName
+    {
+        cActionName_Add = 0,
+        cActionName_Paste,
+        cActionName_Duplicate
+    };
+
     struct Context
     {
         std::vector<Item>   items;
         bool                transform = false;
+        u8                  action_name = cActionName_Add;
         u16                 center_unit_x,
                             center_unit_y;
         s32                 dest_unit_x = 0,
