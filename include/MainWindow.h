@@ -1,5 +1,6 @@
 #pragma once
 
+#include <graphics/GridType.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <item/ItemType.h>
@@ -33,6 +34,9 @@ public:
 
     void applyZoomUnitSize(f32 zoom_unit_size, bool bypass_limits = false);
     void applyZoomStep(bool zoom_in);
+
+    void setGridType(GridType type);
+    void cycleGridType();
 
 private:
     void prepare_() override;

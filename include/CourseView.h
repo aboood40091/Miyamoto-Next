@@ -3,6 +3,7 @@
 #include <action/ActionItemPushBack.h>
 #include <course/CourseDataFile.h>
 #include <graphics/CullViewFrustum.h>
+#include <graphics/GridType.h>
 #include <graphics/OrthoCamera.h>
 #include <graphics/RenderMgr.h>
 #include <graphics/RenderObjLayer.h>
@@ -394,6 +395,16 @@ public:
         return &mLocationShown;
     }
 
+    GridType getGridType() const
+    {
+        return mGridType;
+    }
+
+    void setGridType(GridType type)
+    {
+        mGridType = type;
+    }
+
     void setCursorForceReleaseOnNextUpdate(CursorReleaseFlag flag)
     {
         mCursorForceReleaseFlag |= flag;
@@ -516,6 +527,8 @@ private:
 
     void buildPushBackContext_(ActionItemPushBack::Context& context) const;
 
+    void drawGrid_();
+
     rio::BaseVec2f getLastCursorWorldPos_() const
     {
         return viewToWorldPos(mCursorP1);
@@ -539,6 +552,7 @@ private:
     f32                         mBgZoom;
     bool                        mOptionsOpen;
     Options                     mOptions;
+    GridType                    mGridType;
     PaintContext                mPaintCurrent,
                                 mPaintNext;
     rio::Vector2f               mCursorPos;

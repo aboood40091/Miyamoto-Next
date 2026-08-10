@@ -9,6 +9,7 @@
 #include <actor/ActorCreateMgr.h>
 #include <course/Bg.h>
 #include <course/BgRenderer.h>
+#include <graphics/GridRenderer.h>
 #include <graphics/LayerID.h>
 #include <graphics/QuadRenderer.h>
 #include <graphics/Renderer.h>
@@ -62,6 +63,7 @@ CourseView::CourseView(s32 width, s32 height, const rio::BaseVec2f& window_pos)
     , mDrawCallback3D(*this)
     , mpCourseDataFile(nullptr)
     , mOptionsOpen(false)
+    , mGridType(Preferences::instance()->getGridType())
     , mCursorAction(CURSOR_ACTION_NONE)
     , mCursorButtonCurrent(CURSOR_BUTTON_NONE)
     , mCursorState(CURSOR_STATE_RELEASE)
@@ -1892,6 +1894,10 @@ void CourseView::onCursorReleasedCompletely_()
             if (hasSelection())
                 duplicateSelection();
         }
+        else if (ImGui::IsKeyPressed(ImGuiKey_G, false))
+        {
+            static_cast<MainWindow*>(rio::sRootTask)->cycleGridType();
+        }
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) ||
              ImGui::IsKeyPressed(ImGuiKey_Backspace, false))
@@ -2690,10 +2696,57 @@ void CourseView::DrawCallback3D::postDrawXlu(s32 view_index, const rio::lyr::Dra
         for (std::unique_ptr<AreaItem>& p_item : mCourseView.mAreaItemPtr)
             p_item->drawXlu();
 
+    mCourseView.drawGrid_();
+
     if (mCourseView.mCursorAction == CURSOR_ACTION_SELECTION_BOX)
         mCourseView.drawSelectionBox_();
 
     mCourseView.unbindRenderBuffer();
+}
+
+void CourseView::drawGrid_()
+{
+    if (mGridType == GRID_TYPE_NONE)
+        return;
+
+    const f32 pixels_per_unit = mCamera.getZoomScale();
+    if (pixels_per_unit <= 0.0f)
+        return;
+
+    const rio::BaseVec2f& center = getCenterWorldPos();
+
+    const f32 half_w = getScreenWorldHalfWidth();
+    const f32 half_h = getScreenWorldHalfHeight();
+
+    const rio::BaseVec2f world_min {
+        std::max(center.x - half_w, 0.0f),
+        std::max(center.y - half_h, f32(-BG_MAX_Y))
+    };
+
+    const rio::BaseVec2f world_max {
+        std::min(center.x + half_w, f32(BG_MAX_X)),
+        std::min(center.y + half_h, 0.0f)
+    };
+
+    if (world_max.x <= world_min.x || world_max.y <= world_min.y)
+        return;
+
+    rio::BaseMtx34f view_mtx;
+    mCamera.getMatrix(&view_mtx);
+
+    rio::Matrix44f view_proj;
+    view_proj.setMul(
+        static_cast<const rio::Matrix44f&>(mProjection.getMatrix()),
+        static_cast<const rio::Matrix34f&>(view_mtx)
+    );
+
+    rio::RenderState render_state;
+    render_state.setDepthEnable(false, false);
+    render_state.setBlendEnable(true);
+    render_state.setCullingMode(rio::Graphics::CULLING_MODE_NONE);
+    render_state.apply();
+
+    GridRenderer::instance()->draw(view_proj, world_min, world_max, pixels_per_unit, mGridType);
 }
 
 void CourseView::drawSelectionUI()
@@ -2806,8 +2859,7 @@ void CourseView::drawItemLabels(const rio::BaseVec2f& screen_pos) const
     if (!isInitialized())
         return;
 
-    const f32 px_per_world = mSize.x / getScreenWorldWidth();
-    const f32 tile_px = 16.0f * px_per_world;
+    const f32 tile_px = getZoomUnitSize();
     const f32 font_size = tile_px * cFontSizePerTile;
 
     if (font_size < cMinFontSize)

@@ -5,6 +5,7 @@
 #include <string>
 
 enum ActorNameLanguage : s32;
+enum GridType : s32;
 
 class Preferences
 {
@@ -89,6 +90,10 @@ public:
     [[nodiscard]]
     u32 getMaxUndoHistory();
     void setMaxUndoHistory(u32 value);
+
+    [[nodiscard]]
+    GridType getGridType();
+    void setGridType(GridType value);
 
 private:
     ConfigMgr mConfig;

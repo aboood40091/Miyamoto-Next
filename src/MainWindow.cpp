@@ -13,6 +13,7 @@
 #include <item/LocationItem.h>
 #include <item/MapActorItem.h>
 #include <item/NextGotoItem.h>
+#include <graphics/GridRenderer.h>
 #include <graphics/LayerID.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/QuadRenderer.h>
@@ -230,6 +231,7 @@ void MainWindow::prepare_()
     ActionMgr::createSingleton();
 
     QuadRenderer::createSingleton();
+    GridRenderer::createSingleton();
 
     mLayerGather.it = rio::lyr::Renderer::instance()->addLayer("Gather", LAYER_ID_GATHER);
     mLayerGather.ptr = rio::lyr::Layer::peelIterator(mLayerGather.it);
@@ -1578,6 +1580,29 @@ void MainWindow::drawMainMenuBarUI_()
             ImGui::MenuItem("Toggle Location Visibility",   "Ctrl+7", mpCourseView->getLocationVisibility());
             // Ctrl+8 is reserved for paths and Ctrl+9 is reserved for comments
 
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Grid"))
+            {
+                static const char* const cGridTypeNames[GRID_TYPE_MAX_NUM] = {
+                    "Off",
+                    "Lines",
+                    "Checkerboard"
+                };
+
+                const GridType current = mpCourseView->getGridType();
+
+                for (s32 i = 0; i < GRID_TYPE_MAX_NUM; i++)
+                {
+                    const bool is_next = GridType(i) == GridType((current + 1) % GRID_TYPE_MAX_NUM);
+
+                    if (ImGui::MenuItem(cGridTypeNames[i], is_next ? "Ctrl+G" : nullptr, GridType(i) == current))
+                        setGridType(GridType(i));
+                }
+
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
 
@@ -2008,4 +2033,15 @@ void MainWindow::updateZoom_()
 
     if (mpCourseView)
         mpCourseView->setZoomUnitSizeCentered(mZoomUnitSize);
+}
+
+void MainWindow::setGridType(GridType type)
+{
+    mpCourseView->setGridType(type);
+    Preferences::instance()->setGridType(type);
+}
+
+void MainWindow::cycleGridType()
+{
+    setGridType(GridType((mpCourseView->getGridType() + 1) % GRID_TYPE_MAX_NUM));
 }

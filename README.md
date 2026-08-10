@@ -43,6 +43,7 @@ Settings live in `preferences.ini`, next to the executable in `bin`. The file is
 | `ActorHideUnused` | `false` | Hide actors marked `[UNUSED]` from the actor palette. |
 | `ActorHideNSLU` | `false` | Hide New Super Luigi U actors from the actor palette. |
 | `MaxUndoHistory` | `100` | Maximum number of undo steps kept. `0` means unlimited. Applied when the next edit is made. |
+| `GridType` | `0` | Grid overlay: `0` off, `1` lines, `2` checkerboard. Cycled with `Ctrl+G`. |
 
 Relative paths are resolved against `fs/content/`. For example, based on the default value of `<ContentPath>`, an example game file path would be `fs/content/game/nsmbu/Common/shader/shaderfb.szs`.
 

@@ -1,6 +1,7 @@
 #include <Preferences.h>
 #include <action/ActionMgr.h>
 #include <actor/ActorCreateMgr.h>
+#include <graphics/GridType.h>
 #include <ui/ThemeMgr.h>
 
 #include <filedevice/rio_Path.h>
@@ -229,4 +230,19 @@ u32 Preferences::getMaxUndoHistory()
 void Preferences::setMaxUndoHistory(u32 value)
 {
     mConfig.setInt(cSection, "MaxUndoHistory", s32(std::min<u32>(value, ActionMgr::cMaxUserMaxHistory)));
+}
+
+GridType Preferences::getGridType()
+{
+    const s32 value = mConfig.getInt(cSection, "GridType", GRID_TYPE_NONE);
+
+    if (value < 0 || value >= GRID_TYPE_MAX_NUM)
+        return GRID_TYPE_NONE;
+
+    return GridType(value);
+}
+
+void Preferences::setGridType(GridType value)
+{
+    mConfig.setInt(cSection, "GridType", value);
 }
