@@ -619,30 +619,7 @@ void MainWindow::courseSave()
     if (mCoursePath.empty())
         return courseSaveAs();
 
-    RIO_LOG("Save as file: %s\n", mCoursePath.c_str());
-
-    bool to_compress = mCoursePath.ends_with(".szs");
-
-    std::span<u8> out = CourseData::instance()->save();
-    RIO_ASSERT(out.data() && out.size());
-
-    if (to_compress)
-    {
-        const std::span<u8>& out_szs = SZSCompressor::compressFast(out);
-        RIO_ASSERT(out_szs.data() && out_szs.size());
-        rio::MemUtil::free(out.data());
-        out = out_szs;
-    }
-
-    rio::FileHandle handle;
-    if (rio::FileDeviceMgr::instance()->tryOpen(&handle, mCoursePath, rio::FileDevice::FILE_OPEN_FLAG_WRITE) &&
-        handle.tryWrite(nullptr, out.data(), out.size()) &&
-        handle.tryClose())
-    {
-        ActionMgr::instance()->onSave();
-    }
-
-    rio::MemUtil::free(out.data());
+    courseSave_(mCoursePath);
 }
 
 void MainWindow::courseSaveAs()
@@ -669,9 +646,16 @@ void MainWindow::courseSaveAs()
         return;
     }
 
-    RIO_LOG("Save as file: %s\n", chosen_file);
     std::string level_path = "native://";
     level_path += chosen_file;
+
+    courseSave_(level_path);
+#endif // RIO_IS_DESKTOP
+}
+
+void MainWindow::courseSave_(const std::string& level_path)
+{
+    RIO_LOG("Save as file: %s\n", level_path.c_str());
 
     bool to_compress = level_path.ends_with(".szs");
 
@@ -680,7 +664,11 @@ void MainWindow::courseSaveAs()
 
     if (to_compress)
     {
+    #ifdef ENABLE_FASTYZ
+        const std::span<u8>& out_szs = SZSCompressor::compressFastYZ(out);
+    #else
         const std::span<u8>& out_szs = SZSCompressor::compressFast(out);
+    #endif
         RIO_ASSERT(out_szs.data() && out_szs.size());
         rio::MemUtil::free(out.data());
         out = out_szs;
@@ -691,13 +679,15 @@ void MainWindow::courseSaveAs()
         handle.tryWrite(nullptr, out.data(), out.size()) &&
         handle.tryClose())
     {
-        mCoursePath = level_path;
-        RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+        if (&level_path != &mCoursePath)
+        {
+            mCoursePath = level_path;
+            RIO_LOG("mCoursePath set to: %s\n", mCoursePath.c_str());
+        }
         ActionMgr::instance()->onSave();
     }
 
     rio::MemUtil::free(out.data());
-#endif // RIO_IS_DESKTOP
 }
 
 void MainWindow::courseFileSwitch_(u32 file_index)

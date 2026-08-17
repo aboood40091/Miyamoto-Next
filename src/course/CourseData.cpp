@@ -4,7 +4,6 @@
 #include <course/CourseData.h>
 #include <resource/SharcArchiveRes.h>
 #include <resource/SharcWriter.h>
-#include <resource/SZSCompressor.h>
 #include <resource/SZSDecompressor.h>
 #include <system/ResMgr.h>
 

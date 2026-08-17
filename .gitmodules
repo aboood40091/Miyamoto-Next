@@ -23,3 +23,6 @@
 [submodule "lib/tracy"]
 	path = lib/tracy
 	url = https://github.com/wolfpld/tracy.git
+[submodule "lib/FastYZ"]
+	path = lib/FastYZ
+	url = https://github.com/aboood40091/FastYZ.git

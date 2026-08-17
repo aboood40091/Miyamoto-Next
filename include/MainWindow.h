@@ -57,6 +57,7 @@ private:
 
     void courseNew_();
     void courseOpen_();
+    void courseSave_(const std::string& level_path);
     void courseFileSwitch_(u32 file_index);
 
     void handlePopupCallback_();

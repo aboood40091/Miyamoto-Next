@@ -18,7 +18,8 @@ workspace "Miyamoto-Next"
     startproject "Miyamoto-Next"
 
     defines {
-        "GLEW_STATIC"
+        "GLEW_STATIC",
+        "ENABLE_FASTYZ"
     }
 
     includedirs {
@@ -26,6 +27,7 @@ workspace "Miyamoto-Next"
 
         "lib/glew/include",
         "lib/glfw/include",
+        "lib/FastYZ",
         "lib/ModelStuff-next/lib/agl/lib/rio/include",
         "lib/ModelStuff-next/lib/agl/lib/ninTexUtils/include",
         "lib/ModelStuff-next/lib/agl/lib/CafeSDKWrappers/cafe_win",
@@ -278,6 +280,15 @@ project "Lib_Tracy"
         "lib/tracy/public/TracyClient.cpp"
     }
 
+project "Lib_FastYZ"
+    kind "StaticLib"
+    language "C"
+    cdialect "C99"
+
+    files {
+        "lib/FastYZ/fastyz.c"
+    }
+
 project "Lib_RIO"
     kind "StaticLib"
 
@@ -330,6 +341,7 @@ project "Miyamoto-Next"
     }
 
     links {
+        "Lib_FastYZ",
         "Lib_RIO",
         "Lib_ninTexUtils",
         "Lib_G3d",
