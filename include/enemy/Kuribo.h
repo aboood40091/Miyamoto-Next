@@ -4,7 +4,7 @@
 
 #include <math/rio_MathTypes.h>
 
-class BasicModel;
+class AnimModel;
 
 class Kuribo : public MapActorItem
 {
@@ -46,7 +46,7 @@ private:
 private:
     const bool      cIsKakibo;
 
-    BasicModel*     mpModel;
+    AnimModel*      mpModel;
 
     bool            mIsLayer2;
     rio::BaseVec3f  mPosition;

@@ -1,5 +1,5 @@
 #include <Preferences.h>
-#include <graphics/BasicModel.h>
+#include <graphics/AnimModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <enemy/Kuribo.h>
@@ -33,7 +33,7 @@ Kuribo::Kuribo(const MapActorData& map_actor_data, u32 index)
 
     const char* model_name = res_name.c_str();
 
-    mpModel = BasicModel::create(
+    mpModel = AnimModel::create(
         const_cast<ModelResource*>(model_res),
         model_name,
         1, 1, 0, 0, 0,
@@ -59,7 +59,7 @@ Kuribo::~Kuribo()
 {
     if (mpModel)
     {
-        BasicModel::destroy(mpModel);
+        AnimModel::destroy(mpModel);
 
         const std::string& res_name = cResName[cIsKakibo];
 
@@ -147,8 +147,8 @@ void Kuribo::onSceneUpdate()
     if (mpModel == nullptr)
         return;
 
-    mpModel->updateAnimations();
-    mpModel->updateModel();
+    mpModel->playAnmFrameCtrl();
+    mpModel->calcMdl();
 }
 
 void Kuribo::scheduleDraw()

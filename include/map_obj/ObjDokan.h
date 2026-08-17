@@ -4,7 +4,7 @@
 
 #include <math/rio_MathTypes.h>
 
-class BasicModel;
+class AnimModel;
 class ModelResource;
 
 class ObjDokan
@@ -74,8 +74,8 @@ private:
 
 private:
     const ModelResource*    mpModelResource;
-    BasicModel*             mpModelA;
-    BasicModel*             mpModelB;
+    AnimModel*              mpModelA;
+    AnimModel*              mpModelB;
 
     f32                     mBaseFrame;
     rio::BaseMtx34f         mMtxRT;

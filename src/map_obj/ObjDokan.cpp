@@ -1,5 +1,5 @@
 #include <Preferences.h>
-#include <graphics/BasicModel.h>
+#include <graphics/AnimModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/ObjDokan.h>
@@ -157,14 +157,14 @@ bool ObjDokan::initialize(Type type, f32 length, bool draw_a, Color color)
     const char* const model_name_a = cModelNameA[mType];
     const char* const model_name_b = cModelNameB[mType];
 
-    mpModelA = BasicModel::create(
+    mpModelA = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         model_name_a,
         0, 1, 2, 0, 0,
         Model::cBoundingMode_Enable
     );
 
-    mpModelB = BasicModel::create(
+    mpModelB = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         model_name_b,
         0, 1, 2, 0, 0,
@@ -249,11 +249,8 @@ void ObjDokan::destroy()
     if (!isCreated())
         return;
 
-    BasicModel::destroy(mpModelA);
-    mpModelA = nullptr;
-
-    BasicModel::destroy(mpModelB);
-    mpModelB = nullptr;
+    AnimModel::destroy(mpModelA);
+    AnimModel::destroy(mpModelB);
 
     const std::string& res_name = cResName[mType];
 
@@ -285,9 +282,9 @@ void ObjDokan::setModelMtxSRT_()
     mpModelB->getModel()->setScale(static_cast<const rio::Vector3f&>(mScale));
 
     if (mType == TYPE_CB)
-        mpModelB->updateAnimations();
+        mpModelB->playAnmFrameCtrl();
 
-    mpModelB->updateModel();
+    mpModelB->calcMdl();
 
     if (mType == TYPE_KAIGA)
     {
@@ -303,9 +300,9 @@ void ObjDokan::setModelMtxSRT_()
         mpModelA->getModel()->setMtxRT(mtx);
 
         if (mType == TYPE_CB)
-            mpModelA->updateAnimations();
+            mpModelA->playAnmFrameCtrl();
 
-        mpModelA->updateModel();
+        mpModelA->calcMdl();
     }
 }
 
@@ -313,13 +310,13 @@ void ObjDokan::onSceneUpdate() const
 {
     if (mType == TYPE_CB)
     {
-        mpModelB->updateAnimations();
-        mpModelB->updateModel();
+        mpModelB->playAnmFrameCtrl();
+        mpModelB->calcMdl();
 
         if (mIsEnableDrawA)
         {
-            mpModelA->updateAnimations();
-            mpModelA->updateModel();
+            mpModelA->playAnmFrameCtrl();
+            mpModelA->calcMdl();
         }
     }
 }

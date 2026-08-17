@@ -121,7 +121,7 @@ void MainWindow::failContentLoad_(const std::string& message)
         if (p_layer == nullptr)
             continue;
 
-        RenderMgr* p_render_mgr = p_layer->getRenderMgr();
+        RenderObjRenderMgr* p_render_mgr = p_layer->getRenderMgr();
         if (p_render_mgr != nullptr)
         {
             p_render_mgr->clear();

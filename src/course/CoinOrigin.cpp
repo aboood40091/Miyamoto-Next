@@ -4,7 +4,7 @@
 #include <course/UnitID.h>
 #include <graphics/ModelG3d.h>
 #include <graphics/ModelResMgr.h>
-#include <graphics/RenderMgr.h>
+#include <graphics/RenderObjRenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <system/ResMgr.h>
 
@@ -74,13 +74,13 @@ bool CoinOrigin::initialize()
     const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(model_res);
 
-    mpModelCoin = Model::createG3d(
+    mpModelCoin = ModelUtil::createG3d(
         *model_res,
         "obj_coin",
         0, 0, 0, 0, 0,
         Model::cBoundingMode_Disable
     );
-    mpModelBlueCoin = Model::createG3d(
+    mpModelBlueCoin = ModelUtil::createG3d(
         *model_res,
         "obj_coin_blue",
         0, 0, 0, 0, 0,
@@ -149,8 +149,8 @@ void CoinOrigin::calcMdl_()
     mpModelCoin->setScale(s);
     mpModelBlueCoin->setScale(s);
 
-    mpModelCoin->updateModel();
-    mpModelBlueCoin->updateModel();
+    mpModelCoin->calcMdl();
+    mpModelBlueCoin->calcMdl();
 }
 
 void CoinOrigin::apply_(const rio::lyr::DrawInfo& draw_info)

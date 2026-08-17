@@ -20,7 +20,7 @@ CollectionCoin::CollectionCoin(const MapActorData& map_actor_data, u32 index)
     const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(model_res);
 
-    mpModel = Model::createG3d(
+    mpModel = ModelUtil::createG3d(
         *model_res,
         "star_coinA",
         0, 0, 0, 0, 0,
@@ -76,7 +76,7 @@ void CollectionCoin::onSceneUpdate()
     );
 
     mpModel->setMtxRT(mtx);
-    mpModel->updateModel();
+    mpModel->calcMdl();
 }
 
 void CollectionCoin::scheduleDraw()

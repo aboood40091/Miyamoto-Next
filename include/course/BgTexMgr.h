@@ -2,7 +2,7 @@
 
 #include <course/BgUnitFile.h>
 #include <course/UnitID.h>
-#include <graphics/RenderMgr.h>
+#include <graphics/RenderObjRenderMgr.h>
 
 #include <gpu/rio_RenderBuffer.h>
 #include <gpu/rio_RenderTarget.h>
@@ -153,7 +153,7 @@ private:
     void clearUnitDefaultRender_();
 
 private:
-    class DrawCallback : public RenderMgr::CallbackBase
+    class DrawCallback : public RenderObjRenderMgr::CallbackBase
     {
     public:
         DrawCallback(BgTexMgr& bg_tex_mgr)

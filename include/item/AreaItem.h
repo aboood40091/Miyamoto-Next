@@ -8,7 +8,7 @@
 
 class AreaItem : public ItemBase, public rio::lyr::IDrawable
 {
-    class DrawCallbackDV : public RenderMgr::CallbackBase
+    class DrawCallbackDV : public RenderObjRenderMgr::CallbackBase
     {
     public:
         DrawCallbackDV(s32 index)
@@ -140,7 +140,7 @@ private:
     std::unique_ptr<DistantViewMgr> mpDistantViewMgr;
     std::string                     mDVName;
     DrawCallbackDV                  mDrawCallbackDV;
-    RenderMgr                       mRenderMgrDV;
+    RenderObjRenderMgr              mRenderMgrDV;
     rio::lyr::Layer::iterator       mLayerItrDV;
     rio::lyr::Layer*                mpLayerDV;
     rio::BaseVec2i                  mScissorMin;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <graphics/GridType.h>
-#include <graphics/RenderMgr.h>
+#include <graphics/RenderObjRenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <item/ItemType.h>
 #include <resource/SharcArchiveRes.h>
@@ -133,7 +133,7 @@ private:
     bool                    mCourseViewHovered;
     bool                    mCourseViewFocused;
     bool                    mCourseViewCameraMoved;
-    RenderMgr               mRenderMgrBgPrepare;
+    RenderObjRenderMgr      mRenderMgrBgPrepare;
     std::string             mCoursePath;
     u32                     mCurrentFile;
     ItemType                mPaintType;

@@ -20,7 +20,7 @@ DokanJoint::DokanJoint(const MapActorData& map_actor_data, u32 index)
     const ModelResource* model_res = ModelResMgr::instance()->loadResFile(cResName, archive_res, cResName.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(model_res);
 
-    mpModel = ModelG3d::createG3d(
+    mpModel = ModelUtil::createG3d(
         *model_res,
         "obj_dokan_joint",
         0, 0, 0, 0, 0,
@@ -63,7 +63,7 @@ void DokanJoint::setModelMtxRT_()
     mtx.makeT(static_cast<const rio::Vector3f&>(mPosition));
 
     mpModel->setMtxRT(mtx);
-    mpModel->updateModel();
+    mpModel->calcMdl();
 }
 
 void DokanJoint::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)

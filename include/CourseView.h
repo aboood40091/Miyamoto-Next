@@ -5,7 +5,7 @@
 #include <graphics/CullViewFrustum.h>
 #include <graphics/GridType.h>
 #include <graphics/OrthoCamera.h>
-#include <graphics/RenderMgr.h>
+#include <graphics/RenderObjRenderMgr.h>
 #include <graphics/RenderObjLayer.h>
 #include <item/ItemID.h>
 
@@ -26,7 +26,7 @@ class   NextGotoItem;
 class CourseView : public rio::lyr::IDrawable
 {
 private:
-    class DrawCallback3D : public RenderMgr::CallbackBase
+    class DrawCallback3D : public RenderObjRenderMgr::CallbackBase
     {
     public:
         DrawCallback3D(CourseView& course_view)
@@ -545,7 +545,7 @@ private:
     rio::OrthoProjection        mProjection;
     CullViewFrustum             mCullViewFrustum3D;
     DrawCallback3D              mDrawCallback3D;
-    RenderMgr                   mRenderMgr3D;
+    RenderObjRenderMgr          mRenderMgr3D;
     rio::lyr::Layer::iterator   mLayerItr3D;
     rio::lyr::Layer*            mpLayer3D;
     CourseDataFile*             mpCourseDataFile;

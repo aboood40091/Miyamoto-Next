@@ -4,7 +4,7 @@
 
 #include <math/rio_MathTypes.h>
 
-class BasicModel;
+class AnimModel;
 class ModelResource;
 
 class Nokonoko : public MapActorItem
@@ -50,8 +50,8 @@ private:
     const bool              cIsBig;
 
     const ModelResource*    mpModelResource;
-    BasicModel*             mpModel;
-    BasicModel*             mpShellModel;
+    AnimModel*              mpModel;
+    AnimModel*              mpShellModel;
 
     bool                    mIsAltColor;
     rio::BaseVec3f          mPosition;

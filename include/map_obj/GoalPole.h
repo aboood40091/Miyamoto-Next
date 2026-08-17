@@ -4,7 +4,7 @@
 
 #include <math/rio_MathTypes.h>
 
-class BasicModel;
+class AnimModel;
 
 class GoalPole : public MapActorItem
 {
@@ -44,9 +44,9 @@ private:
     const std::string*      mpResName;
 
     const ModelResource*    mpModelResource;
-    BasicModel*             mpBaseModel;
-    BasicModel*             mpGoalFlagModel;
-    BasicModel*             mpTorideStdModel;
+    AnimModel*              mpBaseModel;
+    AnimModel*              mpGoalFlagModel;
+    AnimModel*              mpTorideStdModel;
 
     const bool              cIsKaiga;
     s32                     mFrame;

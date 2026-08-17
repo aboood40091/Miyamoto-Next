@@ -1,6 +1,6 @@
 #include <CourseView.h>
 #include <Preferences.h>
-#include <graphics/BasicModel.h>
+#include <graphics/AnimModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <enemy/Nokonoko.h>
@@ -54,14 +54,14 @@ Nokonoko::Nokonoko(const MapActorData& map_actor_data, u32 index)
 
     const char* model_name = res_name.c_str();
 
-    mpModel = BasicModel::create(
+    mpModel = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         model_name,
         1, 1, 0, 0, /* cIsBig ? 1 : */ 0,   // Enabling shape animation crashes on Windows atm
         Model::cBoundingMode_Enable
     );
 
-    mpShellModel = BasicModel::create(
+    mpShellModel = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         cShellModelName[cIsBig],
         0, 1, 0, 0, 0,
@@ -101,8 +101,8 @@ Nokonoko::~Nokonoko()
 {
     if (mpModelResource)
     {
-        BasicModel::destroy(mpModel);
-        BasicModel::destroy(mpShellModel);
+        AnimModel::destroy(mpModel);
+        AnimModel::destroy(mpShellModel);
 
         const std::string& res_name = cResName[cIsBig];
 
@@ -171,7 +171,7 @@ void Nokonoko::setModelMtxRT_()
     mpModel->getModel()->setMtxRT(mtx);
 
     mpShellModel->getModel()->setMtxRT(mtx);
-    mpShellModel->getModel()->updateModel();
+    mpShellModel->getModel()->calcMdl();
 }
 
 void Nokonoko::updateColor_()
@@ -182,8 +182,8 @@ void Nokonoko::updateColor_()
     SetColor(mpModel->getTexAnim(0), mpModelResource, cResName[cIsBig].c_str(), mIsAltColor);
 
     SetColor(mpShellModel->getTexAnim(0), mpModelResource, cShellTexAnimName[cIsBig], mIsAltColor);
-    mpShellModel->updateAnimations();
-    mpShellModel->updateModel();
+    mpShellModel->playAnmFrameCtrl();
+    mpShellModel->calcMdl();
 }
 
 void Nokonoko::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
@@ -222,8 +222,8 @@ void Nokonoko::onSceneUpdate()
         return;
 
     {
-        mpModel->updateAnimations();
-        mpModel->getModel()->updateAnimations();
+        mpModel->playAnmFrameCtrl();
+        mpModel->getModel()->calcAnm();
 
         if (!cIsBig)
         {
@@ -238,7 +238,7 @@ void Nokonoko::onSceneUpdate()
             mpModel->getModel()->setBoneLocalMatrix(index, head_mtx, head_scale);
         }
 
-        mpModel->getModel()->updateModel();
+        mpModel->getModel()->calcMdl();
     }
 }
 

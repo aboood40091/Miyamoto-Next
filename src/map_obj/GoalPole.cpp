@@ -1,6 +1,6 @@
 #include <CourseView.h>
 #include <Preferences.h>
-#include <graphics/BasicModel.h>
+#include <graphics/AnimModel.h>
 #include <graphics/ModelResMgr.h>
 #include <graphics/Renderer.h>
 #include <map_obj/GoalPole.h>
@@ -59,14 +59,14 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     mpModelResource = ModelResMgr::instance()->loadResFile(res_name, archive_res, res_name.c_str(), Preferences::instance()->getForceSharcfb());
     RIO_ASSERT(mpModelResource);
 
-    mpBaseModel = BasicModel::create(
+    mpBaseModel = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         "baseA",
         0, 1, 0, 0, 0,
         Model::cBoundingMode_Enable
     );
 
-    mpGoalFlagModel = BasicModel::create(
+    mpGoalFlagModel = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         "goal_flag",
         1, 1, 1, 0, 0,
@@ -82,7 +82,7 @@ GoalPole::GoalPole(const MapActorData& map_actor_data, u32 index)
     mpGoalFlagModel->getShuAnim(0)->getFrameCtrl().setPlayMode(FrameCtrl::cMode_NoRepeat);
     mpGoalFlagModel->getShuAnim(0)->getFrameCtrl().setRate(1.0f);
 
-    mpTorideStdModel = BasicModel::create(
+    mpTorideStdModel = AnimModel::create(
         const_cast<ModelResource*>(mpModelResource),
         "toride_std",
         0, 1, 0, cIsKaiga ? 0 : 1, 0,
@@ -106,9 +106,9 @@ GoalPole::~GoalPole()
 {
     if (mpModelResource)
     {
-        BasicModel::destroy(mpBaseModel);
-        BasicModel::destroy(mpGoalFlagModel);
-        BasicModel::destroy(mpTorideStdModel);
+        AnimModel::destroy(mpBaseModel);
+        AnimModel::destroy(mpGoalFlagModel);
+        AnimModel::destroy(mpTorideStdModel);
 
         ModelResMgr::instance()->destroyResFile(*mpResName);
         ResMgr::instance()->destroyArchiveRes(*mpResName);
@@ -170,13 +170,13 @@ void GoalPole::setModelMtxRT_()
         rio::Matrix34f mtx;
         mtx.makeT({ mPosition.x, mPosition.y, 2900.0f });
         mpBaseModel->getModel()->setMtxRT(mtx);
-        mpBaseModel->getModel()->updateModel();
+        mpBaseModel->getModel()->calcMdl();
     }
     {
         rio::Matrix34f mtx;
         mtx.makeT({ mPosition.x + 256, mPosition.y, -1800.0f });
         mpTorideStdModel->getModel()->setMtxRT(mtx);
-        mpTorideStdModel->getModel()->updateModel();
+        mpTorideStdModel->getModel()->calcMdl();
     }
     {
         rio::Matrix34f& mtx = sMtx.mtx;
@@ -193,16 +193,16 @@ void GoalPole::updateFrame_()
     f32 frame = mFrame;
 
     SetFrame(mpBaseModel->getTexAnim(0), mpModelResource, "baseA", frame);
-    mpBaseModel->updateAnimations();
-    mpBaseModel->updateModel();
+    mpBaseModel->playAnmFrameCtrl();
+    mpBaseModel->calcMdl();
 
     SetFrame(mpGoalFlagModel->getTexAnim(0), mpModelResource, "goal_flag", frame);
 
     SetFrame(mpTorideStdModel->getTexAnim(0), mpModelResource, "toride_std", frame);
     if (!cIsKaiga)
         SetFrame(mpTorideStdModel->getVisAnim(0), mpModelResource, "toride_std", frame);
-    mpTorideStdModel->updateAnimations();
-    mpTorideStdModel->updateModel();
+    mpTorideStdModel->playAnmFrameCtrl();
+    mpTorideStdModel->calcMdl();
 }
 
 void GoalPole::onDataChange(const MapActorData& map_actor_data, DataChangeFlag flag)
@@ -232,8 +232,8 @@ void GoalPole::onSceneUpdate()
     if (mpModelResource == nullptr)
         return;
 
-    mpGoalFlagModel->updateAnimations();
-    mpGoalFlagModel->updateModel();
+    mpGoalFlagModel->playAnmFrameCtrl();
+    mpGoalFlagModel->calcMdl();
 }
 
 void GoalPole::scheduleDraw()
